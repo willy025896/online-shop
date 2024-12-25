@@ -1,6 +1,6 @@
 <script setup>
-import { ref } from 'vue';
-import { useForm } from '@inertiajs/vue3';
+import { ref, computed } from 'vue';
+import { useForm, usePage } from '@inertiajs/vue3';
 import ActionMessage from '@/Components/ActionMessage.vue';
 import FormSection from '@/Components/FormSection.vue';
 import InputError from '@/Components/InputError.vue';
@@ -35,21 +35,25 @@ const updatePassword = () => {
         },
     });
 };
+
+const page = usePage();
+const actionLang = computed(() => page.props.lang.action);
+const lang = computed(() => page.props.lang.profile.password);
 </script>
 
 <template>
     <FormSection @submitted="updatePassword">
         <template #title>
-            Update Password
+            {{ lang.title }}
         </template>
 
         <template #description>
-            Ensure your account is using a long, random password to stay secure.
+            {{ lang.description }}
         </template>
 
         <template #form>
             <div class="col-span-6 sm:col-span-4">
-                <InputLabel for="current_password" value="Current Password" />
+                <InputLabel for="current_password" :value="lang.current" />
                 <TextInput
                     id="current_password"
                     ref="currentPasswordInput"
@@ -62,7 +66,7 @@ const updatePassword = () => {
             </div>
 
             <div class="col-span-6 sm:col-span-4">
-                <InputLabel for="password" value="New Password" />
+                <InputLabel for="password" :value="lang.new" />
                 <TextInput
                     id="password"
                     ref="passwordInput"
@@ -75,7 +79,7 @@ const updatePassword = () => {
             </div>
 
             <div class="col-span-6 sm:col-span-4">
-                <InputLabel for="password_confirmation" value="Confirm Password" />
+                <InputLabel for="password_confirmation" :value="lang.confirm" />
                 <TextInput
                     id="password_confirmation"
                     v-model="form.password_confirmation"
@@ -89,11 +93,11 @@ const updatePassword = () => {
 
         <template #actions>
             <ActionMessage :on="form.recentlySuccessful" class="me-3">
-                Saved.
+                {{ actionLang.saved }}
             </ActionMessage>
 
             <PrimaryButton :class="{ 'opacity-25': form.processing }" :disabled="form.processing">
-                Save
+                {{ actionLang.save }}
             </PrimaryButton>
         </template>
     </FormSection>

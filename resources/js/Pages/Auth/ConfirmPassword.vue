@@ -1,6 +1,6 @@
 <script setup>
-import { ref } from 'vue';
-import { Head, useForm } from '@inertiajs/vue3';
+import { ref, computed } from 'vue';
+import { Head, useForm, usePage } from '@inertiajs/vue3';
 import AuthenticationCard from '@/Components/AuthenticationCard.vue';
 import AuthenticationCardLogo from '@/Components/AuthenticationCardLogo.vue';
 import InputError from '@/Components/InputError.vue';
@@ -23,10 +23,13 @@ const submit = () => {
         },
     });
 };
+
+const page = usePage()
+const lang = computed(() => page.props.lang);
 </script>
 
 <template>
-    <Head title="Secure Area" />
+    <Head :title="lang.secureArea" />
 
     <AuthenticationCard>
         <template #logo>
@@ -34,12 +37,12 @@ const submit = () => {
         </template>
 
         <div class="mb-4 text-sm text-gray-600 dark:text-gray-400">
-            This is a secure area of the application. Please confirm your password before continuing.
+            {{ lang.confirmPasswordHint }}
         </div>
 
         <form @submit.prevent="submit">
             <div>
-                <InputLabel for="password" value="Password" />
+                <InputLabel for="password" :value="lang.password" />
                 <TextInput
                     id="password"
                     ref="passwordInput"
@@ -55,7 +58,7 @@ const submit = () => {
 
             <div class="flex justify-end mt-4">
                 <PrimaryButton class="ms-4" :class="{ 'opacity-25': form.processing }" :disabled="form.processing">
-                    Confirm
+                    {{ lang.confirm }}
                 </PrimaryButton>
             </div>
         </form>
