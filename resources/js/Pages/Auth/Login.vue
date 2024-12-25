@@ -1,5 +1,6 @@
 <script setup>
-import { Head, Link, useForm } from '@inertiajs/vue3';
+import { Head, Link, useForm, usePage } from '@inertiajs/vue3';
+import { computed } from 'vue';
 import AuthenticationCard from '@/Components/AuthenticationCard.vue';
 import AuthenticationCardLogo from '@/Components/AuthenticationCardLogo.vue';
 import Checkbox from '@/Components/Checkbox.vue';
@@ -28,10 +29,13 @@ const submit = () => {
         onFinish: () => form.reset('password'),
     });
 };
+
+const page = usePage()
+const lang = computed(() => page.props.lang);
 </script>
 
 <template>
-    <Head title="Log in" />
+    <Head :title="lang.login" />
 
     <AuthenticationCard>
         <template #logo>
@@ -49,11 +53,11 @@ const submit = () => {
                     :href="route('register')"
                     class="underline text-sm text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 dark:focus:ring-offset-gray-800"
                 >
-                    Not registered?
+                    {{ lang.notRegister }}
                 </Link>
             </div>
             <div>
-                <InputLabel for="email" value="Email" />
+                <InputLabel for="email" :value="lang.email" />
                 <TextInput
                     id="email"
                     v-model="form.email"
@@ -67,7 +71,7 @@ const submit = () => {
             </div>
 
             <div class="mt-4">
-                <InputLabel for="password" value="Password" />
+                <InputLabel for="password" :value="lang.password" />
                 <TextInput
                     id="password"
                     v-model="form.password"
@@ -82,17 +86,17 @@ const submit = () => {
             <div class="block mt-4">
                 <label class="flex items-center">
                     <Checkbox v-model:checked="form.remember" name="remember" />
-                    <span class="ms-2 text-sm text-gray-600 dark:text-gray-400">Remember me</span>
+                    <span class="ms-2 text-sm text-gray-600 dark:text-gray-400">{{ lang.remember }}</span>
                 </label>
             </div>
 
             <div class="flex items-center justify-end mt-4">
                 <Link v-if="canResetPassword" :href="route('password.request')" class="underline text-sm text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 dark:focus:ring-offset-gray-800">
-                    Forgot your password?
+                    {{ lang.forget }}
                 </Link>
 
                 <PrimaryButton class="ms-4" :class="{ 'opacity-25': form.processing }" :disabled="form.processing">
-                    Log in
+                    {{ lang.login }}
                 </PrimaryButton>
             </div>
         </form>
