@@ -37,10 +37,12 @@ class HandleInertiaRequests extends Middleware
     public function share(Request $request): array
     {
         $path = $request->path() == '/' ? 'index':$request->path();
+        $pathArray = explode('/', $path);
+        $mainPage = $pathArray[0];
 
         return array_merge(parent::share($request), [
             // lang
-            'lang' => Lang::get($path)
+            'lang' => Lang::get($mainPage)
         ]);
     }
 }
