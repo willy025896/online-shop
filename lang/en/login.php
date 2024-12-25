@@ -5,5 +5,6 @@ return [
     'register' => 'Register',
     'remember' => 'Remember Me',
     'forget' => 'Forget your password?',
-    'login' => 'LOG IN'
+    'login' => 'LOG IN',
+    'notRegister' => 'Not Register?',
 ];
