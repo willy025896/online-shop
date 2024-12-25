@@ -3,6 +3,7 @@
 namespace App\Http\Middleware;
 
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Lang;
 use Inertia\Middleware;
 
 class HandleInertiaRequests extends Middleware
@@ -35,8 +36,11 @@ class HandleInertiaRequests extends Middleware
      */
     public function share(Request $request): array
     {
+        $path = $request->path() == '/' ? 'index':$request->path();
+
         return array_merge(parent::share($request), [
-            //
+            // lang
+            'lang' => Lang::get($path)
         ]);
     }
 }
