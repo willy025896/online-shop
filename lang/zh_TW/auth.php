@@ -11,7 +11,7 @@ return [
     |
     */
 
-    'failed' => '驗證憑證錯誤。',
+    'failed' => '帳號或密碼錯誤。',
     'password' => '密碼輸入錯誤，請確認後重新輸入。',
     'throttle' => '登入嘗試太多次，請 :seconds 秒後再試。',
 
