@@ -236,7 +236,7 @@ const lang = computed(() => page.props.lang.profile.twoFactor);
                             :class="{ 'opacity-25': disabling }"
                             :disabled="disabling"
                         >
-                            {{ lang.cancel }}
+                            {{ actionLang.cancel }}
                         </SecondaryButton>
                     </ConfirmsPassword>
 
