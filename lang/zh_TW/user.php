@@ -12,16 +12,17 @@
         'saved' => '已儲存',
         'done' => '完成',
         'cancel' => '取消',
+        'confirm' => '確認',
         'password' => '請輸入密碼'
     ],
 
     /**
      * confirm-password
      */
-    'secureArea' => '安全性頁面',
-    'confirmPasswordHint' => '安全性頁面，請先輸入您的密碼。',
-    'password' => '密碼',
-    'confirm' => '確認',
+    'confirmPassword' => [
+        'secureArea' => '安全性頁面',
+        'confirmPasswordHint' => '安全性頁面，請先輸入您的密碼。'
+    ],
 
     /**
      * profile

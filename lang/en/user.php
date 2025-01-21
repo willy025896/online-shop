@@ -12,16 +12,17 @@
         'saved' => 'Saved.',
         'done' => 'Done.',
         'cancel' => 'Cancel',
+        'confirm' => 'Confirm',
         'password' => 'Please enter your password.'
     ],
 
     /**
      * confirm-password
      */
-    'secureArea' => 'Secure Area',
-    'confirmPasswordHint' => 'This is a secure area of the application. Please confirm your password before continuing.',
-    'password' => 'Password',
-    'confirm' => 'Confirm',
+    'confirmPassword' => [
+        'secureArea' => 'Secure Area',
+        'confirmPasswordHint' => 'This is a secure area of the application. Please confirm your password before continuing.'
+    ],
 
     /**
      * profile

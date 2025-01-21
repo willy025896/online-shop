@@ -23,6 +23,15 @@ defineProps({
     },
 });
 
+let passwordText = ref('Password');
+let cancelText = ref('Cancel');
+
+axios.get('/api/component-lang/ConfirmPassword').then((res) => {
+    passwordText = res.data.password;
+    cancelText = res.data.cancel;
+    title = res.data.title
+})
+
 const confirmingPassword = ref(false);
 
 const form = reactive({
@@ -90,7 +99,7 @@ const closeModal = () => {
                         v-model="form.password"
                         type="password"
                         class="mt-1 block w-3/4"
-                        placeholder="Password"
+                        :placeholder="passwordText"
                         autocomplete="current-password"
                         @keyup.enter="confirmPassword"
                     />
@@ -101,7 +110,7 @@ const closeModal = () => {
 
             <template #footer>
                 <SecondaryButton @click="closeModal">
-                    Cancel
+                    {{ cancelText }}
                 </SecondaryButton>
 
                 <PrimaryButton
