@@ -46,4 +46,26 @@ Route::middleware([
     Route::put('/shop', [App\Http\Controllers\Seller\ShopController::class, 'update'])->name('shop.update');
 });
 
+// Admin routes
+Route::middleware([
+    'auth:sanctum',
+    config('jetstream.auth_session'),
+    'verified',
+    'role:admin',
+])->prefix('admin')->name('admin.')->group(function () {
+    Route::get('/dashboard', [App\Http\Controllers\Admin\DashboardController::class, 'index'])->name('dashboard');
+
+    Route::get('/users', [App\Http\Controllers\Admin\UserController::class, 'index'])->name('users.index');
+    Route::patch('/users/{user}/role', [App\Http\Controllers\Admin\UserController::class, 'updateRole'])->name('users.role');
+
+    Route::get('/shops', [App\Http\Controllers\Admin\ShopController::class, 'index'])->name('shops.index');
+    Route::patch('/shops/{shop}/status', [App\Http\Controllers\Admin\ShopController::class, 'updateStatus'])->name('shops.status');
+
+    Route::get('/categories', [App\Http\Controllers\Admin\CategoryController::class, 'index'])->name('categories.index');
+    Route::post('/categories', [App\Http\Controllers\Admin\CategoryController::class, 'store'])->name('categories.store');
+    Route::put('/categories/{category}', [App\Http\Controllers\Admin\CategoryController::class, 'update'])->name('categories.update');
+    Route::delete('/categories/{category}', [App\Http\Controllers\Admin\CategoryController::class, 'destroy'])->name('categories.destroy');
+
+    Route::get('/orders', [App\Http\Controllers\Admin\OrderController::class, 'index'])->name('orders.index');
+    Route::get('/products', [App\Http\Controllers\Admin\ProductController::class, 'index'])->name('products.index');
 });
