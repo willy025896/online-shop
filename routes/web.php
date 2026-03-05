@@ -17,6 +17,13 @@ Route::get('/shop', [ShopController::class, 'index'])->name('shops.index');
 Route::get('/shop/{shop:slug}', [ShopController::class, 'show'])->name('shops.show');
 Route::get('/categories/{category:slug}', [CategoryController::class, 'show'])->name('categories.show');
 
+// Cart (guest + auth)
+Route::get('/cart', [CartController::class, 'index'])->name('cart.index');
+Route::post('/cart/items', [CartController::class, 'store'])->name('cart.store');
+Route::patch('/cart/items/{cartItem}', [CartController::class, 'update'])->name('cart.update');
+Route::delete('/cart/items/{cartItem}', [CartController::class, 'destroy'])->name('cart.destroy');
+
+// Authenticated routes
 Route::middleware([
     'auth:sanctum',
     config('jetstream.auth_session'),
@@ -25,6 +32,30 @@ Route::middleware([
     Route::get('/dashboard', function () {
         return Inertia::render('Dashboard');
     })->name('dashboard');
+
+    Route::get('/advertisement', function () {
+        return Inertia::render('Advertisement');
+    })->name('advertisement');
+
+    Route::get('/members', function () {
+        return Inertia::render('Members');
+    })->name('members');
+
+    // Checkout
+    Route::get('/checkout', [CheckoutController::class, 'index'])->name('checkout.index');
+    Route::post('/checkout', [CheckoutController::class, 'store'])->name('checkout.store');
+
+    // Customer orders
+    Route::get('/orders', [OrderController::class, 'index'])->name('orders.index');
+    Route::get('/orders/{order}', [OrderController::class, 'show'])->name('orders.show');
+    Route::post('/orders/{order}/pay', [OrderController::class, 'simulatePayment'])->name('orders.pay');
+    Route::post('/orders/{order}/cancel', [OrderController::class, 'cancel'])->name('orders.cancel');
+
+    // Seller registration (any authenticated user)
+    Route::get('/seller/register', [App\Http\Controllers\Seller\RegisterController::class, 'create'])->name('seller.register');
+    Route::post('/seller/register', [App\Http\Controllers\Seller\RegisterController::class, 'store'])->name('seller.register.store');
+});
+
 // Seller routes
 Route::middleware([
     'auth:sanctum',
