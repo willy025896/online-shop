@@ -58,12 +58,6 @@ const logout = () => {
                                 <NavLink :href="route('shops.index')" :active="route().current('shops.*')">
                                     Shops
                                 </NavLink>
-                                <NavLink :href="route('dashboard')" :active="route().current('dashboard')">
-                                    Dashboard
-                                </NavLink>
-                                <NavLink v-if="$page.props.auth?.user" :href="route('orders.index')" :active="route().current('orders.*')">
-                                    Orders
-                                </NavLink>
                             </div>
                         </div>
 
@@ -76,6 +70,11 @@ const logout = () => {
                                 <span v-if="cartCount > 0" class="absolute -top-1 -right-1 inline-flex items-center justify-center px-1.5 py-0.5 text-xs font-bold leading-none text-white bg-red-600 rounded-full">
                                     {{ cartCount > 99 ? '99+' : cartCount }}
                                 </span>
+                            </Link>
+
+                            <!-- Login button (guest only) -->
+                            <Link v-if="!$page.props.auth?.user" :href="route('login')" class="ms-3 text-sm font-medium text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300">
+                                Log In
                             </Link>
 
                             <!-- Seller/Admin Panel Link -->
@@ -173,6 +172,10 @@ const logout = () => {
                                             Profile
                                         </DropdownLink>
 
+                                        <DropdownLink :href="route('orders.index')">
+                                            Orders
+                                        </DropdownLink>
+
                                         <DropdownLink v-if="$page.props.jetstream.hasApiFeatures" :href="route('api-tokens.index')">
                                             API Tokens
                                         </DropdownLink>
@@ -228,17 +231,14 @@ const logout = () => {
                         <ResponsiveNavLink :href="route('shops.index')" :active="route().current('shops.*')">
                             Shops
                         </ResponsiveNavLink>
-                        <ResponsiveNavLink :href="route('dashboard')" :active="route().current('dashboard')">
-                            Dashboard
-                        </ResponsiveNavLink>
                         <ResponsiveNavLink :href="route('cart.index')" :active="route().current('cart.*')">
                             Cart
                             <span v-if="cartCount > 0" class="ms-2 inline-flex items-center justify-center px-1.5 py-0.5 text-xs font-bold leading-none text-white bg-red-600 rounded-full">
                                 {{ cartCount }}
                             </span>
                         </ResponsiveNavLink>
-                        <ResponsiveNavLink v-if="$page.props.auth?.user" :href="route('orders.index')" :active="route().current('orders.*')">
-                            Orders
+                        <ResponsiveNavLink v-if="!$page.props.auth?.user" :href="route('login')">
+                            Log In
                         </ResponsiveNavLink>
                         <ResponsiveNavLink v-if="userRole === 'seller'" :href="route('seller.dashboard')" :active="route().current('seller.*')">
                             Seller Panel
@@ -268,6 +268,10 @@ const logout = () => {
                         <div class="mt-3 space-y-1">
                             <ResponsiveNavLink :href="route('profile.show')" :active="route().current('profile.show')">
                                 Profile
+                            </ResponsiveNavLink>
+
+                            <ResponsiveNavLink :href="route('orders.index')" :active="route().current('orders.*')">
+                                Orders
                             </ResponsiveNavLink>
 
                             <ResponsiveNavLink v-if="$page.props.jetstream.hasApiFeatures" :href="route('api-tokens.index')" :active="route().current('api-tokens.index')">

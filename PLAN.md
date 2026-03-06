@@ -45,3 +45,9 @@ Frontend (Vue)
 - [x] 商家頁面產品搜尋 — 輸入關鍵字即時過濾（400ms debounce），query param `search`
 - [x] 商家頁面類別過濾 — 顯示該商家有商品的類別，點選 pill button 過濾，query param `category`
 - [x] 商家頁面排序 — Latest / Price Low-High / Price High-Low / Name A-Z，query param `sort`
+
+已完成 (Stage 9)
+
+- [x] 移除導覽列 Dashboard 連結（桌面 + 手機版）
+- [x] Orders 移至右側 account dropdown 選單（桌面）及 settings 區塊（手機版）
+- [x] 未登入時購物車旁顯示 Log In 按鈕（桌面 + 手機版）

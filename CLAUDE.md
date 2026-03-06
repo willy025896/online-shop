@@ -2,6 +2,12 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+## AI 操作規範
+
+**每次執行任何開發任務前，必須先讀取 `.ai/AI-SKILLS.md`**，並遵守其中定義的記錄規範（prompt、change、INDEX.md、PLAN.md）。
+
+---
+
 ## Project Overview
 
 **Online Shop** — Multi-vendor e-commerce platform with buyer/seller/admin roles
