@@ -1,6 +1,6 @@
 <script setup>
-import { ref } from 'vue';
-import { Head, Link, router } from '@inertiajs/vue3';
+import { ref, computed } from 'vue';
+import { Head, Link, router, usePage } from '@inertiajs/vue3';
 import ApplicationMark from '@/Components/ApplicationMark.vue';
 import Banner from '@/Components/Banner.vue';
 import Dropdown from '@/Components/Dropdown.vue';
@@ -11,6 +11,10 @@ import ResponsiveNavLink from '@/Components/ResponsiveNavLink.vue';
 defineProps({
     title: String,
 });
+
+const page = usePage();
+const cartCount = computed(() => page.props.cartCount || 0);
+const userRole = computed(() => page.props.userRole);
 
 const showingNavigationDropdown = ref(false);
 
@@ -48,19 +52,40 @@ const logout = () => {
 
                             <!-- Navigation Links -->
                             <div class="hidden space-x-8 sm:-my-px sm:ms-10 sm:flex">
+                                <NavLink :href="route('products.index')" :active="route().current('products.*')">
+                                    Products
+                                </NavLink>
+                                <NavLink :href="route('shops.index')" :active="route().current('shops.*')">
+                                    Shops
+                                </NavLink>
                                 <NavLink :href="route('dashboard')" :active="route().current('dashboard')">
                                     Dashboard
                                 </NavLink>
-                                <NavLink :href="route('members')" :active="route().current('members')">
-                                    Members
-                                </NavLink>
-                                <NavLink :href="route('advertisement')" :active="route().current('advertisement')">
-                                    Advertisement
+                                <NavLink v-if="$page.props.auth?.user" :href="route('orders.index')" :active="route().current('orders.*')">
+                                    Orders
                                 </NavLink>
                             </div>
                         </div>
 
                         <div class="hidden sm:flex sm:items-center sm:ms-6">
+                            <!-- Cart Badge -->
+                            <Link :href="route('cart.index')" class="relative p-2 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300">
+                                <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 3h1.386c.51 0 .955.343 1.087.835l.383 1.437M7.5 14.25a3 3 0 00-3 3h15.75m-12.75-3h11.218c1.121-2.3 2.1-4.684 2.924-7.138a60.114 60.114 0 00-16.536-1.84M7.5 14.25L5.106 5.272M6 20.25a.75.75 0 11-1.5 0 .75.75 0 011.5 0zm12.75 0a.75.75 0 11-1.5 0 .75.75 0 011.5 0z" />
+                                </svg>
+                                <span v-if="cartCount > 0" class="absolute -top-1 -right-1 inline-flex items-center justify-center px-1.5 py-0.5 text-xs font-bold leading-none text-white bg-red-600 rounded-full">
+                                    {{ cartCount > 99 ? '99+' : cartCount }}
+                                </span>
+                            </Link>
+
+                            <!-- Seller/Admin Panel Link -->
+                            <Link v-if="userRole === 'seller'" :href="route('seller.dashboard')" class="ms-3 text-sm text-indigo-600 dark:text-indigo-400 hover:text-indigo-800 dark:hover:text-indigo-300 font-medium">
+                                Seller Panel
+                            </Link>
+                            <Link v-if="userRole === 'admin'" :href="route('admin.dashboard')" class="ms-3 text-sm text-indigo-600 dark:text-indigo-400 hover:text-indigo-800 dark:hover:text-indigo-300 font-medium">
+                                Admin Panel
+                            </Link>
+
                             <div class="ms-3 relative">
                                 <!-- Teams Dropdown -->
                                 <Dropdown v-if="$page.props.jetstream.hasTeamFeatures" align="right" width="60">
@@ -197,8 +222,29 @@ const logout = () => {
                 <!-- Responsive Navigation Menu -->
                 <div :class="{'block': showingNavigationDropdown, 'hidden': ! showingNavigationDropdown}" class="sm:hidden">
                     <div class="pt-2 pb-3 space-y-1">
+                        <ResponsiveNavLink :href="route('products.index')" :active="route().current('products.*')">
+                            Products
+                        </ResponsiveNavLink>
+                        <ResponsiveNavLink :href="route('shops.index')" :active="route().current('shops.*')">
+                            Shops
+                        </ResponsiveNavLink>
                         <ResponsiveNavLink :href="route('dashboard')" :active="route().current('dashboard')">
                             Dashboard
+                        </ResponsiveNavLink>
+                        <ResponsiveNavLink :href="route('cart.index')" :active="route().current('cart.*')">
+                            Cart
+                            <span v-if="cartCount > 0" class="ms-2 inline-flex items-center justify-center px-1.5 py-0.5 text-xs font-bold leading-none text-white bg-red-600 rounded-full">
+                                {{ cartCount }}
+                            </span>
+                        </ResponsiveNavLink>
+                        <ResponsiveNavLink v-if="$page.props.auth?.user" :href="route('orders.index')" :active="route().current('orders.*')">
+                            Orders
+                        </ResponsiveNavLink>
+                        <ResponsiveNavLink v-if="userRole === 'seller'" :href="route('seller.dashboard')" :active="route().current('seller.*')">
+                            Seller Panel
+                        </ResponsiveNavLink>
+                        <ResponsiveNavLink v-if="userRole === 'admin'" :href="route('admin.dashboard')" :active="route().current('admin.*')">
+                            Admin Panel
                         </ResponsiveNavLink>
                     </div>
 
