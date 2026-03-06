@@ -10,6 +10,7 @@
 2. 記錄完成後的變更
 3. 重要決策記錄到 decisions
 4. 更新 INDEX.md
+5. 更新 PLAN.md
 
 ---
 
