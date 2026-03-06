@@ -1,10 +1,14 @@
 <script setup>
-import { useForm } from '@inertiajs/vue3';
+import { computed } from 'vue';
+import { useForm, usePage } from '@inertiajs/vue3';
 import AppLayout from '@/Layouts/AppLayout.vue';
 import InputLabel from '@/Components/InputLabel.vue';
 import TextInput from '@/Components/TextInput.vue';
 import InputError from '@/Components/InputError.vue';
 import PrimaryButton from '@/Components/PrimaryButton.vue';
+
+const page = usePage();
+const lang = computed(() => page.props.lang || {});
 
 const form = useForm({
     name: '',
@@ -18,15 +22,15 @@ const submit = () => {
 </script>
 
 <template>
-    <AppLayout title="Register as Seller">
+    <AppLayout :title="lang.register?.title">
         <div class="max-w-2xl mx-auto py-12 px-4 sm:px-6 lg:px-8">
             <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-8">
-                <h1 class="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-2">Register as a Seller</h1>
-                <p class="text-gray-600 dark:text-gray-400 mb-8">Set up your shop and start selling.</p>
+                <h1 class="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-2">{{ lang.register?.title }}</h1>
+                <p class="text-gray-600 dark:text-gray-400 mb-8">{{ lang.register?.subtitle }}</p>
 
                 <form @submit.prevent="submit" class="space-y-6">
                     <div>
-                        <InputLabel for="name" value="Shop Name" />
+                        <InputLabel for="name" :value="lang.register?.shop_name" />
                         <TextInput
                             id="name"
                             v-model="form.name"
@@ -38,7 +42,7 @@ const submit = () => {
                     </div>
 
                     <div>
-                        <InputLabel for="slug" value="Shop URL" />
+                        <InputLabel for="slug" :value="lang.register?.shop_url" />
                         <div class="mt-1 flex rounded-md shadow-sm">
                             <span class="inline-flex items-center rounded-l-md border border-r-0 border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 px-3 text-sm text-gray-500 dark:text-gray-400">
                                 /shop/
@@ -55,7 +59,7 @@ const submit = () => {
                     </div>
 
                     <div>
-                        <InputLabel for="description" value="Description" />
+                        <InputLabel for="description" :value="lang.register?.description" />
                         <textarea
                             id="description"
                             v-model="form.description"
@@ -66,7 +70,7 @@ const submit = () => {
                     </div>
 
                     <PrimaryButton :class="{ 'opacity-25': form.processing }" :disabled="form.processing">
-                        Register Shop
+                        {{ lang.register?.submit }}
                     </PrimaryButton>
                 </form>
             </div>

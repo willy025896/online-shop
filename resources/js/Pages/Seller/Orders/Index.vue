@@ -1,5 +1,6 @@
 <script setup>
-import { Link } from '@inertiajs/vue3';
+import { computed } from 'vue';
+import { Link, usePage } from '@inertiajs/vue3';
 import SellerLayout from '@/Layouts/SellerLayout.vue';
 import OrderStatusBadge from '@/Components/OrderStatusBadge.vue';
 import Pagination from '@/Components/Pagination.vue';
@@ -7,24 +8,27 @@ import Pagination from '@/Components/Pagination.vue';
 defineProps({
     orders: Object,
 });
+
+const page = usePage();
+const lang = computed(() => page.props.lang || {});
 </script>
 
 <template>
-    <SellerLayout title="Orders">
+    <SellerLayout :title="lang.orders?.title">
         <template #header>
-            <h2 class="text-xl font-semibold text-gray-800 dark:text-gray-200">Orders</h2>
+            <h2 class="text-xl font-semibold text-gray-800 dark:text-gray-200">{{ lang.orders?.title }}</h2>
         </template>
 
         <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm overflow-hidden">
             <table v-if="orders.data.length" class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
                 <thead class="bg-gray-50 dark:bg-gray-700">
                     <tr>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase">Order</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase">Customer</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase">Items</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase">Total</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase">Status</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase">Date</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase">{{ lang.orders?.order }}</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase">{{ lang.orders?.customer }}</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase">{{ lang.orders?.items }}</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase">{{ lang.orders?.total }}</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase">{{ lang.orders?.status }}</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase">{{ lang.orders?.date }}</th>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-gray-200 dark:divide-gray-700">
@@ -35,7 +39,7 @@ defineProps({
                             </Link>
                         </td>
                         <td class="px-6 py-4 text-sm text-gray-900 dark:text-gray-100">{{ order.user?.name }}</td>
-                        <td class="px-6 py-4 text-sm text-gray-500">{{ order.items?.length }} item(s)</td>
+                        <td class="px-6 py-4 text-sm text-gray-500">{{ lang.orders?.items_count?.replace(':count', order.items?.length) }}</td>
                         <td class="px-6 py-4 text-sm font-medium text-gray-900 dark:text-gray-100">${{ Number(order.total).toFixed(2) }}</td>
                         <td class="px-6 py-4"><OrderStatusBadge :status="order.status" /></td>
                         <td class="px-6 py-4 text-sm text-gray-500">{{ new Date(order.created_at).toLocaleDateString() }}</td>
@@ -43,7 +47,7 @@ defineProps({
                 </tbody>
             </table>
             <div v-else class="px-6 py-12 text-center text-gray-500">
-                No orders yet.
+                {{ lang.orders?.no_orders }}
             </div>
         </div>
 

@@ -1,5 +1,6 @@
 <script setup>
-import { router } from '@inertiajs/vue3';
+import { computed } from 'vue';
+import { router, usePage } from '@inertiajs/vue3';
 import AdminLayout from '@/Layouts/AdminLayout.vue';
 import Pagination from '@/Components/Pagination.vue';
 
@@ -7,25 +8,28 @@ defineProps({
     users: Object,
 });
 
+const page = usePage();
+const lang = computed(() => page.props.lang || {});
+
 const updateRole = (user, role) => {
     router.patch(route('admin.users.role', user.id), { role });
 };
 </script>
 
 <template>
-    <AdminLayout title="Users">
+    <AdminLayout :title="lang.users?.title">
         <template #header>
-            <h2 class="text-xl font-semibold text-gray-800 dark:text-gray-200">Users</h2>
+            <h2 class="text-xl font-semibold text-gray-800 dark:text-gray-200">{{ lang.users?.title }}</h2>
         </template>
 
         <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm overflow-hidden">
             <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
                 <thead class="bg-gray-50 dark:bg-gray-700">
                     <tr>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase">Name</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase">Email</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase">Role</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase">Joined</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase">{{ lang.users?.name }}</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase">{{ lang.users?.email }}</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase">{{ lang.users?.role }}</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase">{{ lang.users?.joined }}</th>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-gray-200 dark:divide-gray-700">
@@ -38,9 +42,9 @@ const updateRole = (user, role) => {
                                 @change="updateRole(user, $event.target.value)"
                                 class="text-sm rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-300"
                             >
-                                <option value="customer">Customer</option>
-                                <option value="seller">Seller</option>
-                                <option value="admin">Admin</option>
+                                <option value="customer">{{ lang.users?.customer }}</option>
+                                <option value="seller">{{ lang.users?.seller }}</option>
+                                <option value="admin">{{ lang.users?.admin }}</option>
                             </select>
                         </td>
                         <td class="px-6 py-4 text-sm text-gray-500">{{ new Date(user.created_at).toLocaleDateString() }}</td>

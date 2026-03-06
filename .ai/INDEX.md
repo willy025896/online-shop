@@ -7,8 +7,8 @@
 
 ## Statistics
 
-- **Total Prompts**: 5
-- **Total Changes**: 8
+- **Total Prompts**: 6
+- **Total Changes**: 9
 - **Total Decisions**: 0
 
 ---
@@ -25,6 +25,7 @@
 | 2026-03-06 | 006 | Feature | Stage 9 導覽列調整（移除 Dashboard、Orders 移入 dropdown、guest Log In） | Completed |
 | 2026-03-06 | 007 | Bug Fix | Admin sidebar 底部 Dropdown 向上展開 | Completed |
 | 2026-03-06 | 008 | Feature | 語系切換功能 (en / zh_TW) | Completed |
+| 2026-03-06 | 009 | Feature | Stage 10 i18n 完成剩餘 11 個頁面 | Completed |
 
 ---
 

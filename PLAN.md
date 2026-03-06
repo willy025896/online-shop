@@ -55,7 +55,7 @@ Frontend (Vue)
 - [x] Orders 移至右側 account dropdown 選單（桌面）及 settings 區塊（手機版）
 - [x] 未登入時購物車旁顯示 Log In 按鈕（桌面 + 手機版）
 
-進行中 (Stage 10 — 頁面內容 i18n)
+已完成 (Stage 10 — 頁面內容 i18n)
 
 - [x] Lang 檔案補完（en + zh_TW）：products, shop, checkout, orders, seller, admin, dashboard + 新建 categories.php
 - [x] Products/Index.vue
@@ -71,14 +71,16 @@ Frontend (Vue)
 - [x] Seller/Dashboard.vue
 - [x] Seller/Products/Index.vue
 - [x] Seller/Products/Create.vue
-- [ ] Seller/Products/Edit.vue
-- [ ] Seller/Orders/Index.vue
-- [ ] Seller/Orders/Show.vue
-- [ ] Seller/Register.vue
-- [ ] Seller/Shop/Edit.vue
-- [ ] Admin/Dashboard.vue
-- [ ] Admin/Users/Index.vue
-- [ ] Admin/Shops/Index.vue
-- [ ] Admin/Categories/Index.vue
-- [ ] Admin/Orders/Index.vue
-- [ ] Admin/Products/Index.vue
+- [x] Seller/Products/Edit.vue
+- [x] Seller/Orders/Index.vue
+- [x] Seller/Orders/Show.vue
+- [x] Seller/Register.vue
+- [x] Seller/Shop/Edit.vue
+- [x] Admin/Dashboard.vue
+- [x] Admin/Users/Index.vue
+- [x] Admin/Shops/Index.vue
+- [x] Admin/Categories/Index.vue
+- [x] Admin/Orders/Index.vue
+- [x] Admin/Products/Index.vue
+
+已完成 (Stage 10 — 全部)

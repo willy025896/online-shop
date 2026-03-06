@@ -1,5 +1,6 @@
 <script setup>
-import { useForm } from '@inertiajs/vue3';
+import { computed } from 'vue';
+import { useForm, usePage } from '@inertiajs/vue3';
 import SellerLayout from '@/Layouts/SellerLayout.vue';
 import InputLabel from '@/Components/InputLabel.vue';
 import TextInput from '@/Components/TextInput.vue';
@@ -9,6 +10,9 @@ import PrimaryButton from '@/Components/PrimaryButton.vue';
 const props = defineProps({
     shop: Object,
 });
+
+const page = usePage();
+const lang = computed(() => page.props.lang || {});
 
 const form = useForm({
     name: props.shop.name,
@@ -25,21 +29,21 @@ const submit = () => {
 </script>
 
 <template>
-    <SellerLayout title="Shop Settings">
+    <SellerLayout :title="lang.shop?.title">
         <template #header>
-            <h2 class="text-xl font-semibold text-gray-800 dark:text-gray-200">Shop Settings</h2>
+            <h2 class="text-xl font-semibold text-gray-800 dark:text-gray-200">{{ lang.shop?.title }}</h2>
         </template>
 
         <div class="max-w-3xl">
             <form @submit.prevent="submit" class="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-6 space-y-6">
                 <!-- Current Logo -->
                 <div v-if="shop.logo_path">
-                    <InputLabel value="Current Logo" />
+                    <InputLabel :value="lang.shop?.current_logo" />
                     <img :src="`/storage/${shop.logo_path}`" class="mt-2 h-20 w-20 rounded-lg object-cover" />
                 </div>
 
                 <div>
-                    <InputLabel for="logo" value="Shop Logo" />
+                    <InputLabel for="logo" :value="lang.shop?.logo" />
                     <input
                         id="logo"
                         type="file"
@@ -51,13 +55,13 @@ const submit = () => {
                 </div>
 
                 <div>
-                    <InputLabel for="name" value="Shop Name" />
+                    <InputLabel for="name" :value="lang.shop?.name" />
                     <TextInput id="name" v-model="form.name" type="text" class="mt-1 block w-full" required />
                     <InputError :message="form.errors.name" class="mt-2" />
                 </div>
 
                 <div>
-                    <InputLabel for="description" value="Description" />
+                    <InputLabel for="description" :value="lang.shop?.description" />
                     <textarea
                         id="description"
                         v-model="form.description"
@@ -69,7 +73,7 @@ const submit = () => {
 
                 <div class="flex justify-end">
                     <PrimaryButton :class="{ 'opacity-25': form.processing }" :disabled="form.processing">
-                        Save Changes
+                        {{ lang.shop?.save }}
                     </PrimaryButton>
                 </div>
             </form>
