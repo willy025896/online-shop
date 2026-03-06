@@ -35,6 +35,13 @@ Frontend (Vue)
 - [x] Pest tests — 6 test files, 41 new tests (Product, Shop, Cart, Seller, Admin, Order)
 - [x] Bug fix: Controller 加入 AuthorizesRequests trait
 - [x] Bug fix: Migration 排序修正 (parent tables before child tables)
+- [x] 測試資料隔離 — 所有測試均透過 Factory 自建資料，不依賴 DatabaseSeeder；RefreshDatabase 在每次測試後 rollback，seeder 資料不影響測試結果
 
-# 待辦事項
+已完成 (Stage 7)
 - [x] 移除 Jetstream 預設 Dashboard 頁面
+
+已完成 (Stage 8)
+
+- [x] 商家頁面產品搜尋 — 輸入關鍵字即時過濾（400ms debounce），query param `search`
+- [x] 商家頁面類別過濾 — 顯示該商家有商品的類別，點選 pill button 過濾，query param `category`
+- [x] 商家頁面排序 — Latest / Price Low-High / Price High-Low / Name A-Z，query param `sort`
