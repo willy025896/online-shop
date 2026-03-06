@@ -25,7 +25,11 @@ Frontend (Vue)
 
 - [x] Lang 檔案 — en + zh_TW 共 20 檔 (products, shop, categories, cart, checkout, orders, seller, admin, dashboard, components)
 
+已完成 (Stage 5)
+
+- [x] Database factories — User, Shop, Category, Product, Order (含 state methods)
+- [x] DatabaseSeeder — admin + customers + sellers + shops + products + categories + orders
+
 尚未完成
 
-- Database seeder + factories
 - Pest tests
