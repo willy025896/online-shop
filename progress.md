@@ -30,6 +30,8 @@ Frontend (Vue)
 - [x] Database factories — User, Shop, Category, Product, Order (含 state methods)
 - [x] DatabaseSeeder — admin + customers + sellers + shops + products + categories + orders
 
-尚未完成
+已完成 (Stage 6)
 
-- Pest tests
+- [x] Pest tests — 6 test files, 41 new tests (Product, Shop, Cart, Seller, Admin, Order)
+- [x] Bug fix: Controller 加入 AuthorizesRequests trait
+- [x] Bug fix: Migration 排序修正 (parent tables before child tables)
