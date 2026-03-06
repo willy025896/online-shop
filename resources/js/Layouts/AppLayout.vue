@@ -17,6 +17,11 @@ const cartCount = computed(() => page.props.cartCount || 0);
 const userRole = computed(() => page.props.userRole);
 
 const showingNavigationDropdown = ref(false);
+const locale = computed(() => page.props.locale);
+
+const switchLocale = (loc) => {
+    router.post(route('locale.store'), { locale: loc }, { preserveScroll: true });
+};
 
 const switchToTeam = (team) => {
     router.put(route('current-team.update'), {
@@ -62,6 +67,19 @@ const logout = () => {
                         </div>
 
                         <div class="hidden sm:flex sm:items-center sm:ms-6">
+                            <!-- Locale switcher -->
+                            <div class="hidden sm:flex items-center gap-1 text-xs font-medium me-2">
+                                <button @click="switchLocale('en')"
+                                    :class="locale === 'en' ? 'text-indigo-600 dark:text-indigo-400 font-bold' : 'text-gray-400 hover:text-gray-600 dark:hover:text-gray-300'">
+                                    EN
+                                </button>
+                                <span class="text-gray-300 dark:text-gray-600">|</span>
+                                <button @click="switchLocale('zh_TW')"
+                                    :class="locale === 'zh_TW' ? 'text-indigo-600 dark:text-indigo-400 font-bold' : 'text-gray-400 hover:text-gray-600 dark:hover:text-gray-300'">
+                                    中文
+                                </button>
+                            </div>
+
                             <!-- Cart Badge -->
                             <Link :href="route('cart.index')" class="relative p-2 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300">
                                 <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
@@ -246,6 +264,18 @@ const logout = () => {
                         <ResponsiveNavLink v-if="userRole === 'admin'" :href="route('admin.dashboard')" :active="route().current('admin.*')">
                             Admin Panel
                         </ResponsiveNavLink>
+                    </div>
+
+                    <!-- Responsive locale switcher -->
+                    <div class="pt-3 pb-2 px-4 border-t border-gray-200 dark:border-gray-600 flex gap-3 text-sm font-medium">
+                        <button @click="switchLocale('en')"
+                            :class="locale === 'en' ? 'text-indigo-600 dark:text-indigo-400 font-bold' : 'text-gray-500 dark:text-gray-400'">
+                            English
+                        </button>
+                        <button @click="switchLocale('zh_TW')"
+                            :class="locale === 'zh_TW' ? 'text-indigo-600 dark:text-indigo-400 font-bold' : 'text-gray-500 dark:text-gray-400'">
+                            中文
+                        </button>
                     </div>
 
                     <!-- Responsive Settings Options -->

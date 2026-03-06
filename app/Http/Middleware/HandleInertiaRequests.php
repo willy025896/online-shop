@@ -23,12 +23,13 @@ class HandleInertiaRequests extends Middleware
         $mainPage = $pathArray[0];
 
         return array_merge(parent::share($request), [
-            'lang' => Lang::get($mainPage),
+            'lang'      => Lang::get($mainPage),
+            'locale'    => app()->getLocale(),
             'cartCount' => fn () => app(CartService::class)->getCartCount(),
-            'userRole' => fn () => $request->user()?->role,
-            'flash' => [
+            'userRole'  => fn () => $request->user()?->role,
+            'flash'     => [
                 'success' => fn () => $request->session()->get('success'),
-                'error' => fn () => $request->session()->get('error'),
+                'error'   => fn () => $request->session()->get('error'),
             ],
         ]);
     }

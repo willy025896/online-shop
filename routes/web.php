@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\CartController;
+use App\Http\Controllers\LocaleController;
 use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\CheckoutController;
 use App\Http\Controllers\OrderController;
@@ -8,6 +9,9 @@ use App\Http\Controllers\ProductController;
 use App\Http\Controllers\ShopController;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
+
+// Locale switcher
+Route::post('/locale', [LocaleController::class, 'store'])->name('locale.store');
 
 // Public routes
 Route::get('/', [ProductController::class, 'index'])->name('home');

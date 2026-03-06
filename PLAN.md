@@ -24,6 +24,7 @@ Frontend (Vue)
 已完成 (Stage 4)
 
 - [x] Lang 檔案 — en + zh_TW 共 20 檔 (products, shop, categories, cart, checkout, orders, seller, admin, dashboard, components)
+- [x] 新增語系切換功能
 
 已完成 (Stage 5)
 
