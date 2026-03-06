@@ -7,8 +7,8 @@
 
 ## Statistics
 
-- **Total Prompts**: 3
-- **Total Changes**: 6
+- **Total Prompts**: 4
+- **Total Changes**: 7
 - **Total Decisions**: 0
 
 ---
@@ -23,6 +23,7 @@
 | 2026-03-06 | 004 | Feature | Pest tests + migration/controller bug fixes | Completed |
 | 2026-03-06 | 005 | Refactor | 移除 Jetstream 預設 Dashboard，改為角色導向儀表板 | Completed |
 | 2026-03-06 | 006 | Feature | Stage 9 導覽列調整（移除 Dashboard、Orders 移入 dropdown、guest Log In） | Completed |
+| 2026-03-06 | 007 | Bug Fix | Admin sidebar 底部 Dropdown 向上展開 | Completed |
 
 ---
 

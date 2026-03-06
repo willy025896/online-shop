@@ -76,7 +76,7 @@ const navItems = [
                             <div class="text-sm text-gray-600 dark:text-gray-400 truncate">
                                 {{ $page.props.auth.user.name }}
                             </div>
-                            <Dropdown align="right" width="48">
+                            <Dropdown align="right" width="48" position="top">
                                 <template #trigger>
                                     <button class="text-gray-400 hover:text-gray-600">
                                         <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">

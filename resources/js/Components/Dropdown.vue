@@ -14,6 +14,10 @@ const props = defineProps({
         type: Array,
         default: () => ['py-1', 'bg-white dark:bg-gray-700'],
     },
+    position: {
+        type: String,
+        default: 'bottom',
+    },
 });
 
 let open = ref(false);
@@ -34,15 +38,25 @@ const widthClass = computed(() => {
 });
 
 const alignmentClasses = computed(() => {
+    const isTop = props.position === 'top';
+
     if (props.align === 'left') {
-        return 'ltr:origin-top-left rtl:origin-top-right start-0';
+        return isTop
+            ? 'ltr:origin-bottom-left rtl:origin-bottom-right start-0'
+            : 'ltr:origin-top-left rtl:origin-top-right start-0';
     }
 
     if (props.align === 'right') {
-        return 'ltr:origin-top-right rtl:origin-top-left end-0';
+        return isTop
+            ? 'ltr:origin-bottom-right rtl:origin-bottom-left end-0'
+            : 'ltr:origin-top-right rtl:origin-top-left end-0';
     }
 
-    return 'origin-top';
+    return isTop ? 'origin-bottom' : 'origin-top';
+});
+
+const positionClass = computed(() => {
+    return props.position === 'top' ? 'bottom-full mb-2' : 'mt-2';
 });
 </script>
 
@@ -65,8 +79,8 @@ const alignmentClasses = computed(() => {
         >
             <div
                 v-show="open"
-                class="absolute z-50 mt-2 rounded-md shadow-lg"
-                :class="[widthClass, alignmentClasses]"
+                class="absolute z-50 rounded-md shadow-lg"
+                :class="[widthClass, alignmentClasses, positionClass]"
                 style="display: none;"
                 @click="open = false"
             >
