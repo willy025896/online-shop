@@ -35,3 +35,6 @@ Frontend (Vue)
 - [x] Pest tests — 6 test files, 41 new tests (Product, Shop, Cart, Seller, Admin, Order)
 - [x] Bug fix: Controller 加入 AuthorizesRequests trait
 - [x] Bug fix: Migration 排序修正 (parent tables before child tables)
+
+# 待辦事項
+- [x] 移除 Jetstream 預設 Dashboard 頁面

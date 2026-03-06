@@ -7,8 +7,8 @@
 
 ## Statistics
 
-- **Total Prompts**: 1
-- **Total Changes**: 4
+- **Total Prompts**: 2
+- **Total Changes**: 5
 - **Total Decisions**: 0
 
 ---
@@ -21,6 +21,7 @@
 | 2026-03-06 | 002 | Feature | Lang files (en + zh_TW) | Completed |
 | 2026-03-06 | 003 | Feature | Database factories + seeder | Completed |
 | 2026-03-06 | 004 | Feature | Pest tests + migration/controller bug fixes | Completed |
+| 2026-03-06 | 005 | Refactor | 移除 Jetstream 預設 Dashboard，改為角色導向儀表板 | Completed |
 
 ---
 
