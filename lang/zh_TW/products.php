@@ -17,4 +17,7 @@ return [
     'quantity' => '數量',
     'in_stock' => '有庫存',
     'shop' => '店鋪',
+    'sold_by' => '販售者：:name',
+    'in_stock_count' => '剩餘 :count 件',
+    'related_products' => '相關商品',
 ];

@@ -5,4 +5,5 @@ return [
     'become_seller' => 'Become a Seller',
     'seller_panel' => 'Seller Panel',
     'admin_panel' => 'Admin Panel',
+    'orders' => 'My Orders',
 ];

@@ -1,4 +1,6 @@
 <script setup>
+import { computed } from 'vue';
+import { usePage } from '@inertiajs/vue3';
 import AppLayout from '@/Layouts/AppLayout.vue';
 import ProductCard from '@/Components/ProductCard.vue';
 import Pagination from '@/Components/Pagination.vue';
@@ -11,6 +13,9 @@ const props = defineProps({
     categories: Array,
     filters: Object,
 });
+
+const page = usePage();
+const lang = computed(() => page.props.lang || {});
 
 const search = ref(props.filters.search);
 const selectedCategory = ref(props.filters.category);
@@ -62,7 +67,7 @@ watch([selectedCategory, sort], applyFilters);
                     <input
                         v-model="search"
                         type="text"
-                        placeholder="Search products..."
+                        :placeholder="lang.search"
                         class="flex-1 rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 focus:border-indigo-500 focus:ring-indigo-500 text-sm"
                     />
                 </div>
@@ -70,10 +75,10 @@ watch([selectedCategory, sort], applyFilters);
                     v-model="sort"
                     class="rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 focus:border-indigo-500 focus:ring-indigo-500 text-sm"
                 >
-                    <option value="latest">Latest</option>
-                    <option value="price_asc">Price: Low to High</option>
-                    <option value="price_desc">Price: High to Low</option>
-                    <option value="name">Name A–Z</option>
+                    <option value="latest">{{ lang.sort?.latest }}</option>
+                    <option value="price_asc">{{ lang.sort?.price_asc }}</option>
+                    <option value="price_desc">{{ lang.sort?.price_desc }}</option>
+                    <option value="name">{{ lang.sort?.name }}</option>
                 </select>
             </div>
 
@@ -88,7 +93,7 @@ watch([selectedCategory, sort], applyFilters);
                             : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
                     ]"
                 >
-                    All
+                    {{ lang.all }}
                 </button>
                 <button
                     v-for="cat in categories"
@@ -110,7 +115,7 @@ watch([selectedCategory, sort], applyFilters);
                 <ProductCard v-for="product in products.data" :key="product.id" :product="product" />
             </div>
             <div v-else class="text-center py-12 text-gray-500">
-                No products found.
+                {{ lang.no_products }}
             </div>
 
             <div class="mt-8">

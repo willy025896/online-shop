@@ -1,5 +1,6 @@
 <script setup>
-import { Link } from '@inertiajs/vue3';
+import { computed } from 'vue';
+import { Link, usePage } from '@inertiajs/vue3';
 import AppLayout from '@/Layouts/AppLayout.vue';
 import ProductCard from '@/Components/ProductCard.vue';
 import Pagination from '@/Components/Pagination.vue';
@@ -8,6 +9,9 @@ defineProps({
     category: Object,
     products: Object,
 });
+
+const page = usePage();
+const lang = computed(() => page.props.lang || {});
 </script>
 
 <template>
@@ -15,7 +19,7 @@ defineProps({
         <div class="max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
             <div class="mb-6">
                 <div class="flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400 mb-2">
-                    <Link :href="route('products.index')" class="hover:text-indigo-600">Products</Link>
+                    <Link :href="route('products.index')" class="hover:text-indigo-600">{{ lang.products }}</Link>
                     <span>/</span>
                     <Link v-if="category.parent" :href="route('categories.show', category.parent.slug)" class="hover:text-indigo-600">
                         {{ category.parent.name }}
@@ -41,7 +45,7 @@ defineProps({
                 <ProductCard v-for="product in products.data" :key="product.id" :product="product" />
             </div>
             <div v-else class="text-center py-12 text-gray-500">
-                No products in this category.
+                {{ lang.no_products }}
             </div>
 
             <div class="mt-8">

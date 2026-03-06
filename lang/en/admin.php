@@ -52,6 +52,8 @@ return [
         'cancel' => 'Cancel',
         'delete_confirm' => 'Delete ":name"?',
         'no_categories' => 'No categories yet.',
+        'action_edit' => 'Edit',
+        'action_delete' => 'Delete',
     ],
 
     'orders' => [

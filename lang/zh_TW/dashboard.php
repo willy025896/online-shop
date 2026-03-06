@@ -5,4 +5,5 @@ return [
     'become_seller' => '成為賣家',
     'seller_panel' => '賣家中心',
     'admin_panel' => '管理後台',
+    'orders' => '我的訂單',
 ];

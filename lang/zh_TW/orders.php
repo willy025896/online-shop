@@ -21,6 +21,11 @@ return [
     'pay_now' => '立即付款',
     'cancel_order' => '取消訂單',
     'notes' => '備註',
+    'shop' => '店鋪',
+    'shipping_to' => '收件資訊',
+    'free' => '免運費',
+    'cancel_confirm' => '確定要取消此訂單嗎？',
+    'pay_now_simulated' => '立即付款（模擬）',
     'statuses' => [
         'pending' => '待付款',
         'paid' => '已付款',

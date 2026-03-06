@@ -42,6 +42,9 @@ return [
         'draft' => 'Draft',
         'active' => 'Active',
         'inactive' => 'Inactive',
+        'update' => 'Update Product',
+        'action_edit' => 'Edit',
+        'action_delete' => 'Delete',
     ],
 
     'orders' => [
@@ -69,6 +72,15 @@ return [
         'mark_as' => 'Mark as :status',
         'notes' => 'Customer Notes',
         'no_orders' => 'No orders yet.',
+        'items_count' => ':count item(s)',
+        'statuses' => [
+            'pending' => 'Pending',
+            'paid' => 'Paid',
+            'processing' => 'Processing',
+            'shipped' => 'Shipped',
+            'completed' => 'Completed',
+            'cancelled' => 'Cancelled',
+        ],
     ],
 
     'shop' => [

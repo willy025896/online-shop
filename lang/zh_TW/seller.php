@@ -42,6 +42,9 @@ return [
         'draft' => '草稿',
         'active' => '上架',
         'inactive' => '下架',
+        'update' => '更新商品',
+        'action_edit' => '編輯',
+        'action_delete' => '刪除',
     ],
 
     'orders' => [
@@ -69,6 +72,15 @@ return [
         'mark_as' => '標記為:status',
         'notes' => '顧客備註',
         'no_orders' => '尚無訂單。',
+        'items_count' => ':count 件商品',
+        'statuses' => [
+            'pending' => '待付款',
+            'paid' => '已付款',
+            'processing' => '處理中',
+            'shipped' => '已出貨',
+            'completed' => '已完成',
+            'cancelled' => '已取消',
+        ],
     ],
 
     'shop' => [

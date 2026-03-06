@@ -17,4 +17,7 @@ return [
     'quantity' => 'Quantity',
     'in_stock' => 'In Stock',
     'shop' => 'Shop',
+    'sold_by' => 'Sold by :name',
+    'in_stock_count' => ':count available',
+    'related_products' => 'Related Products',
 ];

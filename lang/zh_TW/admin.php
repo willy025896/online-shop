@@ -52,6 +52,8 @@ return [
         'cancel' => '取消',
         'delete_confirm' => '刪除「:name」？',
         'no_categories' => '尚無分類。',
+        'action_edit' => '編輯',
+        'action_delete' => '刪除',
     ],
 
     'orders' => [

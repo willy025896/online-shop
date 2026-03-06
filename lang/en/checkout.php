@@ -16,4 +16,7 @@ return [
     'total' => 'Total',
     'place_order' => 'Place Order',
     'items' => ':count item(s)',
+    'processing' => 'Processing...',
+    'order_items' => 'Order Items',
+    'notes_optional' => 'Notes (optional)',
 ];

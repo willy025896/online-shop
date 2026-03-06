@@ -1,17 +1,21 @@
 <script setup>
-import { Link } from '@inertiajs/vue3';
+import { computed } from 'vue';
+import { Link, usePage } from '@inertiajs/vue3';
 import AppLayout from '@/Layouts/AppLayout.vue';
 import Pagination from '@/Components/Pagination.vue';
 
 defineProps({
     shops: Object,
 });
+
+const page = usePage();
+const lang = computed(() => page.props.lang || {});
 </script>
 
 <template>
-    <AppLayout title="Shops">
+    <AppLayout :title="lang.title">
         <div class="max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
-            <h1 class="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-6">All Shops</h1>
+            <h1 class="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-6">{{ lang.all_shops }}</h1>
 
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 <Link
@@ -29,7 +33,7 @@ defineProps({
                         </div>
                         <div>
                             <h3 class="font-medium text-gray-900 dark:text-gray-100">{{ shop.name }}</h3>
-                            <p class="text-sm text-gray-500 dark:text-gray-400">{{ shop.products_count }} products</p>
+                            <p class="text-sm text-gray-500 dark:text-gray-400">{{ shop.products_count }} {{ lang.products }}</p>
                         </div>
                     </div>
                     <p v-if="shop.description" class="mt-3 text-sm text-gray-600 dark:text-gray-400 line-clamp-2">{{ shop.description }}</p>

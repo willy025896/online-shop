@@ -21,6 +21,11 @@ return [
     'pay_now' => 'Pay Now',
     'cancel_order' => 'Cancel Order',
     'notes' => 'Notes',
+    'shop' => 'Shop',
+    'shipping_to' => 'Shipping To',
+    'free' => 'Free',
+    'cancel_confirm' => 'Are you sure you want to cancel this order?',
+    'pay_now_simulated' => 'Pay Now (Simulated)',
     'statuses' => [
         'pending' => 'Pending',
         'paid' => 'Paid',

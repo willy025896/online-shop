@@ -1,6 +1,5 @@
 <?php
 return [
-    'title' => 'Categories',
+    'products' => 'Products',
     'no_products' => 'No products in this category.',
-    'subcategories' => 'Subcategories',
 ];

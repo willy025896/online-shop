@@ -59,7 +59,7 @@ const user = computed(() => page.props.auth?.user);
                     <Link :href="route('orders.index')"
                           class="block bg-white dark:bg-gray-800 shadow-xl sm:rounded-lg p-6 hover:bg-gray-50 dark:hover:bg-gray-700 transition">
                         <h3 class="text-lg font-semibold text-gray-700 dark:text-gray-300">
-                            Orders
+                            {{ lang.orders }}
                         </h3>
                     </Link>
                 </div>

@@ -16,4 +16,7 @@ return [
     'total' => '合計',
     'place_order' => '送出訂單',
     'items' => ':count 件商品',
+    'processing' => '處理中...',
+    'order_items' => '訂單商品',
+    'notes_optional' => '備註（選填）',
 ];

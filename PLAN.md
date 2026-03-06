@@ -25,6 +25,8 @@ Frontend (Vue)
 
 - [x] Lang 檔案 — en + zh_TW 共 20 檔 (products, shop, categories, cart, checkout, orders, seller, admin, dashboard, components)
 - [x] 新增語系切換功能
+- [x] 補完選單、導覽列以及後台的功能按鈕等中文與英文語系資料
+- [x] 後台也新增語系切換功能
 
 已完成 (Stage 5)
 
@@ -52,3 +54,31 @@ Frontend (Vue)
 - [x] 移除導覽列 Dashboard 連結（桌面 + 手機版）
 - [x] Orders 移至右側 account dropdown 選單（桌面）及 settings 區塊（手機版）
 - [x] 未登入時購物車旁顯示 Log In 按鈕（桌面 + 手機版）
+
+進行中 (Stage 10 — 頁面內容 i18n)
+
+- [x] Lang 檔案補完（en + zh_TW）：products, shop, checkout, orders, seller, admin, dashboard + 新建 categories.php
+- [x] Products/Index.vue
+- [x] Products/Show.vue
+- [x] Shop/Index.vue
+- [x] Shop/Show.vue
+- [x] Cart/Index.vue
+- [x] Checkout/Index.vue
+- [x] Orders/Index.vue
+- [x] Orders/Show.vue
+- [x] Categories/Show.vue
+- [x] Dashboard.vue
+- [x] Seller/Dashboard.vue
+- [x] Seller/Products/Index.vue
+- [x] Seller/Products/Create.vue
+- [ ] Seller/Products/Edit.vue
+- [ ] Seller/Orders/Index.vue
+- [ ] Seller/Orders/Show.vue
+- [ ] Seller/Register.vue
+- [ ] Seller/Shop/Edit.vue
+- [ ] Admin/Dashboard.vue
+- [ ] Admin/Users/Index.vue
+- [ ] Admin/Shops/Index.vue
+- [ ] Admin/Categories/Index.vue
+- [ ] Admin/Orders/Index.vue
+- [ ] Admin/Products/Index.vue

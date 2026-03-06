@@ -1,5 +1,6 @@
 <script setup>
-import { router } from '@inertiajs/vue3';
+import { computed } from 'vue';
+import { router, usePage } from '@inertiajs/vue3';
 import AppLayout from '@/Layouts/AppLayout.vue';
 import OrderStatusBadge from '@/Components/OrderStatusBadge.vue';
 
@@ -7,12 +8,15 @@ defineProps({
     order: Object,
 });
 
+const page = usePage();
+const lang = computed(() => page.props.lang || {});
+
 const pay = (orderId) => {
     router.post(route('orders.pay', orderId));
 };
 
 const cancel = (orderId) => {
-    if (confirm('Are you sure you want to cancel this order?')) {
+    if (confirm(lang.value.cancel_confirm || 'Are you sure you want to cancel this order?')) {
         router.post(route('orders.cancel', orderId));
     }
 };
@@ -32,11 +36,11 @@ const cancel = (orderId) => {
 
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
                     <div>
-                        <h3 class="text-sm font-medium text-gray-500 mb-2">Shop</h3>
+                        <h3 class="text-sm font-medium text-gray-500 mb-2">{{ lang.shop }}</h3>
                         <p class="text-gray-900 dark:text-gray-100">{{ order.shop?.name }}</p>
                     </div>
                     <div>
-                        <h3 class="text-sm font-medium text-gray-500 mb-2">Shipping To</h3>
+                        <h3 class="text-sm font-medium text-gray-500 mb-2">{{ lang.shipping_to }}</h3>
                         <p class="text-gray-900 dark:text-gray-100">{{ order.shipping_name }}</p>
                         <p class="text-sm text-gray-600 dark:text-gray-400">{{ order.shipping_phone }}</p>
                         <p class="text-sm text-gray-600 dark:text-gray-400">{{ order.shipping_address }}</p>
@@ -44,7 +48,7 @@ const cancel = (orderId) => {
                 </div>
 
                 <div class="border-t border-gray-200 dark:border-gray-700 pt-6">
-                    <h3 class="text-sm font-medium text-gray-500 mb-4">Order Items</h3>
+                    <h3 class="text-sm font-medium text-gray-500 mb-4">{{ lang.order_items }}</h3>
                     <div class="divide-y divide-gray-200 dark:divide-gray-700">
                         <div v-for="item in order.items" :key="item.id" class="flex items-center gap-4 py-3">
                             <div class="h-16 w-16 bg-gray-200 dark:bg-gray-700 rounded-md overflow-hidden flex-shrink-0">
@@ -61,21 +65,21 @@ const cancel = (orderId) => {
 
                 <div class="border-t border-gray-200 dark:border-gray-700 pt-4 mt-4">
                     <div class="flex justify-between text-sm text-gray-600 dark:text-gray-400 mb-1">
-                        <span>Subtotal</span>
+                        <span>{{ lang.subtotal }}</span>
                         <span>${{ Number(order.subtotal).toFixed(2) }}</span>
                     </div>
                     <div class="flex justify-between text-sm text-gray-600 dark:text-gray-400 mb-2">
-                        <span>Shipping</span>
-                        <span>{{ order.shipping_fee > 0 ? `$${Number(order.shipping_fee).toFixed(2)}` : 'Free' }}</span>
+                        <span>{{ lang.shipping }}</span>
+                        <span>{{ order.shipping_fee > 0 ? `$${Number(order.shipping_fee).toFixed(2)}` : lang.free }}</span>
                     </div>
                     <div class="flex justify-between text-lg font-bold text-gray-900 dark:text-gray-100">
-                        <span>Total</span>
+                        <span>{{ lang.total }}</span>
                         <span>${{ Number(order.total).toFixed(2) }}</span>
                     </div>
                 </div>
 
                 <div v-if="order.notes" class="border-t border-gray-200 dark:border-gray-700 pt-4 mt-4">
-                    <h3 class="text-sm font-medium text-gray-500 mb-1">Notes</h3>
+                    <h3 class="text-sm font-medium text-gray-500 mb-1">{{ lang.notes }}</h3>
                     <p class="text-sm text-gray-600 dark:text-gray-400">{{ order.notes }}</p>
                 </div>
 
@@ -85,14 +89,14 @@ const cancel = (orderId) => {
                         @click="pay(order.id)"
                         class="bg-green-600 text-white py-2 px-6 rounded-lg hover:bg-green-700 transition text-sm font-medium"
                     >
-                        Pay Now (Simulated)
+                        {{ lang.pay_now_simulated }}
                     </button>
                     <button
                         v-if="order.status === 'pending'"
                         @click="cancel(order.id)"
                         class="bg-red-600 text-white py-2 px-6 rounded-lg hover:bg-red-700 transition text-sm font-medium"
                     >
-                        Cancel Order
+                        {{ lang.cancel_order }}
                     </button>
                 </div>
             </div>
