@@ -1,0 +1,19 @@
+<?php
+return [
+    'title' => 'Checkout',
+    'shipping_info' => 'Shipping Information',
+    'name' => 'Full Name',
+    'phone' => 'Phone Number',
+    'address' => 'Shipping Address',
+    'payment_method' => 'Payment Method',
+    'credit_card' => 'Credit Card',
+    'bank_transfer' => 'Bank Transfer',
+    'notes' => 'Order Notes',
+    'notes_placeholder' => 'Special instructions for your order...',
+    'order_summary' => 'Order Summary',
+    'subtotal' => 'Subtotal',
+    'shipping' => 'Shipping',
+    'total' => 'Total',
+    'place_order' => 'Place Order',
+    'items' => ':count item(s)',
+];

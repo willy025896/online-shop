@@ -21,8 +21,11 @@ Frontend (Vue)
 - [x] Seller 頁面 — Dashboard, Register, Products (Index/Create/Edit), Orders (Index/Show), Shop Edit
 - [x] Admin 頁面 — Dashboard, Users, Shops, Categories (CRUD), Orders, Products
 
+已完成 (Stage 4)
+
+- [x] Lang 檔案 — en + zh_TW 共 20 檔 (products, shop, categories, cart, checkout, orders, seller, admin, dashboard, components)
+
 尚未完成
 
-- Lang 檔案 (en + zh_TW)
 - Database seeder + factories
 - Pest tests

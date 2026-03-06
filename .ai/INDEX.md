@@ -8,7 +8,7 @@
 ## Statistics
 
 - **Total Prompts**: 1
-- **Total Changes**: 1
+- **Total Changes**: 2
 - **Total Decisions**: 0
 
 ---
@@ -17,7 +17,8 @@
 
 | Date | ID | Type | Description | Status |
 |------|-----|------|-------------|--------|
-| 2026-03-06 | 001 | Feature | AppLayout + Seller/Admin pages | In Progress |
+| 2026-03-06 | 001 | Feature | AppLayout + Seller/Admin pages | Completed |
+| 2026-03-06 | 002 | Feature | Lang files (en + zh_TW) | Completed |
 
 ---
 
