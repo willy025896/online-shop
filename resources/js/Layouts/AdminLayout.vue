@@ -1,6 +1,6 @@
 <script setup>
-import { ref } from 'vue';
-import { Head, Link, router } from '@inertiajs/vue3';
+import { ref, computed } from 'vue';
+import { Head, Link, router, usePage } from '@inertiajs/vue3';
 import ApplicationMark from '@/Components/ApplicationMark.vue';
 import Dropdown from '@/Components/Dropdown.vue';
 import DropdownLink from '@/Components/DropdownLink.vue';
@@ -9,20 +9,28 @@ defineProps({
     title: String,
 });
 
+const page = usePage();
+const nav = computed(() => page.props.nav || {});
+const locale = computed(() => page.props.locale);
+
 const sidebarOpen = ref(false);
 
 const logout = () => {
     router.post(route('logout'));
 };
 
-const navItems = [
-    { name: 'Dashboard', route: 'admin.dashboard', icon: 'M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-4 0a1 1 0 01-1-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 01-1 1' },
-    { name: 'Users', route: 'admin.users.index', icon: 'M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z' },
-    { name: 'Shops', route: 'admin.shops.index', icon: 'M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4' },
-    { name: 'Categories', route: 'admin.categories.index', icon: 'M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z' },
-    { name: 'Products', route: 'admin.products.index', icon: 'M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4' },
-    { name: 'Orders', route: 'admin.orders.index', icon: 'M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2' },
-];
+const switchLocale = (loc) => {
+    router.post(route('locale.store'), { locale: loc }, { preserveScroll: true });
+};
+
+const navItems = computed(() => [
+    { key: 'admin_dashboard',  route: 'admin.dashboard',        icon: 'M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-4 0a1 1 0 01-1-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 01-1 1' },
+    { key: 'admin_users',      route: 'admin.users.index',      icon: 'M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z' },
+    { key: 'admin_shops',      route: 'admin.shops.index',      icon: 'M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4' },
+    { key: 'admin_categories', route: 'admin.categories.index', icon: 'M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z' },
+    { key: 'admin_products',   route: 'admin.products.index',   icon: 'M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4' },
+    { key: 'admin_orders',     route: 'admin.orders.index',     icon: 'M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2' },
+]);
 </script>
 
 <template>
@@ -49,7 +57,7 @@ const navItems = [
                         <Link :href="route('admin.dashboard')">
                             <ApplicationMark class="block h-9 w-auto" />
                         </Link>
-                        <span class="ml-3 font-semibold text-gray-700 dark:text-gray-200">Admin Panel</span>
+                        <span class="ml-3 font-semibold text-gray-700 dark:text-gray-200">{{ nav.admin_title }}</span>
                     </div>
 
                     <nav class="mt-4 px-3 space-y-1">
@@ -67,11 +75,23 @@ const navItems = [
                             <svg class="mr-3 h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
                                 <path stroke-linecap="round" stroke-linejoin="round" :d="item.icon" />
                             </svg>
-                            {{ item.name }}
+                            {{ nav[item.key] }}
                         </Link>
                     </nav>
 
                     <div class="absolute bottom-0 w-64 p-4 border-t border-gray-200 dark:border-gray-700">
+                        <!-- Locale switcher -->
+                        <div class="flex gap-2 text-xs font-medium mb-3">
+                            <button @click="switchLocale('en')"
+                                :class="locale === 'en' ? 'text-indigo-600 dark:text-indigo-400 font-bold' : 'text-gray-400 hover:text-gray-600 dark:hover:text-gray-300'">
+                                EN
+                            </button>
+                            <span class="text-gray-300 dark:text-gray-600">|</span>
+                            <button @click="switchLocale('zh_TW')"
+                                :class="locale === 'zh_TW' ? 'text-indigo-600 dark:text-indigo-400 font-bold' : 'text-gray-400 hover:text-gray-600 dark:hover:text-gray-300'">
+                                中文
+                            </button>
+                        </div>
                         <div class="flex items-center justify-between">
                             <div class="text-sm text-gray-600 dark:text-gray-400 truncate">
                                 {{ $page.props.auth.user.name }}
@@ -85,10 +105,10 @@ const navItems = [
                                     </button>
                                 </template>
                                 <template #content>
-                                    <DropdownLink :href="route('home')">Back to Store</DropdownLink>
-                                    <DropdownLink :href="route('profile.show')">Profile</DropdownLink>
+                                    <DropdownLink :href="route('home')">{{ nav.back_to_store }}</DropdownLink>
+                                    <DropdownLink :href="route('profile.show')">{{ nav.profile }}</DropdownLink>
                                     <form @submit.prevent="logout">
-                                        <DropdownLink as="button">Log Out</DropdownLink>
+                                        <DropdownLink as="button">{{ nav.log_out }}</DropdownLink>
                                     </form>
                                 </template>
                             </Dropdown>

@@ -24,6 +24,7 @@ class HandleInertiaRequests extends Middleware
 
         return array_merge(parent::share($request), [
             'lang'      => Lang::get($mainPage),
+            'nav'       => Lang::get('navigation'),
             'locale'    => app()->getLocale(),
             'cartCount' => fn () => app(CartService::class)->getCartCount(),
             'userRole'  => fn () => $request->user()?->role,

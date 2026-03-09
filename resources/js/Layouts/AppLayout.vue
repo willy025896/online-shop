@@ -15,6 +15,7 @@ defineProps({
 const page = usePage();
 const cartCount = computed(() => page.props.cartCount || 0);
 const userRole = computed(() => page.props.userRole);
+const nav = computed(() => page.props.nav || {});
 
 const showingNavigationDropdown = ref(false);
 const locale = computed(() => page.props.locale);
@@ -58,10 +59,10 @@ const logout = () => {
                             <!-- Navigation Links -->
                             <div class="hidden space-x-8 sm:-my-px sm:ms-10 sm:flex">
                                 <NavLink :href="route('products.index')" :active="route().current('products.*')">
-                                    Products
+                                    {{ nav.products }}
                                 </NavLink>
                                 <NavLink :href="route('shops.index')" :active="route().current('shops.*')">
-                                    Shops
+                                    {{ nav.shops }}
                                 </NavLink>
                             </div>
                         </div>
@@ -92,15 +93,15 @@ const logout = () => {
 
                             <!-- Login button (guest only) -->
                             <Link v-if="!$page.props.auth?.user" :href="route('login')" class="ms-3 text-sm font-medium text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300">
-                                Log In
+                                {{ nav.log_in }}
                             </Link>
 
                             <!-- Seller/Admin Panel Link -->
                             <Link v-if="userRole === 'seller'" :href="route('seller.dashboard')" class="ms-3 text-sm text-indigo-600 dark:text-indigo-400 hover:text-indigo-800 dark:hover:text-indigo-300 font-medium">
-                                Seller Panel
+                                {{ nav.seller_panel }}
                             </Link>
                             <Link v-if="userRole === 'admin'" :href="route('admin.dashboard')" class="ms-3 text-sm text-indigo-600 dark:text-indigo-400 hover:text-indigo-800 dark:hover:text-indigo-300 font-medium">
-                                Admin Panel
+                                {{ nav.admin_panel }}
                             </Link>
 
                             <div class="ms-3 relative">
@@ -183,19 +184,19 @@ const logout = () => {
                                     <template #content>
                                         <!-- Account Management -->
                                         <div class="block px-4 py-2 text-xs text-gray-400">
-                                            Manage Account
+                                            {{ nav.manage_account }}
                                         </div>
 
                                         <DropdownLink :href="route('profile.show')">
-                                            Profile
+                                            {{ nav.profile }}
                                         </DropdownLink>
 
                                         <DropdownLink :href="route('orders.index')">
-                                            Orders
+                                            {{ nav.orders }}
                                         </DropdownLink>
 
                                         <DropdownLink v-if="$page.props.jetstream.hasApiFeatures" :href="route('api-tokens.index')">
-                                            API Tokens
+                                            {{ nav.api_tokens }}
                                         </DropdownLink>
 
                                         <div class="border-t border-gray-200 dark:border-gray-600" />
@@ -203,7 +204,7 @@ const logout = () => {
                                         <!-- Authentication -->
                                         <form @submit.prevent="logout">
                                             <DropdownLink as="button">
-                                                Log Out
+                                                {{ nav.log_out }}
                                             </DropdownLink>
                                         </form>
                                     </template>
@@ -244,25 +245,25 @@ const logout = () => {
                 <div :class="{'block': showingNavigationDropdown, 'hidden': ! showingNavigationDropdown}" class="sm:hidden">
                     <div class="pt-2 pb-3 space-y-1">
                         <ResponsiveNavLink :href="route('products.index')" :active="route().current('products.*')">
-                            Products
+                            {{ nav.products }}
                         </ResponsiveNavLink>
                         <ResponsiveNavLink :href="route('shops.index')" :active="route().current('shops.*')">
-                            Shops
+                            {{ nav.shops }}
                         </ResponsiveNavLink>
                         <ResponsiveNavLink :href="route('cart.index')" :active="route().current('cart.*')">
-                            Cart
+                            {{ nav.cart }}
                             <span v-if="cartCount > 0" class="ms-2 inline-flex items-center justify-center px-1.5 py-0.5 text-xs font-bold leading-none text-white bg-red-600 rounded-full">
                                 {{ cartCount }}
                             </span>
                         </ResponsiveNavLink>
                         <ResponsiveNavLink v-if="!$page.props.auth?.user" :href="route('login')">
-                            Log In
+                            {{ nav.log_in }}
                         </ResponsiveNavLink>
                         <ResponsiveNavLink v-if="userRole === 'seller'" :href="route('seller.dashboard')" :active="route().current('seller.*')">
-                            Seller Panel
+                            {{ nav.seller_panel }}
                         </ResponsiveNavLink>
                         <ResponsiveNavLink v-if="userRole === 'admin'" :href="route('admin.dashboard')" :active="route().current('admin.*')">
-                            Admin Panel
+                            {{ nav.admin_panel }}
                         </ResponsiveNavLink>
                     </div>
 
@@ -297,21 +298,21 @@ const logout = () => {
 
                         <div class="mt-3 space-y-1">
                             <ResponsiveNavLink :href="route('profile.show')" :active="route().current('profile.show')">
-                                Profile
+                                {{ nav.profile }}
                             </ResponsiveNavLink>
 
                             <ResponsiveNavLink :href="route('orders.index')" :active="route().current('orders.*')">
-                                Orders
+                                {{ nav.orders }}
                             </ResponsiveNavLink>
 
                             <ResponsiveNavLink v-if="$page.props.jetstream.hasApiFeatures" :href="route('api-tokens.index')" :active="route().current('api-tokens.index')">
-                                API Tokens
+                                {{ nav.api_tokens }}
                             </ResponsiveNavLink>
 
                             <!-- Authentication -->
                             <form method="POST" @submit.prevent="logout">
                                 <ResponsiveNavLink as="button">
-                                    Log Out
+                                    {{ nav.log_out }}
                                 </ResponsiveNavLink>
                             </form>
 
