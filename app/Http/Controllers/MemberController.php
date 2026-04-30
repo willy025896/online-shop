@@ -10,16 +10,14 @@ class MemberController extends Controller
     {
         $user = auth()->user();
 
-        $orders = $user->orders()->with('shop', 'items')->latest();
-
         $stats = [
-            'total'      => (clone $orders)->count(),
-            'pending'    => (clone $orders)->where('status', 'pending')->count(),
-            'in_progress'=> (clone $orders)->whereIn('status', ['processing', 'shipped'])->count(),
-            'completed'  => (clone $orders)->where('status', 'completed')->count(),
+            'total'       => $user->orders()->count(),
+            'pending'     => $user->orders()->where('status', 'pending')->count(),
+            'in_progress' => $user->orders()->whereIn('status', ['paid', 'processing', 'shipped'])->count(),
+            'completed'   => $user->orders()->where('status', 'completed')->count(),
         ];
 
-        $recentOrders = (clone $orders)->limit(5)->get();
+        $recentOrders = $user->orders()->with('shop', 'items')->latest()->limit(5)->get();
 
         return Inertia::render('Members', [
             'stats'        => $stats,
