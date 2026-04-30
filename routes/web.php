@@ -37,10 +37,6 @@ Route::middleware([
         return Inertia::render('Dashboard');
     })->name('dashboard');
 
-    Route::get('/advertisement', function () {
-        return Inertia::render('Advertisement');
-    })->name('advertisement');
-
     Route::get('/members', function () {
         return Inertia::render('Members');
     })->name('members');
