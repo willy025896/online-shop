@@ -34,7 +34,7 @@ class CartController extends Controller
 
         $product = Product::active()->findOrFail($request->product_id);
 
-        if (!$product->inStock()) {
+        if (! $product->inStock()) {
             return back()->withErrors(['product' => 'This product is out of stock.']);
         }
 

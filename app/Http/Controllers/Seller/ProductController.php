@@ -44,7 +44,7 @@ class ProductController extends Controller
         ]);
 
         $validated['shop_id'] = auth()->user()->shop->id;
-        $validated['slug'] = Str::slug($validated['name']) . '-' . Str::random(6);
+        $validated['slug'] = Str::slug($validated['name']).'-'.Str::random(6);
 
         $product = Product::create($validated);
 

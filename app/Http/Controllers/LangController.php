@@ -1,4 +1,5 @@
 <?php
+
 /**
  * 語言
  */
@@ -12,10 +13,9 @@ class LangController extends Controller
     /**
      * 取得前端套件語言包
      *
-     * @param String $name 套件名稱
-     * @return String
+     * @param  string  $name  套件名稱
      */
-    public function getComponents(String $name): String
+    public function getComponents(string $name): string
     {
         $lang = Lang::get('components');
 

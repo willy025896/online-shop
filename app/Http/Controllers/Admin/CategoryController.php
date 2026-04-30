@@ -37,7 +37,7 @@ class CategoryController extends Controller
         $validated['slug'] = Str::slug($validated['name']);
 
         if (Category::where('slug', $validated['slug'])->exists()) {
-            $validated['slug'] .= '-' . Str::random(4);
+            $validated['slug'] .= '-'.Str::random(4);
         }
 
         Category::create($validated);

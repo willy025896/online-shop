@@ -20,6 +20,10 @@ const cancel = (orderId) => {
         router.post(route('orders.cancel', orderId));
     }
 };
+
+const askSeller = (orderId) => {
+    router.post(route('orders.conversation', orderId));
+};
 </script>
 
 <template>
@@ -97,6 +101,12 @@ const cancel = (orderId) => {
                         class="bg-red-600 text-white py-2 px-6 rounded-lg hover:bg-red-700 transition text-sm font-medium"
                     >
                         {{ lang.cancel_order }}
+                    </button>
+                    <button
+                        @click="askSeller(order.id)"
+                        class="bg-indigo-600 text-white py-2 px-6 rounded-lg hover:bg-indigo-700 transition text-sm font-medium ms-auto"
+                    >
+                        {{ lang.ask_seller || 'Ask Seller' }}
                     </button>
                 </div>
             </div>

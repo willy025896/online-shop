@@ -14,6 +14,7 @@ defineProps({
 
 const page = usePage();
 const cartCount = computed(() => page.props.cartCount || 0);
+const unreadMessageCount = computed(() => page.props.unreadMessageCount || 0);
 const userRole = computed(() => page.props.userRole);
 const nav = computed(() => page.props.nav || {});
 
@@ -94,6 +95,16 @@ const logout = () => {
                                 </svg>
                                 <span v-if="cartCount > 0" class="absolute -top-1 -right-1 inline-flex items-center justify-center px-1.5 py-0.5 text-xs font-bold leading-none text-white bg-red-600 rounded-full">
                                     {{ cartCount > 99 ? '99+' : cartCount }}
+                                </span>
+                            </Link>
+
+                            <!-- Messages Badge (auth only) -->
+                            <Link v-if="$page.props.auth?.user" :href="route('messages.index')" class="relative p-2 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300">
+                                <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M8.625 12a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm0 0H8.25m4.125 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm0 0H12m4.125 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm0 0h-.375M21 12c0 4.556-4.03 8.25-9 8.25a9.764 9.764 0 0 1-2.555-.337A5.972 5.972 0 0 1 5.41 20.97a5.969 5.969 0 0 1-.474-.065 4.48 4.48 0 0 0 .978-2.025c.09-.457-.133-.901-.467-1.226C3.93 16.178 3 14.189 3 12c0-4.556 4.03-8.25 9-8.25s9 3.694 9 8.25Z" />
+                                </svg>
+                                <span v-if="unreadMessageCount > 0" class="absolute -top-1 -right-1 inline-flex items-center justify-center px-1.5 py-0.5 text-xs font-bold leading-none text-white bg-red-600 rounded-full">
+                                    {{ unreadMessageCount > 99 ? '99+' : unreadMessageCount }}
                                 </span>
                             </Link>
 

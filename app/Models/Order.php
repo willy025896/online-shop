@@ -53,6 +53,11 @@ class Order extends Model
         return $this->hasMany(OrderItem::class);
     }
 
+    public function conversation(): \Illuminate\Database\Eloquent\Relations\HasOne
+    {
+        return $this->hasOne(Conversation::class);
+    }
+
     public function isPaid(): bool
     {
         return $this->paid_at !== null;

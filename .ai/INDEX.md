@@ -17,6 +17,7 @@
 
 | Date | ID | Type | Description | Status |
 |------|-----|------|-------------|--------|
+| 2026-04-30 | 011 | Feature | 買家賣家即時通訊（Reverb + WebSocket） | Completed |
 | 2026-04-30 | 010 | Feature | 會員中心頁面（/members） | Completed |
 | 2026-03-06 | 001 | Feature | AppLayout + Seller/Admin pages | Completed |
 | 2026-03-06 | 002 | Feature | Lang files (en + zh_TW) | Completed |
@@ -42,6 +43,7 @@
 
 ### 2026-04-30
 - 會員中心：MemberController + Members.vue + lang files (en + zh_TW)
+- 即時通訊：Reverb + Echo + Conversation/Message + 5 個 Vue 元件 + 10 個 Pest 測試
 
 ### 2026-03-06
 - Stage 1-3: AppLayout 更新 + Seller 頁面 (7) + Admin 頁面 (6)

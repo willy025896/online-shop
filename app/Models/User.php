@@ -62,6 +62,16 @@ class User extends Authenticatable
         return $this->hasOne(Cart::class);
     }
 
+    public function buyerConversations(): HasMany
+    {
+        return $this->hasMany(Conversation::class, 'buyer_id');
+    }
+
+    public function sellerConversations(): HasMany
+    {
+        return $this->hasMany(Conversation::class, 'seller_user_id');
+    }
+
     public function isAdmin(): bool
     {
         return $this->role === 'admin';

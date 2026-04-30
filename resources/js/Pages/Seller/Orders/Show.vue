@@ -15,6 +15,10 @@ const updateStatus = (status) => {
     router.patch(route('seller.orders.status', props.order.id), { status });
 };
 
+const replyCustomer = () => {
+    router.post(route('orders.conversation', props.order.id));
+};
+
 const nextStatuses = {
     paid: 'processing',
     processing: 'shipped',
@@ -27,7 +31,15 @@ const nextStatuses = {
         <template #header>
             <div class="flex justify-between items-center">
                 <h2 class="text-xl font-semibold text-gray-800 dark:text-gray-200">{{ order.order_number }}</h2>
-                <OrderStatusBadge :status="order.status" />
+                <div class="flex items-center gap-3">
+                    <OrderStatusBadge :status="order.status" />
+                    <button
+                        @click="replyCustomer"
+                        class="inline-flex items-center px-3 py-1.5 bg-indigo-600 text-white text-xs font-medium rounded-md hover:bg-indigo-700 transition"
+                    >
+                        {{ lang.orders?.reply_customer || 'Reply Customer' }}
+                    </button>
+                </div>
             </div>
         </template>
 

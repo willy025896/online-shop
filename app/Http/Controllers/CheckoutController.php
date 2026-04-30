@@ -18,7 +18,7 @@ class CheckoutController extends Controller
     {
         $cart = $this->cartService->getCartWithItems();
 
-        if (!$cart || $cart->items->isEmpty()) {
+        if (! $cart || $cart->items->isEmpty()) {
             return redirect()->route('cart.index')
                 ->with('error', 'Your cart is empty.');
         }
@@ -44,7 +44,7 @@ class CheckoutController extends Controller
 
         $cart = $this->cartService->getCartWithItems();
 
-        if (!$cart || $cart->items->isEmpty()) {
+        if (! $cart || $cart->items->isEmpty()) {
             return redirect()->route('cart.index')
                 ->with('error', 'Your cart is empty.');
         }
@@ -53,7 +53,7 @@ class CheckoutController extends Controller
             $orders = $this->orderService->createOrdersFromCart($cart, $validated);
 
             return redirect()->route('orders.index')
-                ->with('success', count($orders) . ' order(s) created successfully.');
+                ->with('success', count($orders).' order(s) created successfully.');
         } catch (\Exception $e) {
             return back()->withErrors(['checkout' => $e->getMessage()]);
         }

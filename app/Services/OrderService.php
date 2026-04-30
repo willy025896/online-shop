@@ -22,7 +22,7 @@ class OrderService
                 $subtotal = $items->sum(fn ($item) => $item->quantity * $item->unit_price);
 
                 $order = Order::create([
-                    'order_number' => 'ORD-' . strtoupper(Str::random(8)) . '-' . time(),
+                    'order_number' => 'ORD-'.strtoupper(Str::random(8)).'-'.time(),
                     'user_id' => $cart->user_id,
                     'shop_id' => $shopId,
                     'status' => 'pending',

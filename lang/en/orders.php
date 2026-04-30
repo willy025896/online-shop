@@ -26,6 +26,8 @@ return [
     'free' => 'Free',
     'cancel_confirm' => 'Are you sure you want to cancel this order?',
     'pay_now_simulated' => 'Pay Now (Simulated)',
+    'ask_seller' => 'Ask Seller',
+    'reply_customer' => 'Reply Customer',
     'statuses' => [
         'pending' => 'Pending',
         'paid' => 'Paid',

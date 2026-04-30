@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\CartController;
+use App\Http\Controllers\ConversationController;
 use App\Http\Controllers\LocaleController;
 use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\CheckoutController;
@@ -48,6 +49,13 @@ Route::middleware([
     Route::get('/orders/{order}', [OrderController::class, 'show'])->name('orders.show');
     Route::post('/orders/{order}/pay', [OrderController::class, 'simulatePayment'])->name('orders.pay');
     Route::post('/orders/{order}/cancel', [OrderController::class, 'cancel'])->name('orders.cancel');
+    Route::post('/orders/{order}/conversation', [OrderController::class, 'startConversation'])->name('orders.conversation');
+
+    // Conversations
+    Route::get('/messages', [ConversationController::class, 'index'])->name('messages.index');
+    Route::get('/messages/{conversation}', [ConversationController::class, 'show'])->name('messages.show');
+    Route::post('/messages/{conversation}', [ConversationController::class, 'storeMessage'])->name('messages.store');
+    Route::post('/messages/{conversation}/read', [ConversationController::class, 'markAsRead'])->name('messages.read');
 
     // Seller registration (any authenticated user)
     Route::get('/seller/register', [App\Http\Controllers\Seller\RegisterController::class, 'create'])->name('seller.register');

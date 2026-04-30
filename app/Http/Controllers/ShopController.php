@@ -30,7 +30,7 @@ class ShopController extends Controller
             ->with('primaryImage');
 
         if ($request->filled('search')) {
-            $query->where('name', 'like', '%' . $request->search . '%');
+            $query->where('name', 'like', '%'.$request->search.'%');
         }
 
         if ($request->filled('category')) {
@@ -38,26 +38,25 @@ class ShopController extends Controller
         }
 
         match ($request->get('sort', 'latest')) {
-            'price_asc'  => $query->orderBy('price', 'asc'),
+            'price_asc' => $query->orderBy('price', 'asc'),
             'price_desc' => $query->orderBy('price', 'desc'),
-            'name'       => $query->orderBy('name', 'asc'),
-            default      => $query->latest(),
+            'name' => $query->orderBy('name', 'asc'),
+            default => $query->latest(),
         };
 
         $products = $query->paginate(12)->withQueryString();
 
-        $categories = Category::whereHas('products', fn ($q) =>
-            $q->where('shop_id', $shop->id)->where('status', 'active')
+        $categories = Category::whereHas('products', fn ($q) => $q->where('shop_id', $shop->id)->where('status', 'active')
         )->active()->orderBy('sort_order')->get(['id', 'name']);
 
         return Inertia::render('Shop/Show', [
-            'shop'       => $shop,
-            'products'   => $products,
+            'shop' => $shop,
+            'products' => $products,
             'categories' => $categories,
-            'filters'    => [
-                'search'   => $request->get('search', ''),
+            'filters' => [
+                'search' => $request->get('search', ''),
                 'category' => $request->get('category', ''),
-                'sort'     => $request->get('sort', 'latest'),
+                'sort' => $request->get('sort', 'latest'),
             ],
         ]);
     }

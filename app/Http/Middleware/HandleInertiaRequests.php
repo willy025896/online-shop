@@ -2,6 +2,7 @@
 
 namespace App\Http\Middleware;
 
+use App\Models\Message;
 use App\Services\CartService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Lang;
@@ -23,15 +24,33 @@ class HandleInertiaRequests extends Middleware
         $mainPage = $pathArray[0];
 
         return array_merge(parent::share($request), [
-            'lang'      => Lang::get($mainPage),
-            'nav'       => Lang::get('navigation'),
-            'locale'    => app()->getLocale(),
+            'lang' => Lang::get($mainPage),
+            'nav' => Lang::get('navigation'),
+            'locale' => app()->getLocale(),
             'cartCount' => fn () => app(CartService::class)->getCartCount(),
-            'userRole'  => fn () => $request->user()?->role,
-            'flash'     => [
+            'unreadMessageCount' => fn () => $this->getUnreadMessageCount($request),
+            'userRole' => fn () => $request->user()?->role,
+            'flash' => [
                 'success' => fn () => $request->session()->get('success'),
-                'error'   => fn () => $request->session()->get('error'),
+                'error' => fn () => $request->session()->get('error'),
             ],
         ]);
+    }
+
+    private function getUnreadMessageCount(Request $request): int
+    {
+        $user = $request->user();
+        if (! $user) {
+            return 0;
+        }
+
+        return Message::query()
+            ->whereNull('read_at')
+            ->where('sender_id', '!=', $user->id)
+            ->whereHas('conversation', function ($q) use ($user) {
+                $q->where('buyer_id', $user->id)
+                    ->orWhere('seller_user_id', $user->id);
+            })
+            ->count();
     }
 }

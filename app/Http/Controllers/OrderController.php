@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Order;
+use App\Services\ConversationService;
 use App\Services\OrderService;
 use App\Services\PaymentService;
 use Inertia\Inertia;
@@ -12,6 +13,7 @@ class OrderController extends Controller
     public function __construct(
         private OrderService $orderService,
         private PaymentService $paymentService,
+        private ConversationService $conversationService,
     ) {}
 
     public function index()
@@ -57,5 +59,14 @@ class OrderController extends Controller
         $this->orderService->cancelOrder($order);
 
         return back()->with('success', 'Order cancelled.');
+    }
+
+    public function startConversation(Order $order)
+    {
+        $this->authorize('view', $order);
+
+        $conversation = $this->conversationService->getOrCreateForOrder($order);
+
+        return redirect()->route('messages.show', $conversation);
     }
 }

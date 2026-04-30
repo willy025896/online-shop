@@ -16,6 +16,7 @@ class CartService
         }
 
         $sessionId = session()->getId();
+
         return Cart::firstOrCreate(['session_id' => $sessionId]);
     }
 
@@ -47,6 +48,7 @@ class CartService
     public function updateItem(CartItem $item, int $quantity): CartItem
     {
         $item->update(['quantity' => $quantity]);
+
         return $item->fresh();
     }
 
@@ -59,6 +61,7 @@ class CartService
     {
         $cart = $this->getOrCreateCart();
         $cart->load('items.product.images', 'items.product.shop');
+
         return $cart;
     }
 
@@ -75,14 +78,14 @@ class CartService
 
     public function mergeGuestCart(): void
     {
-        if (!Auth::check()) {
+        if (! Auth::check()) {
             return;
         }
 
         $sessionId = session()->getId();
         $guestCart = Cart::where('session_id', $sessionId)->first();
 
-        if (!$guestCart) {
+        if (! $guestCart) {
             return;
         }
 

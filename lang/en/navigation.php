@@ -5,6 +5,7 @@ return [
     'products'       => 'Products',
     'shops'          => 'Shops',
     'member_center'  => 'Member Center',
+    'messages'       => 'Messages',
     'orders'         => 'Orders',
     'cart'           => 'Cart',
     'log_in'         => 'Log In',
