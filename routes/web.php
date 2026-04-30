@@ -37,9 +37,7 @@ Route::middleware([
         return Inertia::render('Dashboard');
     })->name('dashboard');
 
-    Route::get('/members', function () {
-        return Inertia::render('Members');
-    })->name('members');
+    Route::get('/members', [App\Http\Controllers\MemberController::class, 'index'])->name('members');
 
     // Checkout
     Route::get('/checkout', [CheckoutController::class, 'index'])->name('checkout.index');

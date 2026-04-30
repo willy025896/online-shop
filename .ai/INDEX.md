@@ -1,14 +1,14 @@
 # AI Operations Index
 
 **Project**: Online Shop
-**Last Updated**: 2026-03-06
+**Last Updated**: 2026-04-30
 
 ---
 
 ## Statistics
 
-- **Total Prompts**: 6
-- **Total Changes**: 9
+- **Total Prompts**: 7
+- **Total Changes**: 10
 - **Total Decisions**: 0
 
 ---
@@ -17,6 +17,7 @@
 
 | Date | ID | Type | Description | Status |
 |------|-----|------|-------------|--------|
+| 2026-04-30 | 010 | Feature | 會員中心頁面（/members） | Completed |
 | 2026-03-06 | 001 | Feature | AppLayout + Seller/Admin pages | Completed |
 | 2026-03-06 | 002 | Feature | Lang files (en + zh_TW) | Completed |
 | 2026-03-06 | 003 | Feature | Database factories + seeder | Completed |
@@ -38,6 +39,9 @@
 ---
 
 ## Daily Summary
+
+### 2026-04-30
+- 會員中心：MemberController + Members.vue + lang files (en + zh_TW)
 
 ### 2026-03-06
 - Stage 1-3: AppLayout 更新 + Seller 頁面 (7) + Admin 頁面 (6)
