@@ -4,6 +4,7 @@ return [
     // Top navbar
     'products'       => '商品',
     'shops'          => '商家',
+    'member_center'  => '會員中心',
     'orders'         => '訂單',
     'cart'           => '購物車',
     'log_in'         => '登入',

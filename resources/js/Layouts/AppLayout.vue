@@ -19,6 +19,9 @@ const nav = computed(() => page.props.nav || {});
 
 const showingNavigationDropdown = ref(false);
 const locale = computed(() => page.props.locale);
+const membersHref = computed(() =>
+    page.props.auth?.user ? route('members') : route('login')
+);
 
 const switchLocale = (loc) => {
     router.post(route('locale.store'), { locale: loc }, { preserveScroll: true });
@@ -63,6 +66,9 @@ const logout = () => {
                                 </NavLink>
                                 <NavLink :href="route('shops.index')" :active="route().current('shops.*')">
                                     {{ nav.shops }}
+                                </NavLink>
+                                <NavLink :href="membersHref" :active="route().current('members')">
+                                    {{ nav.member_center }}
                                 </NavLink>
                             </div>
                         </div>
@@ -249,6 +255,9 @@ const logout = () => {
                         </ResponsiveNavLink>
                         <ResponsiveNavLink :href="route('shops.index')" :active="route().current('shops.*')">
                             {{ nav.shops }}
+                        </ResponsiveNavLink>
+                        <ResponsiveNavLink :href="membersHref" :active="route().current('members')">
+                            {{ nav.member_center }}
                         </ResponsiveNavLink>
                         <ResponsiveNavLink :href="route('cart.index')" :active="route().current('cart.*')">
                             {{ nav.cart }}
