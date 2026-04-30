@@ -60,9 +60,11 @@ Pages are served by Laravel controllers/routes that call `Inertia::render('PageN
 
 **Shared data** is injected into every page via `HandleInertiaRequests::share()` (`app/Http/Middleware/HandleInertiaRequests.php`). Currently shared data includes:
 - `lang` — i18n strings for the current page (auto-loaded based on URL path)
+- `nav` — navigation strings from `lang/{locale}/navigation.php` (always loaded)
+- `locale` — current locale string (`en` or `zh_TW`)
 - `cartCount` — current user's cart item count
-- `userRole` — current user's role (buyer/seller/admin)
-- `flash` — flash messages
+- `userRole` — current user's role (`customer` / `seller` / `admin`)
+- `flash` — flash messages (`success`, `error`)
 
 ### i18n (Localization) System
 
@@ -77,6 +79,14 @@ Language files exist for `en` and `zh_TW`. When adding a new page, create matchi
 ### Authentication & Jetstream
 
 Auth is handled entirely by Jetstream/Fortify. The middleware group `['auth:sanctum', config('jetstream.auth_session'), 'verified']` protects authenticated routes. The `User` model and Jetstream actions live in `app/Actions/`.
+
+Role-based access uses the `EnsureRole` middleware registered as `role` — e.g. `'role:seller,admin'`. User roles are stored as a string column on `users` and can be `customer`, `seller`, or `admin`.
+
+Locale is set per-request by `SetLocale` middleware (`app/Http/Middleware/SetLocale.php`), which reads `session('locale')` and calls `App::setLocale()`. The `LocaleController` stores the chosen locale into the session.
+
+### Cart
+
+Cart supports both guests and authenticated users. `CartService` identifies a cart by `user_id` for authenticated users and `session_id` for guests. On login, `CartService::mergeGuestCart()` merges the guest cart into the user's cart. Policies in `app/Policies/` govern seller/admin resource authorization.
 
 ### Adding New Pages
 
@@ -94,22 +104,22 @@ online-shop/
 ├── .ai/                        # AI 操作記錄 (prompts, changes, decisions, sessions)
 ├── app/
 │   ├── Http/
-│   │   ├── Controllers/        # 7 public + 6 seller + 6 admin = 19 controllers
-│   │   ├── Middleware/         # EnsureRole, HandleInertiaRequests
-│   │   └── Policies/           # 3 policies (Product, Order, Shop)
+│   │   ├── Controllers/        # 8 public + 1 locale + 6 seller + 6 admin = 21 controllers
+│   │   └── Middleware/         # EnsureRole, SetLocale, HandleInertiaRequests
+│   ├── Policies/               # 3 policies (Product, Order, Shop)
 │   ├── Models/                 # 8 models + User
 │   └── Services/               # 3 services (Cart, Order, Payment)
 ├── database/
 │   └── migrations/             # 14 migrations
 ├── lang/
-│   ├── en/                     # English translations (11 files)
-│   └── zh_TW/                  # Traditional Chinese translations (11 files)
+│   ├── en/                     # English translations
+│   └── zh_TW/                  # Traditional Chinese translations
 ├── resources/js/
-│   ├── Components/             # 9 custom + Jetstream defaults
-│   ├── Layouts/                # 3 layouts (App, Seller, Admin)
-│   └── Pages/                  # 9 public pages + Auth; Seller/Admin dirs exist but pages TODO
+│   ├── Components/             # Custom + Jetstream defaults
+│   ├── Layouts/                # AppLayout, SellerLayout, AdminLayout
+│   └── Pages/                  # Public, Auth, Seller/, Admin/ pages
 ├── routes/
 │   └── web.php                 # All routes (4 groups: public, auth, seller, admin)
-└── tests/                      # TODO: Add Pest tests
+└── tests/Feature/              # Pest tests: Product, Shop, Cart, Seller, Admin, Order
 ```
 
