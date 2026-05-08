@@ -9,6 +9,7 @@
 
 | Date | ID | Type | Description | Status |
 |------|----|------|-------------|--------|
+| 2026-05-09 | 002 | Feature | 購物車依商家分組，支援勾選結帳 | Done |
 | 2026-05-09 | 001 | Refactor | 重構 AI 操作記錄資料夾結構（.ai → .claude） | Done |
 | 2026-05-08 | 001 | Feature | 新增 npm run dev:full (concurrently) | Done |
 | 2026-04-30 | 002 | Feature | 買家賣家即時通訊（Reverb + WebSocket） | Done |
