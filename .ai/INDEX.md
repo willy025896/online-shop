@@ -7,8 +7,8 @@
 
 ## Statistics
 
-- **Total Prompts**: 7
-- **Total Changes**: 10
+- **Total Prompts**: 8
+- **Total Changes**: 11
 - **Total Decisions**: 0
 
 ---
@@ -17,6 +17,7 @@
 
 | Date | ID | Type | Description | Status |
 |------|-----|------|-------------|--------|
+| 2026-05-08 | 012 | Feature | 新增 npm run dev:full (concurrently) | Completed |
 | 2026-04-30 | 011 | Feature | 買家賣家即時通訊（Reverb + WebSocket） | Completed |
 | 2026-04-30 | 010 | Feature | 會員中心頁面（/members） | Completed |
 | 2026-03-06 | 001 | Feature | AppLayout + Seller/Admin pages | Completed |
