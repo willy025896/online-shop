@@ -11,4 +11,6 @@ return [
     'remove' => 'Remove',
     'checkout' => 'Proceed to Checkout',
     'update' => 'Update',
+    'select_all' => 'Select All',
+    'checkout_selected' => 'Checkout Selected (:count)',
 ];

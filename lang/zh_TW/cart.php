@@ -11,4 +11,6 @@ return [
     'remove' => '移除',
     'checkout' => '前往結帳',
     'update' => '更新',
+    'select_all' => '全選',
+    'checkout_selected' => '結帳選取商品（:count）',
 ];

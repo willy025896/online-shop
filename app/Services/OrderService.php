@@ -10,14 +10,18 @@ use Illuminate\Support\Str;
 
 class OrderService
 {
-    public function createOrdersFromCart(Cart $cart, array $shippingData): array
+    public function createOrdersFromCart(Cart $cart, array $shippingData, array $itemIds = []): array
     {
         $cart->load('items.product.shop', 'items.product.primaryImage');
 
-        $itemsByShop = $cart->items->groupBy('product.shop_id');
+        $items = $itemIds
+            ? $cart->items->whereIn('id', $itemIds)
+            : $cart->items;
+
+        $itemsByShop = $items->groupBy('product.shop_id');
         $orders = [];
 
-        DB::transaction(function () use ($itemsByShop, $shippingData, $cart, &$orders) {
+        DB::transaction(function () use ($itemsByShop, $shippingData, $cart, $itemIds, &$orders) {
             foreach ($itemsByShop as $shopId => $items) {
                 $subtotal = $items->sum(fn ($item) => $item->quantity * $item->unit_price);
 
@@ -58,7 +62,11 @@ class OrderService
                 $orders[] = $order;
             }
 
-            $cart->items()->delete();
+            if ($itemIds) {
+                $cart->items()->whereIn('id', $itemIds)->delete();
+            } else {
+                $cart->items()->delete();
+            }
         });
 
         return $orders;

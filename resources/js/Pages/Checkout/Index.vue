@@ -8,6 +8,7 @@ const props = defineProps({
     cart: Object,
     totals: Object,
     user: Object,
+    itemIds: Array,
 });
 
 const page = usePage();
@@ -19,6 +20,7 @@ const form = useForm({
     shipping_address: '',
     payment_method: 'simulated',
     notes: '',
+    item_ids: props.itemIds ?? [],
 });
 
 const submit = () => {

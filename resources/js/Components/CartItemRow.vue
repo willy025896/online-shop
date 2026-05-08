@@ -1,10 +1,13 @@
 <script setup>
-import { router } from '@inertiajs/vue3';
 import { ref } from 'vue';
+import { router } from '@inertiajs/vue3';
 
 const props = defineProps({
     item: Object,
+    checked: Boolean,
 });
+
+const emit = defineEmits(['toggle']);
 
 const quantity = ref(props.item.quantity);
 
@@ -23,6 +26,12 @@ const removeItem = () => {
 
 <template>
     <div class="flex items-center gap-4 py-4 border-b border-gray-200 dark:border-gray-700">
+        <input
+            type="checkbox"
+            :checked="checked"
+            @change="emit('toggle', item.id)"
+            class="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500 cursor-pointer flex-shrink-0"
+        />
         <div class="h-20 w-20 flex-shrink-0 bg-gray-200 dark:bg-gray-700 rounded-md overflow-hidden">
             <img
                 v-if="item.product?.primary_image"
@@ -32,7 +41,6 @@ const removeItem = () => {
         </div>
         <div class="flex-1 min-w-0">
             <h4 class="text-sm font-medium text-gray-900 dark:text-gray-100 truncate">{{ item.product?.name }}</h4>
-            <p class="text-xs text-gray-500 dark:text-gray-400">{{ item.product?.shop?.name }}</p>
             <p class="text-sm font-semibold text-red-600 mt-1">${{ item.unit_price }}</p>
         </div>
         <div class="flex items-center gap-2">
