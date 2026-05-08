@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## AI 操作規範
 
-**每次執行任何開發任務前，必須先讀取 `.ai/AI-SKILLS.md`**，並遵守其中定義的記錄規範（prompt、change、INDEX.md、PLAN.md）。
+**每次執行任何開發任務前，必須先讀取 `.claude/AI-SKILLS.md`**，並遵守其中定義的記錄規範（tasks、decisions、INDEX.md）。
 
 ---
 
@@ -101,7 +101,7 @@ Cart supports both guests and authenticated users. `CartService` identifies a ca
 
 ```
 online-shop/
-├── .ai/                        # AI 操作記錄 (prompts, changes, decisions, sessions)
+├── .claude/                    # AI 操作記錄 (tasks, decisions, index)
 ├── app/
 │   ├── Http/
 │   │   ├── Controllers/        # 8 public + 1 locale + 6 seller + 6 admin = 21 controllers
