@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Seller;
 
 use App\Http\Controllers\Controller;
+use App\Models\Order;
 use Inertia\Inertia;
 
 class DashboardController extends Controller
@@ -14,8 +15,8 @@ class DashboardController extends Controller
         $stats = [
             'total_products' => $shop->products()->count(),
             'active_products' => $shop->products()->active()->count(),
-            'pending_orders' => $shop->orders()->where('status', 'pending')->count(),
-            'total_revenue' => $shop->orders()->where('status', '!=', 'cancelled')->sum('total'),
+            'pending_orders' => $shop->orders()->where('status', Order::STATUS_PENDING)->count(),
+            'total_revenue' => $shop->orders()->where('status', '!=', Order::STATUS_CANCELLED)->sum('total'),
         ];
 
         $recentOrders = $shop->orders()

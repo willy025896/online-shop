@@ -20,7 +20,7 @@ class DashboardController extends Controller
                 'pending_shops' => Shop::where('status', 'pending')->count(),
                 'total_products' => Product::count(),
                 'total_orders' => Order::count(),
-                'total_revenue' => Order::where('status', '!=', 'cancelled')->sum('total'),
+                'total_revenue' => Order::where('status', '!=', Order::STATUS_CANCELLED)->sum('total'),
             ],
         ]);
     }

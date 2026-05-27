@@ -1,24 +1,49 @@
 <script setup>
-import { computed } from 'vue';
-import { router, usePage } from '@inertiajs/vue3';
+import { computed, ref } from 'vue';
+import { router, useForm, usePage } from '@inertiajs/vue3';
 import AppLayout from '@/Layouts/AppLayout.vue';
 import OrderStatusBadge from '@/Components/OrderStatusBadge.vue';
+import DialogModal from '@/Components/DialogModal.vue';
+import DangerButton from '@/Components/DangerButton.vue';
+import SecondaryButton from '@/Components/SecondaryButton.vue';
+import InputError from '@/Components/InputError.vue';
 
-defineProps({
+const props = defineProps({
     order: Object,
 });
 
 const page = usePage();
 const lang = computed(() => page.props.lang || {});
 
-const pay = (orderId) => {
-    router.post(route('orders.pay', orderId));
+const cancellation = computed(() => props.order.latest_cancellation);
+const isCancelled = computed(() => props.order.status === 'cancelled');
+const requestPending = computed(() => cancellation.value?.status === 'requested');
+const wasRejected = computed(() => cancellation.value?.status === 'rejected');
+const canDirect = computed(() => ['pending', 'paid'].includes(props.order.status));
+const canRequest = computed(() =>
+    ['processing', 'shipped'].includes(props.order.status) && !requestPending.value && !wasRejected.value
+);
+const showCancelButton = computed(() => !isCancelled.value && (canDirect.value || canRequest.value));
+const cancelLabel = computed(() => (canDirect.value ? lang.value.cancel_order : lang.value.request_cancellation));
+
+const showCancelModal = ref(false);
+const cancelForm = useForm({ reason: '' });
+
+const openCancelModal = () => {
+    cancelForm.reset();
+    cancelForm.clearErrors();
+    showCancelModal.value = true;
 };
 
-const cancel = (orderId) => {
-    if (confirm(lang.value.cancel_confirm || 'Are you sure you want to cancel this order?')) {
-        router.post(route('orders.cancel', orderId));
-    }
+const submitCancel = () => {
+    cancelForm.post(route('orders.cancel', props.order.id), {
+        preserveScroll: true,
+        onSuccess: () => { showCancelModal.value = false; },
+    });
+};
+
+const pay = (orderId) => {
+    router.post(route('orders.pay', orderId));
 };
 
 const askSeller = (orderId) => {
@@ -36,6 +61,34 @@ const askSeller = (orderId) => {
                         <p class="text-sm text-gray-500">{{ new Date(order.created_at).toLocaleString() }}</p>
                     </div>
                     <OrderStatusBadge :status="order.status" />
+                </div>
+
+                <!-- Cancellation status -->
+                <div
+                    v-if="cancellation"
+                    class="mb-6 rounded-lg p-4 border"
+                    :class="{
+                        'bg-yellow-50 border-yellow-200 dark:bg-yellow-900/20 dark:border-yellow-800': requestPending,
+                        'bg-red-50 border-red-200 dark:bg-red-900/20 dark:border-red-800': isCancelled,
+                        'bg-gray-50 border-gray-200 dark:bg-gray-700/40 dark:border-gray-600': wasRejected,
+                    }"
+                >
+                    <p v-if="requestPending" class="text-sm font-medium text-yellow-800 dark:text-yellow-300">
+                        {{ lang.awaiting_seller_review }}
+                    </p>
+                    <p v-else-if="isCancelled" class="text-sm font-medium text-red-800 dark:text-red-300">
+                        {{ cancellation.initiated_by === 'seller' ? lang.cancelled_by_seller : lang.cancelled_by_buyer }}
+                    </p>
+                    <p v-else-if="wasRejected" class="text-sm font-medium text-gray-800 dark:text-gray-200">
+                        {{ lang.cancellation_rejected }}
+                    </p>
+
+                    <p class="mt-1 text-sm text-gray-600 dark:text-gray-400">
+                        <span class="font-medium">{{ lang.cancel_reason }}:</span> {{ cancellation.reason }}
+                    </p>
+                    <p v-if="wasRejected && cancellation.response_reason" class="mt-1 text-sm text-gray-600 dark:text-gray-400">
+                        <span class="font-medium">{{ lang.reject_reason }}:</span> {{ cancellation.response_reason }}
+                    </p>
                 </div>
 
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
@@ -96,11 +149,11 @@ const askSeller = (orderId) => {
                         {{ lang.pay_now_simulated }}
                     </button>
                     <button
-                        v-if="order.status === 'pending'"
-                        @click="cancel(order.id)"
+                        v-if="showCancelButton"
+                        @click="openCancelModal"
                         class="bg-red-600 text-white py-2 px-6 rounded-lg hover:bg-red-700 transition text-sm font-medium"
                     >
-                        {{ lang.cancel_order }}
+                        {{ cancelLabel }}
                     </button>
                     <button
                         @click="askSeller(order.id)"
@@ -111,5 +164,30 @@ const askSeller = (orderId) => {
                 </div>
             </div>
         </div>
+
+        <DialogModal :show="showCancelModal" @close="showCancelModal = false">
+            <template #title>{{ cancelLabel }}</template>
+            <template #content>
+                <p class="mb-3">{{ lang.cancel_reason_prompt }}</p>
+                <textarea
+                    v-model="cancelForm.reason"
+                    rows="4"
+                    class="w-full rounded-md border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-sm"
+                    :placeholder="lang.cancel_reason_placeholder"
+                ></textarea>
+                <InputError :message="cancelForm.errors.reason" class="mt-2" />
+            </template>
+            <template #footer>
+                <SecondaryButton @click="showCancelModal = false">{{ lang.cancel }}</SecondaryButton>
+                <DangerButton
+                    class="ms-3"
+                    :class="{ 'opacity-25': cancelForm.processing }"
+                    :disabled="cancelForm.processing"
+                    @click="submitCancel"
+                >
+                    {{ lang.confirm }}
+                </DangerButton>
+            </template>
+        </DialogModal>
     </AppLayout>
 </template>

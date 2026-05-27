@@ -3,6 +3,7 @@
 use App\Models\Cart;
 use App\Models\CartItem;
 use App\Models\Order;
+use App\Models\OrderCancellation;
 use App\Models\Product;
 use App\Models\Shop;
 use App\Models\User;
@@ -141,4 +142,122 @@ test('checkout with multiple shops creates one order per shop', function () {
 
     expect(Order::where('user_id', $user->id)->count())->toBe(2);
     expect($cart->fresh()->items()->count())->toBe(0);
+});
+
+// ---- Order cancellation ----
+
+function makeOrderWithItem(array $orderState = [], int $stock = 5, int $qty = 2): array
+{
+    $seller = User::factory()->seller()->create();
+    $shop = Shop::factory()->create(['user_id' => $seller->id]);
+    $product = Product::factory()->create(['shop_id' => $shop->id, 'stock' => $stock]);
+    $buyer = User::factory()->create();
+    $order = Order::factory()->create(array_merge(['user_id' => $buyer->id, 'shop_id' => $shop->id], $orderState));
+    $order->items()->create([
+        'product_id' => $product->id,
+        'product_name' => $product->name,
+        'quantity' => $qty,
+        'unit_price' => 100,
+        'subtotal' => 100 * $qty,
+    ]);
+
+    return compact('seller', 'shop', 'product', 'buyer', 'order');
+}
+
+test('buyer can directly cancel a pending order with a reason and stock is restored', function () {
+    ['buyer' => $buyer, 'product' => $product, 'order' => $order] = makeOrderWithItem(['status' => 'pending'], stock: 5, qty: 2);
+
+    $this->actingAs($buyer)
+        ->post(route('orders.cancel', $order), ['reason' => 'Changed my mind'])
+        ->assertRedirect();
+
+    expect($order->fresh()->status)->toBe('cancelled');
+    expect($product->fresh()->stock)->toBe(7);
+    expect($order->cancellations()->where('status', 'approved')->where('initiated_by', 'buyer')->count())->toBe(1);
+});
+
+test('buyer requesting cancellation on a processing order does not cancel it yet', function () {
+    ['buyer' => $buyer, 'product' => $product, 'order' => $order] = makeOrderWithItem(['status' => 'processing'], stock: 5, qty: 2);
+
+    $this->actingAs($buyer)
+        ->post(route('orders.cancel', $order), ['reason' => 'Too slow'])
+        ->assertRedirect();
+
+    expect($order->fresh()->status)->toBe('processing');
+    expect($product->fresh()->stock)->toBe(5);
+    expect($order->cancellations()->where('status', 'requested')->count())->toBe(1);
+});
+
+test('cancellation reason is required', function () {
+    ['buyer' => $buyer, 'order' => $order] = makeOrderWithItem(['status' => 'pending']);
+
+    $this->actingAs($buyer)
+        ->post(route('orders.cancel', $order), ['reason' => ''])
+        ->assertSessionHasErrors('reason');
+});
+
+test('buyer cannot request cancellation again after rejection', function () {
+    ['buyer' => $buyer, 'order' => $order] = makeOrderWithItem(['status' => 'processing']);
+    OrderCancellation::factory()->rejected()->create(['order_id' => $order->id]);
+
+    $this->actingAs($buyer)
+        ->post(route('orders.cancel', $order), ['reason' => 'Trying again'])
+        ->assertForbidden();
+});
+
+test('seller can approve a cancellation request which cancels the order and restores stock', function () {
+    ['seller' => $seller, 'product' => $product, 'order' => $order] = makeOrderWithItem(['status' => 'processing'], stock: 5, qty: 2);
+    OrderCancellation::factory()->requested()->create(['order_id' => $order->id]);
+
+    $this->actingAs($seller)
+        ->post(route('seller.orders.cancellation.approve', $order))
+        ->assertRedirect();
+
+    expect($order->fresh()->status)->toBe('cancelled');
+    expect($product->fresh()->stock)->toBe(7);
+});
+
+test('seller can reject a cancellation request leaving the order unchanged', function () {
+    ['seller' => $seller, 'product' => $product, 'order' => $order] = makeOrderWithItem(['status' => 'processing'], stock: 5, qty: 2);
+    OrderCancellation::factory()->requested()->create(['order_id' => $order->id]);
+
+    $this->actingAs($seller)
+        ->post(route('seller.orders.cancellation.reject', $order), ['response_reason' => 'Already shipped'])
+        ->assertRedirect();
+
+    expect($order->fresh()->status)->toBe('processing');
+    expect($product->fresh()->stock)->toBe(5);
+    expect($order->cancellations()->where('status', 'rejected')->count())->toBe(1);
+});
+
+test('seller can directly cancel an order with a reason', function () {
+    ['seller' => $seller, 'product' => $product, 'order' => $order] = makeOrderWithItem(['status' => 'processing'], stock: 5, qty: 2);
+
+    $this->actingAs($seller)
+        ->post(route('seller.orders.cancel', $order), ['reason' => 'Out of stock'])
+        ->assertRedirect();
+
+    expect($order->fresh()->status)->toBe('cancelled');
+    expect($product->fresh()->stock)->toBe(7);
+    expect($order->cancellations()->where('status', 'approved')->where('initiated_by', 'seller')->count())->toBe(1);
+});
+
+test('a different buyer cannot cancel someone elses order', function () {
+    ['order' => $order] = makeOrderWithItem(['status' => 'pending']);
+    $other = User::factory()->create();
+
+    $this->actingAs($other)
+        ->post(route('orders.cancel', $order), ['reason' => 'Not mine'])
+        ->assertForbidden();
+});
+
+test('a seller from another shop cannot manage a cancellation request', function () {
+    ['order' => $order] = makeOrderWithItem(['status' => 'processing']);
+    OrderCancellation::factory()->requested()->create(['order_id' => $order->id]);
+    $otherSeller = User::factory()->seller()->create();
+    Shop::factory()->create(['user_id' => $otherSeller->id]);
+
+    $this->actingAs($otherSeller)
+        ->post(route('seller.orders.cancellation.approve', $order))
+        ->assertForbidden();
 });

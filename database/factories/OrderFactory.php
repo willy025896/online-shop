@@ -2,6 +2,7 @@
 
 namespace Database\Factories;
 
+use App\Models\Order;
 use App\Models\Shop;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\Factory;
@@ -18,10 +19,10 @@ class OrderFactory extends Factory
         $shippingFee = fake()->randomElement([0, 5.00, 10.00, 15.00]);
 
         return [
-            'order_number' => 'ORD-' . strtoupper(Str::random(8)),
+            'order_number' => 'ORD-'.strtoupper(Str::random(8)),
             'user_id' => User::factory(),
             'shop_id' => Shop::factory(),
-            'status' => 'pending',
+            'status' => Order::STATUS_PENDING,
             'subtotal' => $subtotal,
             'shipping_fee' => $shippingFee,
             'total' => $subtotal + $shippingFee,
@@ -37,7 +38,15 @@ class OrderFactory extends Factory
     public function paid(): static
     {
         return $this->state(fn () => [
-            'status' => 'paid',
+            'status' => Order::STATUS_PAID,
+            'paid_at' => now(),
+        ]);
+    }
+
+    public function processing(): static
+    {
+        return $this->state(fn () => [
+            'status' => Order::STATUS_PROCESSING,
             'paid_at' => now(),
         ]);
     }
@@ -45,13 +54,13 @@ class OrderFactory extends Factory
     public function completed(): static
     {
         return $this->state(fn () => [
-            'status' => 'completed',
+            'status' => Order::STATUS_COMPLETED,
             'paid_at' => fake()->dateTimeBetween('-30 days', '-1 day'),
         ]);
     }
 
     public function cancelled(): static
     {
-        return $this->state(fn () => ['status' => 'cancelled']);
+        return $this->state(fn () => ['status' => Order::STATUS_CANCELLED]);
     }
 }

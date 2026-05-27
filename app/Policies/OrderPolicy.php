@@ -16,12 +16,25 @@ class OrderPolicy
 
     public function cancel(User $user, Order $order): bool
     {
-        return $user->id === $order->user_id && $order->canBeCancelled();
+        return $user->id === $order->user_id
+            && ($order->canBeCancelledDirectly() || $order->canRequestCancellation());
     }
 
     public function updateStatus(User $user, Order $order): bool
     {
         return ($user->isSeller() && $user->shop?->id === $order->shop_id)
             || $user->isAdmin();
+    }
+
+    public function manageCancellation(User $user, Order $order): bool
+    {
+        return ($user->isSeller() && $user->shop?->id === $order->shop_id)
+            && $order->pendingCancellation() !== null;
+    }
+
+    public function cancelAsSeller(User $user, Order $order): bool
+    {
+        return ($user->isSeller() && $user->shop?->id === $order->shop_id)
+            && $order->isActive();
     }
 }

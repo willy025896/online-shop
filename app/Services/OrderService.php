@@ -4,7 +4,9 @@ namespace App\Services;
 
 use App\Models\Cart;
 use App\Models\Order;
+use App\Models\OrderCancellation;
 use App\Models\Product;
+use App\Models\User;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 
@@ -29,7 +31,7 @@ class OrderService
                     'order_number' => 'ORD-'.strtoupper(Str::random(8)).'-'.time(),
                     'user_id' => $cart->user_id,
                     'shop_id' => $shopId,
-                    'status' => 'pending',
+                    'status' => Order::STATUS_PENDING,
                     'subtotal' => $subtotal,
                     'shipping_fee' => 0,
                     'total' => $subtotal,
@@ -72,15 +74,78 @@ class OrderService
         return $orders;
     }
 
-    public function cancelOrder(Order $order): void
+    public function directCancelByBuyer(Order $order, string $reason): void
     {
-        DB::transaction(function () use ($order) {
-            foreach ($order->items as $item) {
-                Product::where('id', $item->product_id)
-                    ->increment('stock', $item->quantity);
-            }
+        DB::transaction(function () use ($order, $reason) {
+            $order->cancellations()->create([
+                'initiated_by' => 'buyer',
+                'status' => 'approved',
+                'reason' => $reason,
+                'responded_at' => now(),
+            ]);
 
-            $order->update(['status' => 'cancelled']);
+            $this->finalizeCancellation($order);
         });
+    }
+
+    public function requestCancellation(Order $order, string $reason): void
+    {
+        $order->cancellations()->create([
+            'initiated_by' => 'buyer',
+            'status' => 'requested',
+            'reason' => $reason,
+        ]);
+    }
+
+    public function approveCancellation(OrderCancellation $cancellation, User $responder): void
+    {
+        DB::transaction(function () use ($cancellation, $responder) {
+            $cancellation->update([
+                'status' => 'approved',
+                'responder_id' => $responder->id,
+                'responded_at' => now(),
+            ]);
+
+            $this->finalizeCancellation($cancellation->order);
+        });
+    }
+
+    public function rejectCancellation(OrderCancellation $cancellation, User $responder, string $responseReason): void
+    {
+        $cancellation->update([
+            'status' => 'rejected',
+            'responder_id' => $responder->id,
+            'response_reason' => $responseReason,
+            'responded_at' => now(),
+        ]);
+    }
+
+    public function cancelBySeller(Order $order, User $seller, string $reason): void
+    {
+        DB::transaction(function () use ($order, $seller, $reason) {
+            $order->cancellations()->create([
+                'initiated_by' => 'seller',
+                'status' => 'approved',
+                'reason' => $reason,
+                'responder_id' => $seller->id,
+                'responded_at' => now(),
+            ]);
+
+            $this->finalizeCancellation($order);
+        });
+    }
+
+    private function finalizeCancellation(Order $order): void
+    {
+        if ($order->status === Order::STATUS_CANCELLED) {
+            return;
+        }
+
+        foreach ($order->items as $item) {
+            Product::where('id', $item->product_id)
+                ->increment('stock', $item->quantity);
+        }
+
+        $order->update(['status' => Order::STATUS_CANCELLED]);
     }
 }

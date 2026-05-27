@@ -6,6 +6,7 @@ use App\Models\Order;
 use App\Services\ConversationService;
 use App\Services\OrderService;
 use App\Services\PaymentService;
+use Illuminate\Http\Request;
 use Inertia\Inertia;
 
 class OrderController extends Controller
@@ -32,7 +33,7 @@ class OrderController extends Controller
     {
         $this->authorize('view', $order);
 
-        $order->load('shop', 'items.product');
+        $order->load('shop', 'items.product', 'latestCancellation');
 
         return Inertia::render('Orders/Show', [
             'order' => $order,
@@ -52,13 +53,23 @@ class OrderController extends Controller
         return back()->with('success', 'Payment successful!');
     }
 
-    public function cancel(Order $order)
+    public function cancel(Request $request, Order $order)
     {
         $this->authorize('cancel', $order);
 
-        $this->orderService->cancelOrder($order);
+        $validated = $request->validate([
+            'reason' => 'required|string|max:1000',
+        ]);
 
-        return back()->with('success', 'Order cancelled.');
+        if ($order->canBeCancelledDirectly()) {
+            $this->orderService->directCancelByBuyer($order, $validated['reason']);
+
+            return back()->with('success', 'Order cancelled.');
+        }
+
+        $this->orderService->requestCancellation($order, $validated['reason']);
+
+        return back()->with('success', 'Cancellation request submitted, awaiting seller review.');
     }
 
     public function startConversation(Order $order)

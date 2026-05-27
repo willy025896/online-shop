@@ -9,7 +9,7 @@ class PaymentService
     public function simulatePayment(Order $order): bool
     {
         $order->update([
-            'status' => 'paid',
+            'status' => Order::STATUS_PAID,
             'paid_at' => now(),
         ]);
 
