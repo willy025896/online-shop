@@ -20,6 +20,12 @@ class User extends Authenticatable
     use Notifiable;
     use TwoFactorAuthenticatable;
 
+    public const ROLE_CUSTOMER = 'customer';
+
+    public const ROLE_SELLER = 'seller';
+
+    public const ROLE_ADMIN = 'admin';
+
     protected $fillable = [
         'name',
         'email',
@@ -74,16 +80,16 @@ class User extends Authenticatable
 
     public function isAdmin(): bool
     {
-        return $this->role === 'admin';
+        return $this->role === self::ROLE_ADMIN;
     }
 
     public function isSeller(): bool
     {
-        return $this->role === 'seller';
+        return $this->role === self::ROLE_SELLER;
     }
 
     public function isCustomer(): bool
     {
-        return $this->role === 'customer';
+        return $this->role === self::ROLE_CUSTOMER;
     }
 }

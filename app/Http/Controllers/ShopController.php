@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Category;
+use App\Models\Product;
 use App\Models\Shop;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -11,7 +12,7 @@ class ShopController extends Controller
 {
     public function index()
     {
-        $shops = Shop::where('status', 'approved')
+        $shops = Shop::where('status', Shop::STATUS_APPROVED)
             ->withCount('products')
             ->latest()
             ->paginate(12);
@@ -46,7 +47,7 @@ class ShopController extends Controller
 
         $products = $query->paginate(12)->withQueryString();
 
-        $categories = Category::whereHas('products', fn ($q) => $q->where('shop_id', $shop->id)->where('status', 'active')
+        $categories = Category::whereHas('products', fn ($q) => $q->where('shop_id', $shop->id)->where('status', Product::STATUS_ACTIVE)
         )->active()->orderBy('sort_order')->get(['id', 'name']);
 
         return Inertia::render('Shop/Show', [

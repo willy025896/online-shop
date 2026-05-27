@@ -87,12 +87,12 @@ class Order extends Model
 
     public function pendingCancellation(): ?OrderCancellation
     {
-        return $this->cancellations()->where('status', 'requested')->first();
+        return $this->cancellations()->where('status', OrderCancellation::STATUS_REQUESTED)->first();
     }
 
     public function wasCancellationRejected(): bool
     {
-        return $this->cancellations()->where('status', 'rejected')->exists();
+        return $this->cancellations()->where('status', OrderCancellation::STATUS_REJECTED)->exists();
     }
 
     public function canBeCancelledDirectly(): bool

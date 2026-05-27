@@ -10,6 +10,16 @@ class OrderCancellation extends Model
 {
     use HasFactory;
 
+    public const STATUS_REQUESTED = 'requested';
+
+    public const STATUS_APPROVED = 'approved';
+
+    public const STATUS_REJECTED = 'rejected';
+
+    public const INITIATED_BY_BUYER = 'buyer';
+
+    public const INITIATED_BY_SELLER = 'seller';
+
     protected $fillable = [
         'order_id',
         'initiated_by',

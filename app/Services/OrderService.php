@@ -78,8 +78,8 @@ class OrderService
     {
         DB::transaction(function () use ($order, $reason) {
             $order->cancellations()->create([
-                'initiated_by' => 'buyer',
-                'status' => 'approved',
+                'initiated_by' => OrderCancellation::INITIATED_BY_BUYER,
+                'status' => OrderCancellation::STATUS_APPROVED,
                 'reason' => $reason,
                 'responded_at' => now(),
             ]);
@@ -91,8 +91,8 @@ class OrderService
     public function requestCancellation(Order $order, string $reason): void
     {
         $order->cancellations()->create([
-            'initiated_by' => 'buyer',
-            'status' => 'requested',
+            'initiated_by' => OrderCancellation::INITIATED_BY_BUYER,
+            'status' => OrderCancellation::STATUS_REQUESTED,
             'reason' => $reason,
         ]);
     }
@@ -101,7 +101,7 @@ class OrderService
     {
         DB::transaction(function () use ($cancellation, $responder) {
             $cancellation->update([
-                'status' => 'approved',
+                'status' => OrderCancellation::STATUS_APPROVED,
                 'responder_id' => $responder->id,
                 'responded_at' => now(),
             ]);
@@ -113,7 +113,7 @@ class OrderService
     public function rejectCancellation(OrderCancellation $cancellation, User $responder, string $responseReason): void
     {
         $cancellation->update([
-            'status' => 'rejected',
+            'status' => OrderCancellation::STATUS_REJECTED,
             'responder_id' => $responder->id,
             'response_reason' => $responseReason,
             'responded_at' => now(),
@@ -124,8 +124,8 @@ class OrderService
     {
         DB::transaction(function () use ($order, $seller, $reason) {
             $order->cancellations()->create([
-                'initiated_by' => 'seller',
-                'status' => 'approved',
+                'initiated_by' => OrderCancellation::INITIATED_BY_SELLER,
+                'status' => OrderCancellation::STATUS_APPROVED,
                 'reason' => $reason,
                 'responder_id' => $seller->id,
                 'responded_at' => now(),

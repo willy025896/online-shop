@@ -39,7 +39,7 @@ class ProductController extends Controller
             'price' => 'required|numeric|min:0|max:9999999.99',
             'compare_price' => 'nullable|numeric|min:0|max:9999999.99',
             'stock' => 'required|integer|min:0',
-            'status' => 'required|in:draft,active,inactive',
+            'status' => ['required', 'in:' . implode(',', [Product::STATUS_DRAFT, Product::STATUS_ACTIVE, Product::STATUS_INACTIVE])],
             'is_featured' => 'boolean',
         ]);
 
@@ -75,7 +75,7 @@ class ProductController extends Controller
             'price' => 'required|numeric|min:0|max:9999999.99',
             'compare_price' => 'nullable|numeric|min:0|max:9999999.99',
             'stock' => 'required|integer|min:0',
-            'status' => 'required|in:draft,active,inactive',
+            'status' => ['required', 'in:' . implode(',', [Product::STATUS_DRAFT, Product::STATUS_ACTIVE, Product::STATUS_INACTIVE])],
             'is_featured' => 'boolean',
         ]);
 

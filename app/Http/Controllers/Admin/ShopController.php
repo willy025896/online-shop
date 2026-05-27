@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Shop;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 
 class ShopController extends Controller
@@ -23,12 +24,12 @@ class ShopController extends Controller
     public function updateStatus(Request $request, Shop $shop)
     {
         $validated = $request->validate([
-            'status' => 'required|in:approved,suspended',
+            'status' => ['required', Rule::in([Shop::STATUS_APPROVED, Shop::STATUS_SUSPENDED])],
         ]);
 
         $shop->update([
             'status' => $validated['status'],
-            'approved_at' => $validated['status'] === 'approved' ? now() : $shop->approved_at,
+            'approved_at' => $validated['status'] === Shop::STATUS_APPROVED ? now() : $shop->approved_at,
         ]);
 
         return back()->with('success', 'Shop status updated.');

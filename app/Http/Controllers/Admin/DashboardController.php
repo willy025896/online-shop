@@ -17,7 +17,7 @@ class DashboardController extends Controller
             'stats' => [
                 'total_users' => User::count(),
                 'total_shops' => Shop::count(),
-                'pending_shops' => Shop::where('status', 'pending')->count(),
+                'pending_shops' => Shop::where('status', Shop::STATUS_PENDING)->count(),
                 'total_products' => Product::count(),
                 'total_orders' => Order::count(),
                 'total_revenue' => Order::where('status', '!=', Order::STATUS_CANCELLED)->sum('total'),

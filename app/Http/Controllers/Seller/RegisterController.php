@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Seller;
 
 use App\Http\Controllers\Controller;
 use App\Models\Shop;
+use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 use Inertia\Inertia;
@@ -36,10 +37,10 @@ class RegisterController extends Controller
             'name' => $validated['name'],
             'slug' => Str::lower($validated['slug']),
             'description' => $validated['description'] ?? null,
-            'status' => 'pending',
+            'status' => Shop::STATUS_PENDING,
         ]);
 
-        auth()->user()->update(['role' => 'seller']);
+        auth()->user()->update(['role' => User::ROLE_SELLER]);
 
         return redirect()->route('seller.dashboard')
             ->with('success', 'Shop registration submitted. Please wait for approval.');

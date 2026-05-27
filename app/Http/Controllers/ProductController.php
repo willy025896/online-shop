@@ -39,7 +39,7 @@ class ProductController extends Controller
 
     public function show(Product $product)
     {
-        abort_unless($product->status === 'active', 404);
+        abort_unless($product->status === Product::STATUS_ACTIVE, 404);
 
         $product->load(['shop', 'images', 'category']);
 

@@ -12,6 +12,12 @@ class Product extends Model
 {
     use HasFactory, SoftDeletes;
 
+    public const STATUS_DRAFT = 'draft';
+
+    public const STATUS_ACTIVE = 'active';
+
+    public const STATUS_INACTIVE = 'inactive';
+
     protected $fillable = [
         'shop_id',
         'category_id',
@@ -56,7 +62,7 @@ class Product extends Model
 
     public function scopeActive($query)
     {
-        return $query->where('status', 'active');
+        return $query->where('status', self::STATUS_ACTIVE);
     }
 
     public function scopeFeatured($query)

@@ -12,6 +12,12 @@ class Shop extends Model
 {
     use HasFactory, SoftDeletes;
 
+    public const STATUS_PENDING = 'pending';
+
+    public const STATUS_APPROVED = 'approved';
+
+    public const STATUS_SUSPENDED = 'suspended';
+
     protected $fillable = [
         'user_id',
         'name',
@@ -46,6 +52,6 @@ class Shop extends Model
 
     public function isApproved(): bool
     {
-        return $this->status === 'approved';
+        return $this->status === self::STATUS_APPROVED;
     }
 }
