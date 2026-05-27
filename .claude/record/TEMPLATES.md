@@ -1,32 +1,6 @@
-# AI Assistant Skills - 自動記錄規範
+# 記錄模板
 
-> 本文件定義 AI Assistant 在此專案中的行為規範，每次對話都必須遵守。
-
-## 核心規則
-
-**每次執行任務時，AI 必須：**
-
-1. 在 `tasks/` 建立合併的任務記錄（包含請求與變更）
-2. 若任務涉及架構決策，建立 ADR 至 `decisions/`
-3. 更新 `record/INDEX.md`
-
-> Claude Code 的 memory（使用者偏好/反饋）與 plan mode（實作計畫）由 Claude 內建功能管理，不放入 `.claude/`。
-
----
-
-## 分工說明
-
-| 儲存位置 | 用途 |
-|----------|------|
-| `.claude/record/tasks/` | 每次任務的請求與程式碼變更記錄 |
-| `.claude/record/decisions/` | 架構/技術層面的決策記錄（ADR） |
-| `.claude/record/INDEX.md` | 所有任務與決策的索引 |
-| Claude memory | 使用者偏好、協作風格、專案脈絡 |
-| Claude plan mode | 任務實作計畫 |
-
----
-
-## Task 記錄模板
+## Task 模板
 
 路徑：`.claude/record/tasks/YYYY-MM-DD/XXX-description.md`
 
@@ -56,7 +30,7 @@ status: Done | In Progress
 
 ---
 
-## ADR 模板（架構決策記錄）
+## ADR 模板
 
 路徑：`.claude/record/decisions/XXX-title.md`
 

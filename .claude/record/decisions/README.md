@@ -20,4 +20,4 @@
 003-cache-strategy.md
 ```
 
-詳細格式請參考 `AI-SKILLS.md` 中的模板。
+詳細格式請參考 `.claude/record/TEMPLATES.md`。

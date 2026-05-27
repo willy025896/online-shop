@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## AI 操作規範
 
-**每次執行任何開發任務前，必須先讀取 `.claude/AI-SKILLS.md`**，並遵守其中定義的記錄規範（tasks、decisions、INDEX.md）。
+**每次執行任何開發任務前，必須先讀取 `.claude/AI-RULES.md`**，並遵守其中定義的記錄規範（tasks、decisions）。
 
 ---
 
