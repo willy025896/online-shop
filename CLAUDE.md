@@ -84,6 +84,20 @@ Role-based access uses the `EnsureRole` middleware registered as `role` — e.g.
 
 Locale is set per-request by `SetLocale` middleware (`app/Http/Middleware/SetLocale.php`), which reads `session('locale')` and calls `App::setLocale()`. The `LocaleController` stores the chosen locale into the session.
 
+### Model Constants
+
+Status strings and role values are defined as public constants on their respective models — **never use raw strings**. Always reference the constant so that typos cause a compile-time error rather than a silent bug.
+
+| Model | Constants |
+|-------|-----------|
+| `User` | `ROLE_CUSTOMER`, `ROLE_SELLER`, `ROLE_ADMIN` |
+| `Shop` | `STATUS_PENDING`, `STATUS_APPROVED`, `STATUS_SUSPENDED` |
+| `Product` | `STATUS_DRAFT`, `STATUS_ACTIVE`, `STATUS_INACTIVE` |
+| `Order` | `STATUS_PENDING`, `STATUS_PAID`, `STATUS_PROCESSING`, `STATUS_SHIPPED`, `STATUS_COMPLETED`, `STATUS_CANCELLED` |
+| `OrderCancellation` | `STATUS_REQUESTED`, `STATUS_APPROVED`, `STATUS_REJECTED`, `INITIATED_BY_BUYER`, `INITIATED_BY_SELLER` |
+
+Usage: `Shop::STATUS_APPROVED`, `User::ROLE_SELLER`, etc.
+
 ### Cart
 
 Cart supports both guests and authenticated users. `CartService` identifies a cart by `user_id` for authenticated users and `session_id` for guests. On login, `CartService::mergeGuestCart()` merges the guest cart into the user's cart. Policies in `app/Policies/` govern seller/admin resource authorization.
@@ -101,13 +115,13 @@ Cart supports both guests and authenticated users. `CartService` identifies a ca
 
 ```
 online-shop/
-├── .claude/                    # AI 操作記錄 (tasks, decisions, index)
+├── .claude/                    # AI 操作規範、task/decision 記錄、implementation records
 ├── app/
 │   ├── Http/
-│   │   ├── Controllers/        # 8 public + 1 locale + 6 seller + 6 admin = 21 controllers
+│   │   ├── Controllers/        # 8 public + 2 utility + 6 seller + 6 admin = 22 controllers
 │   │   └── Middleware/         # EnsureRole, SetLocale, HandleInertiaRequests
 │   ├── Policies/               # 3 policies (Product, Order, Shop)
-│   ├── Models/                 # 8 models + User
+│   ├── Models/                 # 12 models (User, Shop, Product, Order, OrderCancellation, ...)
 │   └── Services/               # 3 services (Cart, Order, Payment)
 ├── database/
 │   └── migrations/             # 14 migrations

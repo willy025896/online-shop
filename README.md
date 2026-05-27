@@ -89,12 +89,13 @@ php artisan test tests/Feature/AuthenticationTest.php
 
 ```
 online-shop/
+├── .claude/                    # AI task records, decisions, implementation records
 ├── app/
 │   ├── Http/
-│   │   ├── Controllers/        # 7 public + 6 seller + 6 admin controllers
-│   │   ├── Middleware/         # EnsureRole, HandleInertiaRequests
-│   │   └── Policies/           # Product, Order, Shop
-│   ├── Models/                 # 8 models + User
+│   │   ├── Controllers/        # 8 public + 2 utility + 6 seller + 6 admin = 22 controllers
+│   │   └── Middleware/         # EnsureRole, SetLocale, HandleInertiaRequests
+│   ├── Policies/               # Product, Order, Shop
+│   ├── Models/                 # 12 models (constants defined on each model)
 │   └── Services/               # Cart, Order, Payment
 ├── database/
 │   └── migrations/             # 14 migrations
