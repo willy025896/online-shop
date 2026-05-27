@@ -3,6 +3,7 @@
 namespace Database\Factories;
 
 use App\Models\Order;
+use App\Models\OrderCancellation;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
@@ -14,8 +15,8 @@ class OrderCancellationFactory extends Factory
     {
         return [
             'order_id' => Order::factory(),
-            'initiated_by' => 'buyer',
-            'status' => 'requested',
+            'initiated_by' => OrderCancellation::INITIATED_BY_BUYER,
+            'status' => OrderCancellation::STATUS_REQUESTED,
             'reason' => fake()->sentence(),
             'responder_id' => null,
             'response_reason' => null,
@@ -25,13 +26,13 @@ class OrderCancellationFactory extends Factory
 
     public function requested(): static
     {
-        return $this->state(fn () => ['status' => 'requested']);
+        return $this->state(fn () => ['status' => OrderCancellation::STATUS_REQUESTED]);
     }
 
     public function approved(): static
     {
         return $this->state(fn () => [
-            'status' => 'approved',
+            'status' => OrderCancellation::STATUS_APPROVED,
             'responded_at' => now(),
         ]);
     }
@@ -39,7 +40,7 @@ class OrderCancellationFactory extends Factory
     public function rejected(): static
     {
         return $this->state(fn () => [
-            'status' => 'rejected',
+            'status' => OrderCancellation::STATUS_REJECTED,
             'response_reason' => fake()->sentence(),
             'responded_at' => now(),
         ]);
@@ -48,8 +49,8 @@ class OrderCancellationFactory extends Factory
     public function bySeller(): static
     {
         return $this->state(fn () => [
-            'initiated_by' => 'seller',
-            'status' => 'approved',
+            'initiated_by' => OrderCancellation::INITIATED_BY_SELLER,
+            'status' => OrderCancellation::STATUS_APPROVED,
             'responded_at' => now(),
         ]);
     }

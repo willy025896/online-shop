@@ -10,6 +10,8 @@ import InputError from '@/Components/InputError.vue';
 
 const props = defineProps({
     order: Object,
+    canCancelDirectly: Boolean,
+    canRequestCancellation: Boolean,
 });
 
 const page = usePage();
@@ -19,10 +21,8 @@ const cancellation = computed(() => props.order.latest_cancellation);
 const isCancelled = computed(() => props.order.status === 'cancelled');
 const requestPending = computed(() => cancellation.value?.status === 'requested');
 const wasRejected = computed(() => cancellation.value?.status === 'rejected');
-const canDirect = computed(() => ['pending', 'paid'].includes(props.order.status));
-const canRequest = computed(() =>
-    ['processing', 'shipped'].includes(props.order.status) && !requestPending.value && !wasRejected.value
-);
+const canDirect = computed(() => props.canCancelDirectly);
+const canRequest = computed(() => props.canRequestCancellation);
 const showCancelButton = computed(() => !isCancelled.value && (canDirect.value || canRequest.value));
 const cancelLabel = computed(() => (canDirect.value ? lang.value.cancel_order : lang.value.request_cancellation));
 

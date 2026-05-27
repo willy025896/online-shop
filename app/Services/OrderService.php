@@ -90,34 +90,57 @@ class OrderService
 
     public function requestCancellation(Order $order, string $reason): void
     {
-        $order->cancellations()->create([
-            'initiated_by' => OrderCancellation::INITIATED_BY_BUYER,
-            'status' => OrderCancellation::STATUS_REQUESTED,
-            'reason' => $reason,
-        ]);
+        DB::transaction(function () use ($order, $reason) {
+            // Lock the order row to serialize concurrent requests
+            $lockedOrder = Order::lockForUpdate()->find($order->id);
+
+            if (! $lockedOrder->canRequestCancellation()) {
+                return; // idempotent — silently skip duplicates
+            }
+
+            $lockedOrder->cancellations()->create([
+                'initiated_by' => OrderCancellation::INITIATED_BY_BUYER,
+                'status' => OrderCancellation::STATUS_REQUESTED,
+                'reason' => $reason,
+            ]);
+        });
     }
 
     public function approveCancellation(OrderCancellation $cancellation, User $responder): void
     {
         DB::transaction(function () use ($cancellation, $responder) {
-            $cancellation->update([
+            $locked = OrderCancellation::lockForUpdate()->find($cancellation->id);
+
+            if ($locked->status !== OrderCancellation::STATUS_REQUESTED) {
+                return; // already handled by a concurrent request
+            }
+
+            $locked->update([
                 'status' => OrderCancellation::STATUS_APPROVED,
                 'responder_id' => $responder->id,
                 'responded_at' => now(),
             ]);
 
-            $this->finalizeCancellation($cancellation->order);
+            $this->finalizeCancellation($locked->order);
         });
     }
 
     public function rejectCancellation(OrderCancellation $cancellation, User $responder, string $responseReason): void
     {
-        $cancellation->update([
-            'status' => OrderCancellation::STATUS_REJECTED,
-            'responder_id' => $responder->id,
-            'response_reason' => $responseReason,
-            'responded_at' => now(),
-        ]);
+        DB::transaction(function () use ($cancellation, $responder, $responseReason) {
+            $locked = OrderCancellation::lockForUpdate()->find($cancellation->id);
+
+            if ($locked->status !== OrderCancellation::STATUS_REQUESTED) {
+                return; // already handled by a concurrent request
+            }
+
+            $locked->update([
+                'status' => OrderCancellation::STATUS_REJECTED,
+                'responder_id' => $responder->id,
+                'response_reason' => $responseReason,
+                'responded_at' => now(),
+            ]);
+        });
     }
 
     public function cancelBySeller(Order $order, User $seller, string $reason): void

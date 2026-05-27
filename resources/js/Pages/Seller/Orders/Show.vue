@@ -10,6 +10,8 @@ import InputError from '@/Components/InputError.vue';
 
 const props = defineProps({
     order: Object,
+    canSellerCancel: Boolean,
+    nextStatuses: Object,
 });
 
 const page = usePage();
@@ -19,7 +21,7 @@ const t = computed(() => lang.value.orders || {});
 const cancellation = computed(() => props.order.latest_cancellation);
 const isCancelled = computed(() => props.order.status === 'cancelled');
 const requestPending = computed(() => cancellation.value?.status === 'requested');
-const canSellerCancel = computed(() => !['completed', 'cancelled'].includes(props.order.status) && !requestPending.value);
+const canSellerCancel = computed(() => props.canSellerCancel);
 
 const updateStatus = (status) => {
     router.patch(route('seller.orders.status', props.order.id), { status });
@@ -61,11 +63,7 @@ const submitCancel = () => {
     });
 };
 
-const nextStatuses = {
-    paid: 'processing',
-    processing: 'shipped',
-    shipped: 'completed',
-};
+const nextStatuses = props.nextStatuses;
 </script>
 
 <template>

@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Seller;
 use App\Http\Controllers\Controller;
 use App\Models\Order;
 use App\Services\OrderService;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 use Inertia\Inertia;
@@ -35,6 +36,12 @@ class OrderController extends Controller
 
         return Inertia::render('Seller/Orders/Show', [
             'order' => $order,
+            'canSellerCancel' => $order->isActive() && $order->pendingCancellation() === null,
+            'nextStatuses' => [
+                'paid' => 'processing',
+                'processing' => 'shipped',
+                'shipped' => 'completed',
+            ],
         ]);
     }
 
@@ -64,16 +71,19 @@ class OrderController extends Controller
         return back()->with('success', 'Order cancelled.');
     }
 
-    public function approveCancellation(Order $order)
+    public function approveCancellation(Order $order): RedirectResponse
     {
         $this->authorize('manageCancellation', $order);
 
-        $this->orderService->approveCancellation($order->pendingCancellation(), request()->user());
+        $cancellation = $order->pendingCancellation();
+        abort_if($cancellation === null, 409, 'No pending cancellation request.');
+
+        $this->orderService->approveCancellation($cancellation, request()->user());
 
         return back()->with('success', 'Cancellation approved.');
     }
 
-    public function rejectCancellation(Request $request, Order $order)
+    public function rejectCancellation(Request $request, Order $order): RedirectResponse
     {
         $this->authorize('manageCancellation', $order);
 
@@ -81,7 +91,10 @@ class OrderController extends Controller
             'response_reason' => 'required|string|max:1000',
         ]);
 
-        $this->orderService->rejectCancellation($order->pendingCancellation(), $request->user(), $validated['response_reason']);
+        $cancellation = $order->pendingCancellation();
+        abort_if($cancellation === null, 409, 'No pending cancellation request.');
+
+        $this->orderService->rejectCancellation($cancellation, $request->user(), $validated['response_reason']);
 
         return back()->with('success', 'Cancellation rejected.');
     }

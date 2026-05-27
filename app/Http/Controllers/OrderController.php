@@ -37,6 +37,8 @@ class OrderController extends Controller
 
         return Inertia::render('Orders/Show', [
             'order' => $order,
+            'canCancelDirectly' => $order->canBeCancelledDirectly(),
+            'canRequestCancellation' => $order->canRequestCancellation(),
         ]);
     }
 

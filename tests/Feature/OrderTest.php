@@ -261,3 +261,37 @@ test('a seller from another shop cannot manage a cancellation request', function
         ->post(route('seller.orders.cancellation.approve', $order))
         ->assertForbidden();
 });
+
+test('seller double approve or reject handles missing cancellation gracefully (Bug 1)', function () {
+    ['seller' => $seller, 'order' => $order] = makeOrderWithItem(['status' => 'processing']);
+
+    $response = $this->actingAs($seller)
+        ->post(route('seller.orders.cancellation.approve', $order));
+
+    expect(in_array($response->getStatusCode(), [403, 409]))->toBeTrue();
+
+    $response2 = $this->actingAs($seller)
+        ->post(route('seller.orders.cancellation.reject', $order), ['response_reason' => 'No reason']);
+
+    expect(in_array($response2->getStatusCode(), [403, 409]))->toBeTrue();
+});
+
+test('seller cannot bypass buyer review via cancelAsSeller when pending cancellation exists (Bug 3)', function () {
+    ['seller' => $seller, 'order' => $order] = makeOrderWithItem(['status' => 'processing']);
+    OrderCancellation::factory()->requested()->create(['order_id' => $order->id]);
+
+    $this->actingAs($seller)
+        ->post(route('seller.orders.cancel', $order), ['reason' => 'Seller cancel'])
+        ->assertForbidden();
+});
+
+test('duplicate cancellation requests are handled idempotently (Bug 4)', function () {
+    ['buyer' => $buyer, 'order' => $order] = makeOrderWithItem(['status' => 'processing']);
+
+    $service = app(App\Services\OrderService::class);
+
+    $service->requestCancellation($order, 'First try');
+    $service->requestCancellation($order, 'Second try');
+
+    expect($order->cancellations()->where('status', 'requested')->count())->toBe(1);
+});
