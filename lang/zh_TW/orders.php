@@ -24,7 +24,6 @@ return [
     'shop' => '店鋪',
     'shipping_to' => '收件資訊',
     'free' => '免運費',
-    'cancel_confirm' => '確定要取消此訂單嗎？',
     'pay_now_simulated' => '立即付款（模擬）',
     'ask_seller' => '詢問賣家',
     'reply_customer' => '回覆客戶',
