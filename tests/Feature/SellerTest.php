@@ -1,6 +1,5 @@
 <?php
 
-use App\Models\Category;
 use App\Models\Product;
 use App\Models\Shop;
 use App\Models\User;

@@ -1,4 +1,5 @@
 <?php
+
 return [
     'title' => 'Shopping Cart',
     'empty' => 'Your cart is empty.',

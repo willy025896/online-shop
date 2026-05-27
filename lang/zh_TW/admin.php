@@ -1,4 +1,5 @@
 <?php
+
 return [
     'panel' => '管理後台',
     'dashboard' => '儀表板',

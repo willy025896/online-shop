@@ -25,26 +25,26 @@ test('authenticated user can view messages index', function () {
 
 test('buyer can start conversation from order', function () {
     $seller = User::factory()->seller()->create();
-    $shop   = Shop::factory()->create(['user_id' => $seller->id]);
-    $buyer  = User::factory()->create();
-    $order  = Order::factory()->create(['user_id' => $buyer->id, 'shop_id' => $shop->id]);
+    $shop = Shop::factory()->create(['user_id' => $seller->id]);
+    $buyer = User::factory()->create();
+    $order = Order::factory()->create(['user_id' => $buyer->id, 'shop_id' => $shop->id]);
 
     $this->actingAs($buyer)
         ->post(route('orders.conversation', $order))
         ->assertRedirect();
 
     $this->assertDatabaseHas('conversations', [
-        'order_id'       => $order->id,
-        'buyer_id'       => $buyer->id,
+        'order_id' => $order->id,
+        'buyer_id' => $buyer->id,
         'seller_user_id' => $seller->id,
     ]);
 });
 
 test('starting conversation twice returns same conversation', function () {
     $seller = User::factory()->seller()->create();
-    $shop   = Shop::factory()->create(['user_id' => $seller->id]);
-    $buyer  = User::factory()->create();
-    $order  = Order::factory()->create(['user_id' => $buyer->id, 'shop_id' => $shop->id]);
+    $shop = Shop::factory()->create(['user_id' => $seller->id]);
+    $buyer = User::factory()->create();
+    $order = Order::factory()->create(['user_id' => $buyer->id, 'shop_id' => $shop->id]);
 
     $this->actingAs($buyer)->post(route('orders.conversation', $order));
     $this->actingAs($buyer)->post(route('orders.conversation', $order));
@@ -53,12 +53,12 @@ test('starting conversation twice returns same conversation', function () {
 });
 
 test('non-participant cannot view conversation', function () {
-    $seller    = User::factory()->seller()->create();
-    $shop      = Shop::factory()->create(['user_id' => $seller->id]);
-    $buyer     = User::factory()->create();
-    $outsider  = User::factory()->create();
-    $order     = Order::factory()->create(['user_id' => $buyer->id, 'shop_id' => $shop->id]);
-    $conv      = Conversation::factory()->create([
+    $seller = User::factory()->seller()->create();
+    $shop = Shop::factory()->create(['user_id' => $seller->id]);
+    $buyer = User::factory()->create();
+    $outsider = User::factory()->create();
+    $order = Order::factory()->create(['user_id' => $buyer->id, 'shop_id' => $shop->id]);
+    $conv = Conversation::factory()->create([
         'order_id' => $order->id, 'buyer_id' => $buyer->id, 'seller_user_id' => $seller->id,
     ]);
 
@@ -71,10 +71,10 @@ test('participant can send text message', function () {
     Event::fake();
 
     $seller = User::factory()->seller()->create();
-    $shop   = Shop::factory()->create(['user_id' => $seller->id]);
-    $buyer  = User::factory()->create();
-    $order  = Order::factory()->create(['user_id' => $buyer->id, 'shop_id' => $shop->id]);
-    $conv   = Conversation::factory()->create([
+    $shop = Shop::factory()->create(['user_id' => $seller->id]);
+    $buyer = User::factory()->create();
+    $order = Order::factory()->create(['user_id' => $buyer->id, 'shop_id' => $shop->id]);
+    $conv = Conversation::factory()->create([
         'order_id' => $order->id, 'buyer_id' => $buyer->id, 'seller_user_id' => $seller->id,
     ]);
 
@@ -84,8 +84,8 @@ test('participant can send text message', function () {
 
     $this->assertDatabaseHas('messages', [
         'conversation_id' => $conv->id,
-        'sender_id'       => $buyer->id,
-        'body'            => 'Hello seller',
+        'sender_id' => $buyer->id,
+        'body' => 'Hello seller',
     ]);
 
     Event::assertDispatched(MessageSent::class);
@@ -93,10 +93,10 @@ test('participant can send text message', function () {
 
 test('cannot send empty message', function () {
     $seller = User::factory()->seller()->create();
-    $shop   = Shop::factory()->create(['user_id' => $seller->id]);
-    $buyer  = User::factory()->create();
-    $order  = Order::factory()->create(['user_id' => $buyer->id, 'shop_id' => $shop->id]);
-    $conv   = Conversation::factory()->create([
+    $shop = Shop::factory()->create(['user_id' => $seller->id]);
+    $buyer = User::factory()->create();
+    $order = Order::factory()->create(['user_id' => $buyer->id, 'shop_id' => $shop->id]);
+    $conv = Conversation::factory()->create([
         'order_id' => $order->id, 'buyer_id' => $buyer->id, 'seller_user_id' => $seller->id,
     ]);
 
@@ -110,10 +110,10 @@ test('participant can upload image', function () {
     Event::fake();
 
     $seller = User::factory()->seller()->create();
-    $shop   = Shop::factory()->create(['user_id' => $seller->id]);
-    $buyer  = User::factory()->create();
-    $order  = Order::factory()->create(['user_id' => $buyer->id, 'shop_id' => $shop->id]);
-    $conv   = Conversation::factory()->create([
+    $shop = Shop::factory()->create(['user_id' => $seller->id]);
+    $buyer = User::factory()->create();
+    $order = Order::factory()->create(['user_id' => $buyer->id, 'shop_id' => $shop->id]);
+    $conv = Conversation::factory()->create([
         'order_id' => $order->id, 'buyer_id' => $buyer->id, 'seller_user_id' => $seller->id,
     ]);
 
@@ -131,17 +131,17 @@ test('participant can upload image', function () {
 
 test('viewing conversation marks opponent messages as read', function () {
     $seller = User::factory()->seller()->create();
-    $shop   = Shop::factory()->create(['user_id' => $seller->id]);
-    $buyer  = User::factory()->create();
-    $order  = Order::factory()->create(['user_id' => $buyer->id, 'shop_id' => $shop->id]);
-    $conv   = Conversation::factory()->create([
+    $shop = Shop::factory()->create(['user_id' => $seller->id]);
+    $buyer = User::factory()->create();
+    $order = Order::factory()->create(['user_id' => $buyer->id, 'shop_id' => $shop->id]);
+    $conv = Conversation::factory()->create([
         'order_id' => $order->id, 'buyer_id' => $buyer->id, 'seller_user_id' => $seller->id,
     ]);
 
     Message::factory()->count(3)->create([
         'conversation_id' => $conv->id,
-        'sender_id'       => $seller->id,
-        'read_at'         => null,
+        'sender_id' => $seller->id,
+        'read_at' => null,
     ]);
 
     $this->actingAs($buyer)->get(route('messages.show', $conv));
@@ -151,10 +151,10 @@ test('viewing conversation marks opponent messages as read', function () {
 
 test('unread count only counts opponent messages', function () {
     $seller = User::factory()->seller()->create();
-    $shop   = Shop::factory()->create(['user_id' => $seller->id]);
-    $buyer  = User::factory()->create();
-    $order  = Order::factory()->create(['user_id' => $buyer->id, 'shop_id' => $shop->id]);
-    $conv   = Conversation::factory()->create([
+    $shop = Shop::factory()->create(['user_id' => $seller->id]);
+    $buyer = User::factory()->create();
+    $order = Order::factory()->create(['user_id' => $buyer->id, 'shop_id' => $shop->id]);
+    $conv = Conversation::factory()->create([
         'order_id' => $order->id, 'buyer_id' => $buyer->id, 'seller_user_id' => $seller->id,
     ]);
 

@@ -21,7 +21,7 @@ class UserController extends Controller
     public function updateRole(Request $request, User $user)
     {
         $validated = $request->validate([
-            'role' => ['required', 'in:' . implode(',', [User::ROLE_CUSTOMER, User::ROLE_SELLER, User::ROLE_ADMIN])],
+            'role' => ['required', 'in:'.implode(',', [User::ROLE_CUSTOMER, User::ROLE_SELLER, User::ROLE_ADMIN])],
         ]);
 
         $user->update($validated);

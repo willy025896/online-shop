@@ -18,7 +18,7 @@ class ShopFactory extends Factory
         return [
             'user_id' => User::factory()->seller(),
             'name' => $name,
-            'slug' => Str::slug($name) . '-' . Str::random(4),
+            'slug' => Str::slug($name).'-'.Str::random(4),
             'description' => fake()->optional()->paragraph(),
             'status' => 'approved',
             'approved_at' => now(),

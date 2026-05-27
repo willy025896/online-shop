@@ -1,4 +1,5 @@
 <?php
+
 return [
     'title' => 'Checkout',
     'shipping_info' => 'Shipping Information',

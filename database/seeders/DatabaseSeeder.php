@@ -4,7 +4,6 @@ namespace Database\Seeders;
 
 use App\Models\Category;
 use App\Models\Order;
-use App\Models\OrderItem;
 use App\Models\Product;
 use App\Models\Shop;
 use App\Models\User;
@@ -32,7 +31,7 @@ class DatabaseSeeder extends Seeder
             'Clothing' => ['Men', 'Women', 'Kids'],
             'Home & Garden' => ['Furniture', 'Kitchen', 'Decor'],
             'Sports' => ['Fitness', 'Outdoor', 'Team Sports'],
-        ])->map(function ($children, $parentName, ) {
+        ])->map(function ($children, $parentName) {
             static $sortOrder = 0;
             $parent = Category::factory()->create([
                 'name' => $parentName,
@@ -117,7 +116,7 @@ class DatabaseSeeder extends Seeder
                 $status = fake()->randomElement(['pending', 'paid', 'processing', 'shipped', 'completed', 'completed']);
 
                 $order = Order::create([
-                    'order_number' => 'ORD-' . strtoupper(\Illuminate\Support\Str::random(8)),
+                    'order_number' => 'ORD-'.strtoupper(\Illuminate\Support\Str::random(8)),
                     'user_id' => $customer->id,
                     'shop_id' => $shop->id,
                     'status' => $status,

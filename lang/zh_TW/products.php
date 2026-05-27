@@ -1,4 +1,5 @@
 <?php
+
 return [
     'title' => '商品',
     'search' => '搜尋商品...',

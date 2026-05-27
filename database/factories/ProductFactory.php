@@ -2,7 +2,6 @@
 
 namespace Database\Factories;
 
-use App\Models\Category;
 use App\Models\Shop;
 use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Support\Str;
@@ -21,7 +20,7 @@ class ProductFactory extends Factory
             'shop_id' => Shop::factory(),
             'category_id' => null,
             'name' => ucfirst($name),
-            'slug' => Str::slug($name) . '-' . Str::random(6),
+            'slug' => Str::slug($name).'-'.Str::random(6),
             'description' => fake()->optional()->paragraphs(2, true),
             'price' => $price,
             'compare_price' => fake()->optional(0.3)->randomFloat(2, $price + 5, $price + 100),

@@ -1,4 +1,5 @@
 <?php
+
 return [
     'ConfirmPassword' => [
         'title' => 'Confirm Password',

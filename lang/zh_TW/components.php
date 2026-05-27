@@ -1,4 +1,5 @@
 <?php
+
 return [
     'ConfirmPassword' => [
         'title' => '確認密碼',

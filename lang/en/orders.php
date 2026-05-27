@@ -1,4 +1,5 @@
 <?php
+
 return [
     'title' => 'My Orders',
     'no_orders' => 'No orders yet.',

@@ -1,9 +1,10 @@
 <?php
+
 /**
  * 使用者相關
  */
 
- return [
+return [
     /**
      * common
      */
@@ -13,7 +14,7 @@
         'done' => 'Done.',
         'cancel' => 'Cancel',
         'confirm' => 'Confirm',
-        'password' => 'Please enter your password.'
+        'password' => 'Please enter your password.',
     ],
 
     /**
@@ -21,7 +22,7 @@
      */
     'confirmPassword' => [
         'secureArea' => 'Secure Area',
-        'confirmPasswordHint' => 'This is a secure area of the application. Please confirm your password before continuing.'
+        'confirmPasswordHint' => 'This is a secure area of the application. Please confirm your password before continuing.',
     ],
 
     /**
@@ -37,15 +38,15 @@
             'photo' => [
                 'title' => 'Photo',
                 'new' => 'Select A New Photo',
-                'remove' => 'Remove Photo'
+                'remove' => 'Remove Photo',
             ],
             'name' => 'Name',
             'email' => [
                 'title' => 'Email',
                 'unverified' => 'Your email address is unverified.',
                 'resend' => 'Click here to re-send the verification email.',
-                'sent' => 'A new verification link has been sent to your email address.'
-            ]
+                'sent' => 'A new verification link has been sent to your email address.',
+            ],
         ],
 
         /**
@@ -68,26 +69,26 @@
             'hint' => 'When two factor authentication is enabled, you will be prompted for a secure, random token during authentication. You may retrieve this token from your phone\'s Google Authenticator application.',
             'enabled' => [
                 'title' => 'You have enabled two factor authentication.',
-                'hint' => 'Two factor authentication is now enabled. Scan the following QR code using your phone\'s authenticator application or enter the setup key.'
+                'hint' => 'Two factor authentication is now enabled. Scan the following QR code using your phone\'s authenticator application or enter the setup key.',
             ],
             'disabled' => [
-                'title' => 'You have not enabled two factor authentication.'
+                'title' => 'You have not enabled two factor authentication.',
             ],
             'enabling' => [
                 'title' => 'Finish enabling two factor authentication.',
                 'hint' => 'To finish enabling two factor authentication, scan the following QR code using your phone\'s authenticator application or enter the setup key and provide the generated OTP code.',
-                'code' => 'Code'
+                'code' => 'Code',
             ],
             'recovery' => [
                 'hint' => 'Store these recovery codes in a secure password manager. They can be used to recover access to your account if your two factor authentication device is lost.',
                 'regenerate' => 'Regenerate Recovery Codes',
-                'show' => 'Show Recovery Codes'
+                'show' => 'Show Recovery Codes',
             ],
             'setupKey' => 'Setup Key',
             'confirm' => 'Confirm',
             'cancel' => 'Cancel',
             'disable' => 'Disable',
-            'enable' => 'Enable'
+            'enable' => 'Enable',
         ],
 
         /**
@@ -111,6 +112,6 @@
             'description' => 'Permanently delete your account.',
             'content' => 'Once your account is deleted, all of its resources and data will be permanently deleted. Before deleting your account, please download any data or information that you wish to retain.',
             'confirm' => 'Are you sure you want to delete your account? Once your account is deleted, all of its resources and data will be permanently deleted. Please enter your password to confirm you would like to permanently delete your account.',
-        ]
+        ],
     ],
- ];
+];

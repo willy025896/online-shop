@@ -12,10 +12,10 @@ class MessageFactory extends Factory
     {
         return [
             'conversation_id' => Conversation::factory(),
-            'sender_id'       => User::factory(),
-            'body'            => fake()->sentence(),
-            'image_path'      => null,
-            'read_at'         => null,
+            'sender_id' => User::factory(),
+            'body' => fake()->sentence(),
+            'image_path' => null,
+            'read_at' => null,
         ];
     }
 
@@ -27,8 +27,8 @@ class MessageFactory extends Factory
     public function image(): static
     {
         return $this->state(fn () => [
-            'body'       => null,
-            'image_path' => 'messages/test/' . fake()->uuid() . '.jpg',
+            'body' => null,
+            'image_path' => 'messages/test/'.fake()->uuid().'.jpg',
         ]);
     }
 }

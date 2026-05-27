@@ -1,4 +1,5 @@
 <?php
+
 return [
     'title' => '購物車',
     'empty' => '購物車是空的。',

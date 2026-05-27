@@ -1,4 +1,5 @@
 <?php
+
 return [
     'panel' => 'Admin Panel',
     'dashboard' => 'Dashboard',

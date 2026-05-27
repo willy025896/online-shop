@@ -1,4 +1,5 @@
 <?php
+
 return [
     'title' => '儀表板',
     'welcome' => '歡迎回來！',

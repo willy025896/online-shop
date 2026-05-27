@@ -1,4 +1,5 @@
 <?php
+
 return [
     'title' => 'Shops',
     'all_shops' => 'All Shops',

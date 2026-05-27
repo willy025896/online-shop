@@ -1,4 +1,5 @@
 <?php
+
 return [
     'title' => '店鋪',
     'all_shops' => '所有店鋪',

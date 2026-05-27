@@ -11,9 +11,9 @@ class ConversationFactory extends Factory
     public function definition(): array
     {
         return [
-            'order_id'        => Order::factory(),
-            'buyer_id'        => User::factory(),
-            'seller_user_id'  => User::factory(),
+            'order_id' => Order::factory(),
+            'buyer_id' => User::factory(),
+            'seller_user_id' => User::factory(),
             'last_message_at' => null,
         ];
     }

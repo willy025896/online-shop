@@ -1,4 +1,5 @@
 <?php
+
 return [
     'panel' => '賣家中心',
     'dashboard' => '儀表板',

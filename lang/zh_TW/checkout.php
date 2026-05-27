@@ -1,4 +1,5 @@
 <?php
+
 return [
     'title' => '結帳',
     'shipping_info' => '收件資訊',

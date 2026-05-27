@@ -1,4 +1,5 @@
 <?php
+
 return [
     'email' => '電子信箱',
     'password' => '密碼',
