@@ -3,7 +3,6 @@
 namespace App\Http\Controllers\Seller;
 
 use App\Http\Controllers\Controller;
-use App\Http\Controllers\Seller\DashboardController;
 use Illuminate\Http\Request;
 
 class PreferenceController extends Controller

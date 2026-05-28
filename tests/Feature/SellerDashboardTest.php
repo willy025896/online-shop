@@ -11,6 +11,7 @@ function makeSeller(): array
 {
     $seller = User::factory()->seller()->create();
     $shop = Shop::factory()->create(['user_id' => $seller->id, 'status' => 'approved']);
+
     return compact('seller', 'shop');
 }
 
