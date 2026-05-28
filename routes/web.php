@@ -5,6 +5,7 @@ use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\CheckoutController;
 use App\Http\Controllers\ConversationController;
 use App\Http\Controllers\LocaleController;
+use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\OrderController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\ShopController;
@@ -60,6 +61,14 @@ Route::middleware([
     // Seller registration (any authenticated user)
     Route::get('/seller/register', [App\Http\Controllers\Seller\RegisterController::class, 'create'])->name('seller.register');
     Route::post('/seller/register', [App\Http\Controllers\Seller\RegisterController::class, 'store'])->name('seller.register.store');
+
+    // Notifications
+    Route::prefix('notifications')->name('notifications.')->group(function () {
+        Route::get('/', [NotificationController::class, 'index'])->name('index');
+        Route::post('{id}/read', [NotificationController::class, 'markRead'])->name('read');
+        Route::post('read-all', [NotificationController::class, 'markAllRead'])->name('read_all');
+        Route::delete('{id}', [NotificationController::class, 'destroy'])->name('destroy');
+    });
 });
 
 // Seller routes

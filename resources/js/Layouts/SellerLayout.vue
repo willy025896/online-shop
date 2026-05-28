@@ -4,6 +4,7 @@ import { Head, Link, router, usePage } from '@inertiajs/vue3';
 import ApplicationMark from '@/Components/ApplicationMark.vue';
 import Dropdown from '@/Components/Dropdown.vue';
 import DropdownLink from '@/Components/DropdownLink.vue';
+import NotificationBell from '@/Components/NotificationBell.vue';
 
 defineProps({
     title: String,
@@ -94,22 +95,25 @@ const navItems = computed(() => [
                             <div class="text-sm text-gray-600 dark:text-gray-400 truncate">
                                 {{ $page.props.auth.user.name }}
                             </div>
-                            <Dropdown align="right" width="48" position="top">
-                                <template #trigger>
-                                    <button class="text-gray-400 hover:text-gray-600">
-                                        <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z" />
-                                        </svg>
-                                    </button>
-                                </template>
-                                <template #content>
-                                    <DropdownLink :href="route('home')">{{ nav.back_to_store }}</DropdownLink>
-                                    <DropdownLink :href="route('profile.show')">{{ nav.profile }}</DropdownLink>
-                                    <form @submit.prevent="logout">
-                                        <DropdownLink as="button">{{ nav.log_out }}</DropdownLink>
-                                    </form>
-                                </template>
-                            </Dropdown>
+                            <div class="flex items-center gap-1">
+                                <NotificationBell />
+                                <Dropdown align="right" width="48" position="top">
+                                    <template #trigger>
+                                        <button class="text-gray-400 hover:text-gray-600">
+                                            <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z" />
+                                            </svg>
+                                        </button>
+                                    </template>
+                                    <template #content>
+                                        <DropdownLink :href="route('home')">{{ nav.back_to_store }}</DropdownLink>
+                                        <DropdownLink :href="route('profile.show')">{{ nav.profile }}</DropdownLink>
+                                        <form @submit.prevent="logout">
+                                            <DropdownLink as="button">{{ nav.log_out }}</DropdownLink>
+                                        </form>
+                                    </template>
+                                </Dropdown>
+                            </div>
                         </div>
                     </div>
                 </aside>

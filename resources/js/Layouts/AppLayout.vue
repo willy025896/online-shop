@@ -6,6 +6,7 @@ import Banner from '@/Components/Banner.vue';
 import Dropdown from '@/Components/Dropdown.vue';
 import DropdownLink from '@/Components/DropdownLink.vue';
 import NavLink from '@/Components/NavLink.vue';
+import NotificationBell from '@/Components/NotificationBell.vue';
 import ResponsiveNavLink from '@/Components/ResponsiveNavLink.vue';
 
 defineProps({
@@ -107,6 +108,9 @@ const logout = () => {
                                     {{ unreadMessageCount > 99 ? '99+' : unreadMessageCount }}
                                 </span>
                             </Link>
+
+                            <!-- Notification Bell (auth only) -->
+                            <NotificationBell />
 
                             <!-- Login button (guest only) -->
                             <Link v-if="!$page.props.auth?.user" :href="route('login')" class="ms-3 text-sm font-medium text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300">

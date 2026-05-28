@@ -29,6 +29,9 @@ class HandleInertiaRequests extends Middleware
             'locale' => app()->getLocale(),
             'cartCount' => fn () => app(CartService::class)->getCartCount(),
             'unreadMessageCount' => fn () => $this->getUnreadMessageCount($request),
+            'unreadNotificationCount' => fn () => $request->user()?->unreadNotifications()->count() ?? 0,
+            'recentNotifications' => fn () => $request->user()?->notifications()->limit(10)->get() ?? collect(),
+            'notificationBellLang' => fn () => Lang::get('notifications'),
             'userRole' => fn () => $request->user()?->role,
             'flash' => [
                 'success' => fn () => $request->session()->get('success'),

@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Notifications\OrderStatusChangedNotification;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -38,6 +39,19 @@ class Order extends Model
         self::STATUS_COMPLETED => 4,
     ];
 
+    /**
+     * Buyer-facing milestone statuses worth a generic notification.
+     * `cancelled` is intentionally excluded — every cancellation path
+     * (buyer direct, seller direct, request approved/rejected) already
+     * fires its own purpose-specific notification, so adding the generic
+     * one here would double-notify the buyer or self-notify them.
+     */
+    private const BUYER_NOTIFY_STATUSES = [
+        self::STATUS_PAID,
+        self::STATUS_SHIPPED,
+        self::STATUS_COMPLETED,
+    ];
+
     protected static function booted(): void
     {
         static::updated(function (Order $order) {
@@ -47,6 +61,11 @@ class Order extends Model
                     'to_status' => $order->status,
                     'changed_by' => auth()->id(),
                 ]);
+
+                if (in_array($order->status, self::BUYER_NOTIFY_STATUSES, true)) {
+                    $order->loadMissing('user');
+                    $order->user?->notify(new OrderStatusChangedNotification($order, $order->status));
+                }
             }
         });
     }

@@ -7,6 +7,9 @@ use App\Models\Order;
 use App\Models\OrderCancellation;
 use App\Models\Product;
 use App\Models\User;
+use App\Notifications\OrderCancellationRequestedNotification;
+use App\Notifications\OrderCancellationRespondedNotification;
+use App\Notifications\OrderCancelledBySellerNotification;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 
@@ -109,6 +112,9 @@ class OrderService
                 'status' => OrderCancellation::STATUS_REQUESTED,
                 'reason' => $reason,
             ]);
+
+            $lockedOrder->loadMissing('shop.user');
+            $lockedOrder->shop?->user?->notify(new OrderCancellationRequestedNotification($lockedOrder));
         });
     }
 
@@ -128,6 +134,9 @@ class OrderService
             ]);
 
             $this->finalizeCancellation($locked->order);
+
+            $locked->order->loadMissing('user');
+            $locked->order->user?->notify(new OrderCancellationRespondedNotification($locked));
         });
     }
 
@@ -146,6 +155,9 @@ class OrderService
                 'response_reason' => $responseReason,
                 'responded_at' => now(),
             ]);
+
+            $locked->order->loadMissing('user');
+            $locked->order->user?->notify(new OrderCancellationRespondedNotification($locked));
         });
     }
 
@@ -167,6 +179,9 @@ class OrderService
             ]);
 
             $this->finalizeCancellation($lockedOrder);
+
+            $lockedOrder->loadMissing('user');
+            $lockedOrder->user?->notify(new OrderCancelledBySellerNotification($lockedOrder));
         });
     }
 
