@@ -395,3 +395,38 @@ test('cancellation is also recorded in the status log', function () {
 
     expect($order->statusLogs()->where('to_status', 'cancelled')->count())->toBe(1);
 });
+
+test('non-admin users cannot access admin order show', function () {
+    ['buyer' => $buyer, 'seller' => $seller, 'order' => $order] = makeOrderWithItem();
+
+    $this->get(route('admin.orders.show', $order))->assertRedirect('/login');
+
+    $this->actingAs($buyer)
+        ->get(route('admin.orders.show', $order))
+        ->assertForbidden();
+
+    $this->actingAs($seller)
+        ->get(route('admin.orders.show', $order))
+        ->assertForbidden();
+});
+
+test('admin can view order show with status logs loaded', function () {
+    ['seller' => $seller, 'order' => $order] = makeOrderWithItem(['status' => 'paid']);
+    $admin = User::factory()->admin()->create();
+
+    $this->actingAs($seller)
+        ->patch(route('seller.orders.status', $order), ['status' => 'processing'])
+        ->assertRedirect();
+
+    $this->actingAs($admin)
+        ->get(route('admin.orders.show', $order))
+        ->assertStatus(200)
+        ->assertInertia(fn ($page) => $page
+            ->component('Admin/Orders/Show')
+            ->where('order.id', $order->id)
+            ->has('order.status_logs', 1)
+            ->where('order.status_logs.0.from_status', 'paid')
+            ->where('order.status_logs.0.to_status', 'processing')
+            ->where('order.status_logs.0.changed_by.id', $seller->id)
+        );
+});

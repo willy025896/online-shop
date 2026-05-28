@@ -1,6 +1,6 @@
 <script setup>
 import { computed } from 'vue';
-import { usePage } from '@inertiajs/vue3';
+import { Link, usePage } from '@inertiajs/vue3';
 import AdminLayout from '@/Layouts/AdminLayout.vue';
 import OrderStatusBadge from '@/Components/OrderStatusBadge.vue';
 import Pagination from '@/Components/Pagination.vue';
@@ -33,7 +33,11 @@ const lang = computed(() => page.props.lang || {});
                 </thead>
                 <tbody class="divide-y divide-gray-200 dark:divide-gray-700">
                     <tr v-for="order in orders.data" :key="order.id">
-                        <td class="px-6 py-4 text-sm font-medium text-gray-900 dark:text-gray-100">{{ order.order_number }}</td>
+                        <td class="px-6 py-4 text-sm font-medium text-gray-900 dark:text-gray-100">
+                            <Link :href="route('admin.orders.show', order.id)" class="text-indigo-600 dark:text-indigo-400 hover:underline">
+                                {{ order.order_number }}
+                            </Link>
+                        </td>
                         <td class="px-6 py-4 text-sm text-gray-500 dark:text-gray-400">{{ order.user?.name }}</td>
                         <td class="px-6 py-4 text-sm text-gray-500 dark:text-gray-400">{{ order.shop?.name }}</td>
                         <td class="px-6 py-4 text-sm font-medium text-gray-900 dark:text-gray-100">${{ Number(order.total).toFixed(2) }}</td>

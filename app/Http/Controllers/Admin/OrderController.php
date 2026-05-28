@@ -18,4 +18,22 @@ class OrderController extends Controller
             'orders' => $orders,
         ]);
     }
+
+    public function show(Order $order)
+    {
+        $this->authorize('view', $order);
+
+        $order->load([
+            'user:id,name,email',
+            'shop:id,name',
+            'items.product:id,name',
+            'cancellations.responder:id,name',
+            'statusLogs' => fn ($q) => $q->latest('created_at'),
+            'statusLogs.changedBy:id,name,role',
+        ]);
+
+        return Inertia::render('Admin/Orders/Show', [
+            'order' => $order,
+        ]);
+    }
 }
