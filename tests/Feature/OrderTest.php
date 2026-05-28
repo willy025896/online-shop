@@ -295,3 +295,29 @@ test('duplicate cancellation requests are handled idempotently (Bug 4)', functio
 
     expect($order->cancellations()->where('status', 'requested')->count())->toBe(1);
 });
+
+test('duplicate direct buyer cancellations do not restore stock twice (Bug 5)', function () {
+    ['product' => $product, 'order' => $order] = makeOrderWithItem(['status' => 'paid'], stock: 5, qty: 2);
+
+    $service = app(App\Services\OrderService::class);
+
+    $service->directCancelByBuyer($order, 'First try');
+    $service->directCancelByBuyer($order, 'Second try');
+
+    expect($order->fresh()->status)->toBe('cancelled');
+    expect($product->fresh()->stock)->toBe(7);
+    expect($order->cancellations()->where('status', 'approved')->count())->toBe(1);
+});
+
+test('duplicate direct seller cancellations do not restore stock twice (Bug 5)', function () {
+    ['seller' => $seller, 'product' => $product, 'order' => $order] = makeOrderWithItem(['status' => 'processing'], stock: 5, qty: 2);
+
+    $service = app(App\Services\OrderService::class);
+
+    $service->cancelBySeller($order, $seller, 'First try');
+    $service->cancelBySeller($order, $seller, 'Second try');
+
+    expect($order->fresh()->status)->toBe('cancelled');
+    expect($product->fresh()->stock)->toBe(7);
+    expect($order->cancellations()->where('status', 'approved')->count())->toBe(1);
+});

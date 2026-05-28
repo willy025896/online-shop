@@ -77,14 +77,20 @@ class OrderService
     public function directCancelByBuyer(Order $order, string $reason): void
     {
         DB::transaction(function () use ($order, $reason) {
-            $order->cancellations()->create([
+            $lockedOrder = Order::lockForUpdate()->find($order->id);
+
+            if (! $lockedOrder->canBeCancelledDirectly()) {
+                return; // idempotent — silently skip duplicates
+            }
+
+            $lockedOrder->cancellations()->create([
                 'initiated_by' => OrderCancellation::INITIATED_BY_BUYER,
                 'status' => OrderCancellation::STATUS_APPROVED,
                 'reason' => $reason,
                 'responded_at' => now(),
             ]);
 
-            $this->finalizeCancellation($order);
+            $this->finalizeCancellation($lockedOrder);
         });
     }
 
@@ -146,7 +152,13 @@ class OrderService
     public function cancelBySeller(Order $order, User $seller, string $reason): void
     {
         DB::transaction(function () use ($order, $seller, $reason) {
-            $order->cancellations()->create([
+            $lockedOrder = Order::lockForUpdate()->find($order->id);
+
+            if (! $lockedOrder->isActive() || $lockedOrder->pendingCancellation() !== null) {
+                return; // idempotent — skip if already finalized or awaiting buyer review
+            }
+
+            $lockedOrder->cancellations()->create([
                 'initiated_by' => OrderCancellation::INITIATED_BY_SELLER,
                 'status' => OrderCancellation::STATUS_APPROVED,
                 'reason' => $reason,
@@ -154,7 +166,7 @@ class OrderService
                 'responded_at' => now(),
             ]);
 
-            $this->finalizeCancellation($order);
+            $this->finalizeCancellation($lockedOrder);
         });
     }
 
