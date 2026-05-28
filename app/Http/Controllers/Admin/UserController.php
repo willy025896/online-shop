@@ -24,7 +24,8 @@ class UserController extends Controller
             'role' => ['required', 'in:'.implode(',', [User::ROLE_CUSTOMER, User::ROLE_SELLER, User::ROLE_ADMIN])],
         ]);
 
-        $user->update($validated);
+        $user->role = $validated['role'];
+        $user->save();
 
         return back()->with('success', 'User role updated.');
     }

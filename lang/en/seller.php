@@ -12,6 +12,32 @@ return [
     'no_orders' => 'No orders yet.',
     'shop_pending' => 'Your shop is pending approval. Some features may be limited.',
 
+    'period_today' => 'Today',
+    'period_week' => 'This Week',
+    'period_month' => 'This Month',
+    'period_all' => 'All Time',
+
+    'revenue' => 'Revenue',
+    'revenue_vs_prev' => 'vs last period',
+    'revenue_growth' => ':pct% vs last period',
+    'total_orders' => 'Total Orders',
+    'no_data' => 'No data for this period.',
+
+    'order_status_dist' => 'Order Status',
+    'top_products' => 'Top Products',
+    'top_products_empty' => 'No sales data yet.',
+    'product_name' => 'Product',
+    'qty_sold' => 'Qty Sold',
+    'revenue_col' => 'Revenue',
+    'sales_trend' => 'Sales Trend',
+
+    'widget_settings' => 'Customize Widgets',
+    'widget_revenue' => 'Revenue Card',
+    'widget_order_status' => 'Order Status',
+    'widget_top_products' => 'Top Products',
+    'widget_revenue_chart' => 'Sales Chart',
+    'save_preferences' => 'Save',
+
     'register' => [
         'title' => 'Register as a Seller',
         'subtitle' => 'Set up your shop and start selling.',

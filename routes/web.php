@@ -95,6 +95,16 @@ Route::middleware([
     Route::put('/shop', [App\Http\Controllers\Seller\ShopController::class, 'update'])->name('shop.update');
 });
 
+// Seller-only preference (excludes admin — admins have no seller dashboard)
+Route::middleware([
+    'auth:sanctum',
+    config('jetstream.auth_session'),
+    'verified',
+    'role:seller',
+])->prefix('seller')->name('seller.')->group(function () {
+    Route::patch('/preferences', [App\Http\Controllers\Seller\PreferenceController::class, 'update'])->name('preferences.update');
+});
+
 // Admin routes
 Route::middleware([
     'auth:sanctum',

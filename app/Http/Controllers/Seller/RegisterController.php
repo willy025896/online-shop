@@ -40,7 +40,9 @@ class RegisterController extends Controller
             'status' => Shop::STATUS_PENDING,
         ]);
 
-        auth()->user()->update(['role' => User::ROLE_SELLER]);
+        $user = auth()->user();
+        $user->role = User::ROLE_SELLER;
+        $user->save();
 
         return redirect()->route('seller.dashboard')
             ->with('success', 'Shop registration submitted. Please wait for approval.');

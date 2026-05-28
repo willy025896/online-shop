@@ -12,6 +12,32 @@ return [
     'no_orders' => '尚無訂單。',
     'shop_pending' => '您的店鋪正在審核中，部分功能可能受到限制。',
 
+    'period_today' => '今天',
+    'period_week' => '本週',
+    'period_month' => '本月',
+    'period_all' => '全部',
+
+    'revenue' => '營收',
+    'revenue_vs_prev' => '對比上期',
+    'revenue_growth' => ':pct% 對比上期',
+    'total_orders' => '訂單總數',
+    'no_data' => '本期間無資料。',
+
+    'order_status_dist' => '訂單狀態',
+    'top_products' => '熱賣商品',
+    'top_products_empty' => '尚無銷售資料。',
+    'product_name' => '商品',
+    'qty_sold' => '銷售量',
+    'revenue_col' => '營收',
+    'sales_trend' => '銷售趨勢',
+
+    'widget_settings' => '自訂顯示',
+    'widget_revenue' => '營收卡片',
+    'widget_order_status' => '訂單狀態',
+    'widget_top_products' => '熱賣商品',
+    'widget_revenue_chart' => '銷售圖表',
+    'save_preferences' => '儲存',
+
     'register' => [
         'title' => '註冊成為賣家',
         'subtitle' => '建立您的店鋪，開始販售。',
