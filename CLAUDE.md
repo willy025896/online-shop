@@ -18,6 +18,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - **Inertia.js v1** — bridges Laravel and Vue without a separate API (except for specific endpoints)
 - **Vue 3** (Composition API with `<script setup>`) — frontend
 - **Laravel Jetstream 5** — authentication scaffolding (Sanctum, 2FA, profile management, API tokens, teams)
+- **Laravel Reverb 1** + **Laravel Echo** + **pusher-js** — WebSocket broadcasting for real-time messages and notifications
 - **Tailwind CSS v3** — styling
 - **Pest 3** — PHP testing framework
 - **MySQL 8** — database
@@ -34,6 +35,7 @@ npm install
 # Development
 npm run dev          # Start Vite dev server (hot reload)
 php artisan serve    # Start Laravel dev server
+npm run dev:full     # Start Vite + Laravel + Reverb in parallel (use this when working on notifications/messaging)
 
 # Build
 npm run build        # Production Vite build
@@ -63,8 +65,14 @@ Pages are served by Laravel controllers/routes that call `Inertia::render('PageN
 - `nav` — navigation strings from `lang/{locale}/navigation.php` (always loaded)
 - `locale` — current locale string (`en` or `zh_TW`)
 - `cartCount` — current user's cart item count
+- `unreadMessageCount` — unread chat-message count for the auth user
+- `unreadNotificationCount` — unread notification count (Laravel `notifications` table)
+- `recentNotifications` — 10 most recent notifications (for the `NotificationBell` dropdown)
+- `notificationBellLang` — i18n bundle from `lang/{locale}/notifications.php` (the bell renders on every page, so its strings ship globally)
 - `userRole` — current user's role (`customer` / `seller` / `admin`)
 - `flash` — flash messages (`success`, `error`)
+
+All user-scoped props are lazy closures and only computed when Inertia requests them (full load or partial reload).
 
 ### i18n (Localization) System
 
@@ -113,6 +121,32 @@ Two consequences to keep in mind when changing order status:
 - **Atomicity** — the log insert fires inside the `updated` event, so it only commits atomically with the status change if the `$order->update()` runs inside a `DB::transaction`. All current status-mutating paths (`updateStatus`, `PaymentService::simulatePayment`, `OrderService` cancellation methods) are wrapped in a transaction for this reason. Wrap any new one too.
 - **Bulk-update caveat** — Eloquent's `updated` event does **not** fire on query-builder bulk updates (`Order::where(...)->update(['status' => ...])`), so those would silently bypass the log. Always change order status via a model instance (`$order->update(...)`), never a bulk query.
 
+### Notifications
+
+Uses Laravel's built-in `Notifiable` pipeline. Each Notification's `via()` returns `['database', 'broadcast']`:
+
+- **database** — written to the `notifications` table; the `NotificationBell` dropdown and `/notifications` index page read from it via `$request->user()->notifications()` / `unreadNotifications()`.
+- **broadcast** — pushed over Reverb to Laravel's default `private-App.Models.User.{id}` channel (authorization is registered in `routes/channels.php`). The front-end `NotificationBell.vue` subscribes via `Echo.private(...).notification(cb)` and prepends new entries without a page reload.
+
+Notification classes live in `app/Notifications/`. Each `toArray()` returns a uniform payload — `{ type, title, body, url, meta }` — so the bell renders any type from a single template.
+
+**Trigger map:**
+
+| Event | Triggered in | Notification | Recipient |
+|-------|--------------|--------------|-----------|
+| Payment success | `PaymentService::simulatePayment` | `OrderPaidNotification` | Seller |
+| Status changes to `paid`/`shipped`/`completed` | `Order::booted()` `updated` event (whitelist `BUYER_NOTIFY_STATUSES`) | `OrderStatusChangedNotification` | Buyer |
+| Buyer requests cancellation | `OrderService::requestCancellation` | `OrderCancellationRequestedNotification` | Seller |
+| Seller approves/rejects cancellation | `OrderService::approveCancellation` / `rejectCancellation` | `OrderCancellationRespondedNotification` | Buyer |
+| Seller directly cancels | `OrderService::cancelBySeller` | `OrderCancelledBySellerNotification` | Buyer |
+| Shop `approved`/`suspended` | `Admin\ShopController::updateStatus` | `ShopStatusChangedNotification` | Seller |
+
+`cancelled` is intentionally **excluded** from `Order::BUYER_NOTIFY_STATUSES` — every cancellation path already fires a path-specific notification, so including it would double-notify the buyer (or self-notify when they cancel their own order). If you add a new cancellation path, dispatch the relevant notification explicitly inside the same `DB::transaction`.
+
+Channel auth is in `routes/channels.php`: `App.Models.User.{id}` accepts only the channel owner. Don't add unscoped channels.
+
+The new-message broadcast (`MessageSent` event, `Conversation` chat) is **separate** from the notification pipeline — chat keeps its own `unreadMessageCount` badge and `private-conversation.{id}` channel; don't merge them.
+
 ### Adding New Pages
 
 1. Add a route in `routes/web.php` returning `Inertia::render('PageName')`.
@@ -128,23 +162,26 @@ Two consequences to keep in mind when changing order status:
 online-shop/
 ├── .claude/                    # AI 操作規範、task/decision 記錄、implementation records
 ├── app/
+│   ├── Events/                 # MessageSent (chat broadcast)
 │   ├── Http/
-│   │   ├── Controllers/        # 8 public + 2 utility + 6 seller + 6 admin = 22 controllers
+│   │   ├── Controllers/        # public + utility + seller + admin (incl. NotificationController)
 │   │   └── Middleware/         # EnsureRole, SetLocale, HandleInertiaRequests
+│   ├── Notifications/          # 6 Notification classes (Order*, Shop*); via() = ['database','broadcast']
 │   ├── Policies/               # 3 policies (Product, Order, Shop)
-│   ├── Models/                 # 13 models (User, Shop, Product, Order, OrderCancellation, OrderStatusLog, ...)
-│   └── Services/               # 3 services (Cart, Order, Payment)
+│   ├── Models/                 # 13 models (User, Shop, Product, Order, OrderCancellation, OrderStatusLog, Conversation, Message, ...)
+│   └── Services/               # Cart, Order, Payment, Conversation
 ├── database/
-│   └── migrations/             # 14 migrations
+│   └── migrations/             # 15 migrations (incl. Laravel notifications table)
 ├── lang/
-│   ├── en/                     # English translations
+│   ├── en/                     # English translations (incl. notifications.php)
 │   └── zh_TW/                  # Traditional Chinese translations
 ├── resources/js/
-│   ├── Components/             # Custom + Jetstream defaults
-│   ├── Layouts/                # AppLayout, SellerLayout, AdminLayout
-│   └── Pages/                  # Public, Auth, Seller/, Admin/ pages
+│   ├── Components/             # Custom (NotificationBell, ...) + Jetstream defaults
+│   ├── Layouts/                # AppLayout, SellerLayout, AdminLayout (all mount <NotificationBell />)
+│   └── Pages/                  # Public, Auth, Seller/, Admin/, Notifications/ pages
 ├── routes/
-│   └── web.php                 # All routes (4 groups: public, auth, seller, admin)
-└── tests/Feature/              # Pest tests: Product, Shop, Cart, Seller, Admin, Order
+│   ├── web.php                 # All HTTP routes (4 groups: public, auth, seller, admin)
+│   └── channels.php            # Broadcast channel authorization (App.Models.User.{id}, conversation.{id})
+└── tests/Feature/              # Pest tests: Product, Shop, Cart, Seller, Admin, Order, Notification, Conversation
 ```
 

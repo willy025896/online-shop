@@ -4,19 +4,21 @@ Multi-vendor e-commerce platform with buyer/seller/admin roles, built with Larav
 
 ## Tech Stack
 
-| Category   | Technology       | Version |
-|------------|------------------|---------|
-| Backend    | Laravel          | 12.53.0 |
-| PHP        | PHP              | 8.3.13  |
-| Frontend   | Vue.js           | 3.4.35  |
-| SPA Bridge | Inertia.js       | 1.2.0   |
-| Auth       | Laravel Jetstream | 5.4.0  |
-| Auth Token | Laravel Sanctum  | 4.3.1   |
-| Styling    | Tailwind CSS     | 3.4.7   |
-| Build Tool | Vite             | 6.4.1   |
-| Testing    | Pest             | 3.8.5   |
-| Database   | MySQL            | 8       |
-| Runtime    | Node.js          | 20.18.1 |
+| Category      | Technology        | Version |
+|---------------|-------------------|---------|
+| Backend       | Laravel           | 12.53.0 |
+| PHP           | PHP               | 8.3.13  |
+| Frontend      | Vue.js            | 3.4.35  |
+| SPA Bridge    | Inertia.js        | 1.2.0   |
+| Auth          | Laravel Jetstream | 5.4.0   |
+| Auth Token    | Laravel Sanctum   | 4.3.1   |
+| Broadcasting  | Laravel Reverb    | 1.10    |
+| WebSocket     | Laravel Echo + pusher-js | 2.3 / 8.5 |
+| Styling       | Tailwind CSS      | 3.4.7   |
+| Build Tool    | Vite              | 6.4.1   |
+| Testing       | Pest              | 3.8.5   |
+| Database      | MySQL             | 8       |
+| Runtime       | Node.js           | 20.18.1 |
 
 ## Requirements
 
@@ -52,9 +54,21 @@ npm run dev
 
 # Start Laravel dev server
 php artisan serve
+
+# Start Vite + Laravel + Reverb in parallel (for real-time chat / notifications)
+npm run dev:full
 ```
 
 Visit `http://localhost:8000` in your browser.
+
+### Real-time features (chat & notifications)
+
+Both the in-app chat and the notification bell rely on Laravel Reverb (WebSocket). For these to work locally:
+
+1. Set the Reverb env vars in `.env` (see `.env.example`: `REVERB_APP_ID`, `REVERB_APP_KEY`, `REVERB_APP_SECRET`, plus the matching `VITE_REVERB_*` mirrors)
+2. Run `npm run dev:full` (which also starts `php artisan reverb:start`)
+
+Without Reverb, the bell still works via Inertia data — the `database` notification channel keeps writing entries — but new ones won't appear until the next page navigation.
 
 ## Build
 
@@ -91,23 +105,26 @@ php artisan test tests/Feature/AuthenticationTest.php
 online-shop/
 ├── .claude/                    # AI task records, decisions, implementation records
 ├── app/
+│   ├── Events/                 # MessageSent (chat broadcast)
 │   ├── Http/
-│   │   ├── Controllers/        # 8 public + 2 utility + 6 seller + 6 admin = 22 controllers
+│   │   ├── Controllers/        # public + utility + seller + admin (incl. NotificationController)
 │   │   └── Middleware/         # EnsureRole, SetLocale, HandleInertiaRequests
+│   ├── Notifications/          # OrderPaid, OrderStatusChanged, ShopStatusChanged, ... (database + broadcast)
 │   ├── Policies/               # Product, Order, Shop
-│   ├── Models/                 # 12 models (constants defined on each model)
-│   └── Services/               # Cart, Order, Payment
+│   ├── Models/                 # 13 models (constants defined on each model)
+│   └── Services/               # Cart, Order, Payment, Conversation
 ├── database/
-│   └── migrations/             # 14 migrations
+│   └── migrations/             # 15 migrations
 ├── lang/
-│   ├── en/                     # English translations
+│   ├── en/                     # English translations (incl. notifications.php)
 │   └── zh_TW/                  # Traditional Chinese translations
 ├── resources/js/
-│   ├── Components/             # Shared Vue components
+│   ├── Components/             # Shared Vue components (incl. NotificationBell)
 │   ├── Layouts/                # App, Seller, Admin layouts
-│   └── Pages/                  # Vue pages (organized by feature)
+│   └── Pages/                  # Vue pages organized by feature (incl. Notifications/)
 ├── routes/
-│   └── web.php                 # All routes (public, auth, seller, admin)
+│   ├── web.php                 # HTTP routes (public, auth, seller, admin)
+│   └── channels.php            # Broadcast channel authorization
 └── tests/                      # Pest tests
 ```
 
