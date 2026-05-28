@@ -8,6 +8,7 @@
 
 1. 在 `tasks/` 建立合併的任務記錄（包含請求與變更）
 2. 若任務涉及架構決策，建立 ADR 至 `decisions/`
+3. 完成任何程式碼異動（新增、修復、重構）後，**立即執行 `post-change-review` skill** 進行審查
 
 > Claude Code 的 memory（使用者偏好/反饋）與 plan mode（實作計畫）由 Claude 內建功能管理，不放入 `.claude/`。
 
