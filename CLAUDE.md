@@ -102,6 +102,17 @@ Usage: `Shop::STATUS_APPROVED`, `User::ROLE_SELLER`, etc.
 
 Cart supports both guests and authenticated users. `CartService` identifies a cart by `user_id` for authenticated users and `session_id` for guests. On login, `CartService::mergeGuestCart()` merges the guest cart into the user's cart. Policies in `app/Policies/` govern seller/admin resource authorization.
 
+### Order Status Transitions & Logging
+
+Seller status changes go through `Seller\OrderController::updateStatus`, guarded by `Order::canTransitionStatusTo()`. The rule is **forward-only** (by the `Order::STATUS_RANK` map) and rejects terminal sources (`completed`/`cancelled`) and orders with a pending cancellation — but it deliberately allows legitimate skips such as `pending → shipped` (cash-on-delivery) and `paid → completed` (virtual goods). Invalid transitions `abort(422)`.
+
+**Every status change is logged** to the `order_status_logs` table. Logging is **event-based**: the `Order` model's `updated` event (registered in `Order::booted()`) writes a row whenever `status` changes, capturing `from_status` / `to_status` / `changed_by`. This auto-captures all paths (payment, seller update, cancellation finalize) without per-call-site code.
+
+Two consequences to keep in mind when changing order status:
+
+- **Atomicity** — the log insert fires inside the `updated` event, so it only commits atomically with the status change if the `$order->update()` runs inside a `DB::transaction`. All current status-mutating paths (`updateStatus`, `PaymentService::simulatePayment`, `OrderService` cancellation methods) are wrapped in a transaction for this reason. Wrap any new one too.
+- **Bulk-update caveat** — Eloquent's `updated` event does **not** fire on query-builder bulk updates (`Order::where(...)->update(['status' => ...])`), so those would silently bypass the log. Always change order status via a model instance (`$order->update(...)`), never a bulk query.
+
 ### Adding New Pages
 
 1. Add a route in `routes/web.php` returning `Inertia::render('PageName')`.
@@ -121,7 +132,7 @@ online-shop/
 │   │   ├── Controllers/        # 8 public + 2 utility + 6 seller + 6 admin = 22 controllers
 │   │   └── Middleware/         # EnsureRole, SetLocale, HandleInertiaRequests
 │   ├── Policies/               # 3 policies (Product, Order, Shop)
-│   ├── Models/                 # 12 models (User, Shop, Product, Order, OrderCancellation, ...)
+│   ├── Models/                 # 13 models (User, Shop, Product, Order, OrderCancellation, OrderStatusLog, ...)
 │   └── Services/               # 3 services (Cart, Order, Payment)
 ├── database/
 │   └── migrations/             # 14 migrations

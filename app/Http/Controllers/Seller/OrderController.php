@@ -7,6 +7,7 @@ use App\Models\Order;
 use App\Services\OrderService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 
@@ -53,7 +54,11 @@ class OrderController extends Controller
             'status' => ['required', Rule::in([Order::STATUS_PROCESSING, Order::STATUS_SHIPPED, Order::STATUS_COMPLETED])],
         ]);
 
-        $order->update($validated);
+        abort_unless($order->canTransitionStatusTo($validated['status']), 422, 'Invalid status transition.');
+
+        // Wrap in a transaction so the status-log insert fired by the Order
+        // `updated` event commits atomically with the status change.
+        DB::transaction(fn () => $order->update($validated));
 
         return back()->with('success', 'Order status updated.');
     }

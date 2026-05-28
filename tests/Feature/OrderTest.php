@@ -321,3 +321,77 @@ test('duplicate direct seller cancellations do not restore stock twice (Bug 5)',
     expect($product->fresh()->stock)->toBe(7);
     expect($order->cancellations()->where('status', 'approved')->count())->toBe(1);
 });
+
+test('seller cannot revive a cancelled order via status update (case 1)', function () {
+    ['seller' => $seller, 'order' => $order] = makeOrderWithItem(['status' => 'cancelled']);
+
+    $this->actingAs($seller)
+        ->patch(route('seller.orders.status', $order), ['status' => 'processing'])
+        ->assertStatus(422);
+
+    expect($order->fresh()->status)->toBe('cancelled');
+});
+
+test('seller cannot move order status backwards (case 4)', function () {
+    ['seller' => $seller, 'order' => $order] = makeOrderWithItem(['status' => 'shipped']);
+
+    $this->actingAs($seller)
+        ->patch(route('seller.orders.status', $order), ['status' => 'processing'])
+        ->assertStatus(422);
+
+    expect($order->fresh()->status)->toBe('shipped');
+});
+
+test('seller cannot update status while a buyer cancellation awaits review (case 5)', function () {
+    ['seller' => $seller, 'order' => $order] = makeOrderWithItem(['status' => 'processing']);
+    OrderCancellation::factory()->requested()->create(['order_id' => $order->id]);
+
+    $this->actingAs($seller)
+        ->patch(route('seller.orders.status', $order), ['status' => 'shipped'])
+        ->assertStatus(422);
+
+    expect($order->fresh()->status)->toBe('processing');
+});
+
+test('seller can ship an unpaid order for cash-on-delivery (case 2 stays allowed)', function () {
+    ['seller' => $seller, 'order' => $order] = makeOrderWithItem(['status' => 'pending']);
+
+    $this->actingAs($seller)
+        ->patch(route('seller.orders.status', $order), ['status' => 'shipped'])
+        ->assertRedirect();
+
+    expect($order->fresh()->status)->toBe('shipped');
+});
+
+test('seller can complete a paid order directly for virtual goods (case 3 stays allowed)', function () {
+    ['seller' => $seller, 'order' => $order] = makeOrderWithItem(['status' => 'paid']);
+
+    $this->actingAs($seller)
+        ->patch(route('seller.orders.status', $order), ['status' => 'completed'])
+        ->assertRedirect();
+
+    expect($order->fresh()->status)->toBe('completed');
+});
+
+test('status transitions are recorded in the status log', function () {
+    ['seller' => $seller, 'order' => $order] = makeOrderWithItem(['status' => 'paid']);
+
+    $this->actingAs($seller)
+        ->patch(route('seller.orders.status', $order), ['status' => 'processing'])
+        ->assertRedirect();
+
+    $log = $order->statusLogs()->latest('id')->first();
+
+    expect($log)->not->toBeNull();
+    expect($log->from_status)->toBe('paid');
+    expect($log->to_status)->toBe('processing');
+    expect($log->changed_by)->toBe($seller->id);
+});
+
+test('cancellation is also recorded in the status log', function () {
+    ['order' => $order] = makeOrderWithItem(['status' => 'paid']);
+
+    app(App\Services\OrderService::class)->directCancelByBuyer($order, 'Changed my mind');
+
+    expect($order->statusLogs()->where('to_status', 'cancelled')->count())->toBe(1);
+});

@@ -24,6 +24,33 @@ class Order extends Model
 
     public const STATUS_CANCELLED = 'cancelled';
 
+    /**
+     * Forward progress ranking of the normal fulfillment flow. Higher = later.
+     * Used to forbid backward transitions while still allowing legitimate skips
+     * (e.g. pending→shipped for cash-on-delivery, paid→completed for virtual goods).
+     * Terminal states (completed, cancelled) are intentionally excluded as sources.
+     */
+    private const STATUS_RANK = [
+        self::STATUS_PENDING => 0,
+        self::STATUS_PAID => 1,
+        self::STATUS_PROCESSING => 2,
+        self::STATUS_SHIPPED => 3,
+        self::STATUS_COMPLETED => 4,
+    ];
+
+    protected static function booted(): void
+    {
+        static::updated(function (Order $order) {
+            if ($order->wasChanged('status')) {
+                $order->statusLogs()->create([
+                    'from_status' => $order->getOriginal('status'),
+                    'to_status' => $order->status,
+                    'changed_by' => auth()->id(),
+                ]);
+            }
+        });
+    }
+
     protected $fillable = [
         'order_number',
         'user_id',
@@ -75,6 +102,11 @@ class Order extends Model
         return $this->hasMany(OrderCancellation::class);
     }
 
+    public function statusLogs(): HasMany
+    {
+        return $this->hasMany(OrderStatusLog::class);
+    }
+
     public function latestCancellation(): \Illuminate\Database\Eloquent\Relations\HasOne
     {
         return $this->hasOne(OrderCancellation::class)->latestOfMany();
@@ -110,5 +142,24 @@ class Order extends Model
     public function isActive(): bool
     {
         return ! in_array($this->status, [self::STATUS_COMPLETED, self::STATUS_CANCELLED]);
+    }
+
+    public function canTransitionStatusTo(string $target): bool
+    {
+        // Terminal orders cannot move (blocks reviving a cancelled/completed order).
+        if (! $this->isActive()) {
+            return false;
+        }
+
+        // Cannot change fulfillment status while a buyer cancellation awaits review.
+        if ($this->pendingCancellation() !== null) {
+            return false;
+        }
+
+        // Forward-only: target must rank strictly later than the current status.
+        $current = self::STATUS_RANK[$this->status] ?? -1;
+        $next = self::STATUS_RANK[$target] ?? -1;
+
+        return $next > $current;
     }
 }
