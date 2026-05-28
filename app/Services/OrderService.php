@@ -154,8 +154,8 @@ class OrderService
         DB::transaction(function () use ($order, $seller, $reason) {
             $lockedOrder = Order::lockForUpdate()->find($order->id);
 
-            if (! $lockedOrder->isActive() || $lockedOrder->pendingCancellation() !== null) {
-                return; // idempotent — skip if already finalized or awaiting buyer review
+            if (! $lockedOrder->canBeCancelledBySeller()) {
+                return; // idempotent — skip if shipped/terminal or awaiting buyer review
             }
 
             $lockedOrder->cancellations()->create([

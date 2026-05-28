@@ -37,7 +37,7 @@ class OrderController extends Controller
 
         return Inertia::render('Seller/Orders/Show', [
             'order' => $order,
-            'canSellerCancel' => $order->isActive() && $order->pendingCancellation() === null,
+            'canSellerCancel' => $order->canBeCancelledBySeller(),
             'nextStatuses' => [
                 'paid' => 'processing',
                 'processing' => 'shipped',

@@ -196,6 +196,17 @@ test('cancellation reason is required', function () {
         ->assertSessionHasErrors('reason');
 });
 
+test('buyer cannot cancel a shipped order', function () {
+    ['buyer' => $buyer, 'order' => $order] = makeOrderWithItem(['status' => 'shipped']);
+
+    $this->actingAs($buyer)
+        ->post(route('orders.cancel', $order), ['reason' => 'Too late'])
+        ->assertForbidden();
+
+    expect($order->fresh()->status)->toBe('shipped');
+    expect($order->cancellations()->count())->toBe(0);
+});
+
 test('buyer cannot request cancellation again after rejection', function () {
     ['buyer' => $buyer, 'order' => $order] = makeOrderWithItem(['status' => 'processing']);
     OrderCancellation::factory()->rejected()->create(['order_id' => $order->id]);
@@ -228,6 +239,18 @@ test('seller can reject a cancellation request leaving the order unchanged', fun
     expect($order->fresh()->status)->toBe('processing');
     expect($product->fresh()->stock)->toBe(5);
     expect($order->cancellations()->where('status', 'rejected')->count())->toBe(1);
+});
+
+test('seller cannot directly cancel a shipped order', function () {
+    ['seller' => $seller, 'product' => $product, 'order' => $order] = makeOrderWithItem(['status' => 'shipped'], stock: 5, qty: 2);
+
+    $this->actingAs($seller)
+        ->post(route('seller.orders.cancel', $order), ['reason' => 'Recall'])
+        ->assertForbidden();
+
+    expect($order->fresh()->status)->toBe('shipped');
+    expect($product->fresh()->stock)->toBe(5);
+    expect($order->cancellations()->count())->toBe(0);
 });
 
 test('seller can directly cancel an order with a reason', function () {

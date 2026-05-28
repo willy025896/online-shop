@@ -119,11 +119,19 @@ class Order extends Model
 
     public function pendingCancellation(): ?OrderCancellation
     {
+        if ($this->relationLoaded('cancellations')) {
+            return $this->cancellations->firstWhere('status', OrderCancellation::STATUS_REQUESTED);
+        }
+
         return $this->cancellations()->where('status', OrderCancellation::STATUS_REQUESTED)->first();
     }
 
     public function wasCancellationRejected(): bool
     {
+        if ($this->relationLoaded('cancellations')) {
+            return $this->cancellations->contains('status', OrderCancellation::STATUS_REJECTED);
+        }
+
         return $this->cancellations()->where('status', OrderCancellation::STATUS_REJECTED)->exists();
     }
 
@@ -134,14 +142,20 @@ class Order extends Model
 
     public function canRequestCancellation(): bool
     {
-        return in_array($this->status, [self::STATUS_PROCESSING, self::STATUS_SHIPPED])
-            && ! $this->pendingCancellation()
+        return $this->status === self::STATUS_PROCESSING
+            && $this->pendingCancellation() === null
             && ! $this->wasCancellationRejected();
     }
 
     public function isActive(): bool
     {
         return ! in_array($this->status, [self::STATUS_COMPLETED, self::STATUS_CANCELLED]);
+    }
+
+    public function canBeCancelledBySeller(): bool
+    {
+        return in_array($this->status, [self::STATUS_PENDING, self::STATUS_PAID, self::STATUS_PROCESSING])
+            && $this->pendingCancellation() === null;
     }
 
     public function canTransitionStatusTo(string $target): bool

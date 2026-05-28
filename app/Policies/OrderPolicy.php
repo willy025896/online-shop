@@ -35,7 +35,6 @@ class OrderPolicy
     public function cancelAsSeller(User $user, Order $order): bool
     {
         return ($user->isSeller() && $user->shop?->id === $order->shop_id)
-            && $order->isActive()
-            && $order->pendingCancellation() === null;
+            && $order->canBeCancelledBySeller();
     }
 }
