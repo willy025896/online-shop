@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## AI 操作規範
 
-**每次執行任何開發任務前，必須先讀取 `.claude/AI-RULES.md`**，並遵守其中定義的記錄規範（tasks、decisions）。
+**每次執行任何開發任務前，必須先讀取 `.claude/AI-RULES.md`**，並遵守其中定義的記錄規範（implementation-recorder、decisions ADR）。
 
 ---
 
@@ -219,7 +219,7 @@ Rule: `isReviewWindowOpen()` = `review_released_at === null`. `isInCoolingPeriod
 
 ```
 online-shop/
-├── .claude/                    # AI 操作規範、task/decision 記錄、implementation records
+├── .claude/                    # AI 操作規範、implementation records、decisions ADR
 ├── app/
 │   ├── Console/Commands/       # ReleaseReviews
 │   ├── Events/                 # MessageSent (chat broadcast)

@@ -6,9 +6,9 @@
 
 **每次執行任務時，AI 必須：**
 
-1. 在 `tasks/` 建立合併的任務記錄（包含請求與變更）
-2. 若任務涉及架構決策，建立 ADR 至 `decisions/`
-3. 完成任何程式碼異動（新增、修復、重構）後，**立即執行 `post-change-review` skill** 進行審查
+1. 完成任何程式碼異動（新增、修復、重構）後，**立即執行 `implementation-recorder` skill** 建立變更記錄
+2. 若任務涉及架構決策，手動建立 ADR 至 `.claude/records/decisions/`（格式參考 `.claude/records/TEMPLATES.md`）
+3. 完成任何程式碼異動後，**立即執行 `post-change-review` skill** 進行審查
 
 > Claude Code 的 memory（使用者偏好/反饋）與 plan mode（實作計畫）由 Claude 內建功能管理，不放入 `.claude/`。
 
@@ -18,8 +18,8 @@
 
 | 儲存位置 | 用途 |
 |----------|------|
-| `.claude/record/tasks/` | 每次任務的請求與程式碼變更記錄 |
-| `.claude/record/decisions/` | 架構/技術層面的決策記錄（ADR） |
+| `.claude/records/{type}/` | `implementation-recorder` 自動產生的變更記錄 |
+| `.claude/records/decisions/` | 架構/技術層面的決策記錄（ADR） |
 | Claude memory | 使用者偏好、協作風格、專案脈絡 |
 | Claude plan mode | 任務實作計畫 |
 
@@ -44,6 +44,6 @@
 
 ---
 
-## 記錄模板
+## 決策記錄（ADR）
 
-建立 task 或 ADR 時，讀取 `.claude/record/TEMPLATES.md` 取得格式。
+建立 ADR 時，讀取 `.claude/records/TEMPLATES.md` 取得格式。

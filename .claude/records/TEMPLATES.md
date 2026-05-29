@@ -1,38 +1,13 @@
 # 記錄模板
 
-## Task 模板
-
-路徑：`.claude/record/tasks/YYYY-MM-DD/XXX-description.md`
-
-```markdown
----
-id: YYYY-MM-DD/XXX
-type: Feature | Bug Fix | Refactor | Docs
-status: Done | In Progress
----
-
-# Task: 簡短標題
-
-## Request
-使用者請求了什麼（一到三句話）。
-
-## Changes
-| File | Action | Notes |
-|------|--------|-------|
-| path/to/file | Added / Modified / Deleted | 說明 |
-
-## Outcome
-實際完成了什麼，結果如何（含測試結果）。
-
-## Decision
-（選填）若涉及架構決策 → 連結到 decisions/ 對應 ADR。
-```
+> 程式碼變更記錄由 `implementation-recorder` skill 自動產生至 `.claude/records/{type}/`，不需手動建立。
+> 本模板僅供 ADR 使用。
 
 ---
 
 ## ADR 模板
 
-路徑：`.claude/record/decisions/XXX-title.md`
+路徑：`.claude/records/decisions/XXX-title.md`
 
 **觸發時機（符合任一條件才建立）：**
 - 引入新的套件、技術或框架
