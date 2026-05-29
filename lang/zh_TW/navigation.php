@@ -8,6 +8,7 @@ return [
     'messages' => '訊息',
     'orders' => '訂單',
     'cart' => '購物車',
+    'wishlist' => '收藏清單',
     'log_in' => '登入',
     'log_out' => '登出',
     'profile' => '個人資料',

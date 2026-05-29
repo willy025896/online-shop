@@ -15,6 +15,7 @@ defineProps({
 
 const page = usePage();
 const cartCount = computed(() => page.props.cartCount || 0);
+const wishlistCount = computed(() => (page.props.wishlistProductIds || []).length);
 const unreadMessageCount = computed(() => page.props.unreadMessageCount || 0);
 const userRole = computed(() => page.props.userRole);
 const nav = computed(() => page.props.nav || {});
@@ -88,6 +89,16 @@ const logout = () => {
                                     中文
                                 </button>
                             </div>
+
+                            <!-- Wishlist Badge (auth only) -->
+                            <Link v-if="$page.props.auth?.user" :href="route('wishlist.index')" class="relative p-2 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300">
+                                <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12z" />
+                                </svg>
+                                <span v-if="wishlistCount > 0" class="absolute -top-1 -right-1 inline-flex items-center justify-center px-1.5 py-0.5 text-xs font-bold leading-none text-white bg-red-600 rounded-full">
+                                    {{ wishlistCount > 99 ? '99+' : wishlistCount }}
+                                </span>
+                            </Link>
 
                             <!-- Cart Badge -->
                             <Link :href="route('cart.index')" class="relative p-2 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300">
@@ -278,6 +289,12 @@ const logout = () => {
                             {{ nav.cart }}
                             <span v-if="cartCount > 0" class="ms-2 inline-flex items-center justify-center px-1.5 py-0.5 text-xs font-bold leading-none text-white bg-red-600 rounded-full">
                                 {{ cartCount }}
+                            </span>
+                        </ResponsiveNavLink>
+                        <ResponsiveNavLink v-if="$page.props.auth?.user" :href="route('wishlist.index')" :active="route().current('wishlist.*')">
+                            {{ nav.wishlist }}
+                            <span v-if="wishlistCount > 0" class="ms-2 inline-flex items-center justify-center px-1.5 py-0.5 text-xs font-bold leading-none text-white bg-red-600 rounded-full">
+                                {{ wishlistCount }}
                             </span>
                         </ResponsiveNavLink>
                         <ResponsiveNavLink v-if="!$page.props.auth?.user" :href="route('login')">

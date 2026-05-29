@@ -4,6 +4,7 @@ namespace App\Http\Middleware;
 
 use App\Models\Message;
 use App\Services\CartService;
+use App\Services\WishlistService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Lang;
 use Inertia\Middleware;
@@ -28,6 +29,7 @@ class HandleInertiaRequests extends Middleware
             'nav' => Lang::get('navigation'),
             'locale' => app()->getLocale(),
             'cartCount' => fn () => app(CartService::class)->getCartCount(),
+            'wishlistProductIds' => fn () => app(WishlistService::class)->favoritedProductIds(),
             'unreadMessageCount' => fn () => $this->getUnreadMessageCount($request),
             'unreadNotificationCount' => fn () => $request->user()?->unreadNotifications()->count() ?? 0,
             'recentNotifications' => fn () => $request->user()?->notifications()->limit(10)->get() ?? collect(),

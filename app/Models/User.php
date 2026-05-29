@@ -4,6 +4,7 @@ namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Foundation\Auth\User as Authenticatable;
@@ -115,5 +116,15 @@ class User extends Authenticatable
     public function isCustomer(): bool
     {
         return $this->role === self::ROLE_CUSTOMER;
+    }
+
+    public function wishlistItems(): HasMany
+    {
+        return $this->hasMany(WishlistItem::class);
+    }
+
+    public function favoritedProducts(): BelongsToMany
+    {
+        return $this->belongsToMany(Product::class, 'wishlist_items')->withTimestamps();
     }
 }

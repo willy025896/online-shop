@@ -86,6 +86,11 @@ class Product extends Model
         return $this->hasMany(ProductReview::class);
     }
 
+    public function wishlistItems(): HasMany
+    {
+        return $this->hasMany(WishlistItem::class);
+    }
+
     public function averageRating(): float
     {
         if ($this->reviews_count === 0) {

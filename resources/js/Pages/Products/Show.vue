@@ -8,6 +8,7 @@ import StarRating from '@/Components/StarRating.vue';
 import ReviewCard from '@/Components/ReviewCard.vue';
 import RatingDistribution from '@/Components/RatingDistribution.vue';
 import Pagination from '@/Components/Pagination.vue';
+import FavoriteButton from '@/Components/FavoriteButton.vue';
 
 const props = defineProps({
     product: Object,
@@ -69,6 +70,7 @@ const addToCart = () => {
                             <button @click="addToCart" class="flex-1 bg-indigo-600 text-white py-3 px-6 rounded-lg hover:bg-indigo-700 transition font-medium">
                                 {{ lang.add_to_cart }}
                             </button>
+                            <FavoriteButton :product-id="product.id" size="md" />
                         </div>
                     </div>
                     <div v-else class="mt-6">

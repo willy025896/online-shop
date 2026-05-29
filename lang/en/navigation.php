@@ -8,6 +8,7 @@ return [
     'messages' => 'Messages',
     'orders' => 'Orders',
     'cart' => 'Cart',
+    'wishlist' => 'Wishlist',
     'log_in' => 'Log In',
     'log_out' => 'Log Out',
     'profile' => 'Profile',
