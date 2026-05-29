@@ -74,6 +74,13 @@ class Product extends Model
         return $query->where('is_featured', true);
     }
 
+    public function scopeOrderByRating($query)
+    {
+        return $query
+            ->orderByRaw('CASE WHEN reviews_count = 0 THEN 0 ELSE rating_sum / reviews_count END DESC')
+            ->orderByDesc('reviews_count');
+    }
+
     public function reviews(): HasMany
     {
         return $this->hasMany(ProductReview::class);

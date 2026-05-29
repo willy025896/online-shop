@@ -46,3 +46,17 @@ function something()
 {
     // ..
 }
+
+function makeOrderWithItems(App\Models\Shop $shop, array $products, string $status = App\Models\Order::STATUS_COMPLETED): App\Models\Order
+{
+    $order = App\Models\Order::factory()->create(['shop_id' => $shop->id, 'status' => $status]);
+
+    foreach ($products as $product) {
+        App\Models\OrderItem::factory()->create([
+            'order_id' => $order->id,
+            'product_id' => $product->id,
+        ]);
+    }
+
+    return $order;
+}

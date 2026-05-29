@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Category;
 use App\Models\Product;
+use App\Services\RecommendationService;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 
@@ -34,9 +35,7 @@ class ProductController extends Controller
         } elseif ($sort === 'price_desc') {
             $query->orderByDesc('price');
         } elseif ($sort === 'rating_desc') {
-            // Weighted: products with no reviews sink to the bottom
-            $query->orderByRaw('CASE WHEN reviews_count = 0 THEN 0 ELSE rating_sum / reviews_count END DESC')
-                ->orderByDesc('reviews_count');
+            $query->orderByRating();
         } else {
             $query->latest();
         }
@@ -48,18 +47,13 @@ class ProductController extends Controller
         ]);
     }
 
-    public function show(Product $product)
+    public function show(Product $product, RecommendationService $recommendations)
     {
         abort_unless($product->status === Product::STATUS_ACTIVE, 404);
 
         $product->load(['shop', 'images', 'category']);
 
-        $relatedProducts = Product::active()
-            ->where('category_id', $product->category_id)
-            ->where('id', '!=', $product->id)
-            ->with('primaryImage')
-            ->limit(4)
-            ->get();
+        $relatedProducts = $recommendations->relatedTo($product, 4);
 
         $reviews = $product->reviews()
             ->with(['user:id,name,profile_photo_path'])
