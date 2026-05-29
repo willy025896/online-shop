@@ -1,10 +1,5 @@
 # 記錄模板
 
-> 程式碼變更記錄由 `implementation-recorder` skill 自動產生至 `.claude/records/{type}/`，不需手動建立。
-> 本模板僅供 ADR 使用。
-
----
-
 ## ADR 模板
 
 路徑：`.claude/records/decisions/XXX-title.md`
