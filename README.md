@@ -105,23 +105,25 @@ php artisan test tests/Feature/AuthenticationTest.php
 online-shop/
 ├── .claude/                    # AI task records, decisions, implementation records
 ├── app/
+│   ├── Console/Commands/       # ReleaseReviews (排程：每 10 分鐘公開到期評論)
 │   ├── Events/                 # MessageSent (chat broadcast)
 │   ├── Http/
-│   │   ├── Controllers/        # public + utility + seller + admin (incl. NotificationController)
+│   │   ├── Controllers/        # public + utility + seller + admin (incl. NotificationController, ReviewControllers)
 │   │   └── Middleware/         # EnsureRole, SetLocale, HandleInertiaRequests
-│   ├── Notifications/          # OrderPaid, OrderStatusChanged, ShopStatusChanged, ... (database + broadcast)
-│   ├── Policies/               # Product, Order, Shop
-│   ├── Models/                 # 13 models (constants defined on each model)
-│   └── Services/               # Cart, Order, Payment, Conversation
+│   ├── Notifications/          # Order*, Shop*, Review* (database + broadcast)；共用 BroadcastsAsArray trait
+│   ├── Policies/               # Product, Order, Shop, ProductReview
+│   ├── Models/                 # 15 models (User, Shop, Product, Order, ProductReview, BuyerReview, ...)
+│   └── Services/               # Cart, Order, Payment, Conversation, Review
 ├── database/
-│   └── migrations/             # 15 migrations
+│   └── migrations/             # 22 migrations
 ├── lang/
 │   ├── en/                     # English translations (incl. notifications.php)
 │   └── zh_TW/                  # Traditional Chinese translations
 ├── resources/js/
-│   ├── Components/             # Shared Vue components (incl. NotificationBell)
+│   ├── Components/             # Shared Vue components (incl. NotificationBell, StarRating, ReviewCard, RatingDistribution)
+│   ├── Composables/            # useReviewCountdown
 │   ├── Layouts/                # App, Seller, Admin layouts
-│   └── Pages/                  # Vue pages organized by feature (incl. Notifications/)
+│   └── Pages/                  # Vue pages organized by feature (incl. Notifications/, Reviews/, Seller/Reviews/, Seller/Buyers/)
 ├── routes/
 │   ├── web.php                 # HTTP routes (public, auth, seller, admin)
 │   └── channels.php            # Broadcast channel authorization
@@ -131,7 +133,7 @@ online-shop/
 ## TODO
 
 ### Core Features
-- [ ] **評論/評分系統** - 用戶可對商品評論和評分，提升購物體驗
+- [x] **評論/評分系統** - 雙向盲評：買家評商品 + 賣家評買家，24h 冷靜期，14 天自動公開
 - [ ] **收藏/願望清單** - 用戶可收藏喜歡的商品，提高用戶黏性
 - [ ] **運費計算** - 完善結帳流程，根據重量/地區等計算運費（目前硬編碼為 0）
 - [ ] **折扣碼/優惠券** - 實現折扣碼和優惠券功能，促進銷售

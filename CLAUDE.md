@@ -103,6 +103,8 @@ Status strings and role values are defined as public constants on their respecti
 | `Product` | `STATUS_DRAFT`, `STATUS_ACTIVE`, `STATUS_INACTIVE` |
 | `Order` | `STATUS_PENDING`, `STATUS_PAID`, `STATUS_PROCESSING`, `STATUS_SHIPPED`, `STATUS_COMPLETED`, `STATUS_CANCELLED` |
 | `OrderCancellation` | `STATUS_REQUESTED`, `STATUS_APPROVED`, `STATUS_REJECTED`, `INITIATED_BY_BUYER`, `INITIATED_BY_SELLER` |
+| `ProductReview` | `STATUS_PUBLISHED`, `STATUS_HIDDEN` |
+| `BuyerReview` | `STATUS_PUBLISHED`, `STATUS_HIDDEN` |
 
 Usage: `Shop::STATUS_APPROVED`, `User::ROLE_SELLER`, etc.
 
@@ -147,6 +149,47 @@ Channel auth is in `routes/channels.php`: `App.Models.User.{id}` accepts only th
 
 The new-message broadcast (`MessageSent` event, `Conversation` chat) is **separate** from the notification pipeline — chat keeps its own `unreadMessageCount` badge and `private-conversation.{id}` channel; don't merge them.
 
+All Notification classes share the `BroadcastsAsArray` trait (`app/Notifications/Concerns/BroadcastsAsArray.php`), which implements `toBroadcast()` as `new BroadcastMessage($this->toArray($notifiable))`. This enforces the project-wide convention that broadcast payload = database payload. New Notification classes must `use BroadcastsAsArray, Queueable;` and must NOT add a custom `toBroadcast()`.
+
+**Review notification trigger map (additions):**
+
+| Event | Triggered in | Notification | Recipient |
+|-------|--------------|--------------|-----------|
+| Both parties reviewed → cooling starts | `ReviewService::checkAndStartCooling` | `ReviewCoolingStartedNotification` | Buyer + Seller |
+| Edit/delete during cooling → cooling reset | `ReviewService::resetCoolingIfActive` | `ReviewCoolingResetNotification` | Counterparty |
+| Cooling expires or 14-day timeout → release | `ReviewService::releaseOrder` | `ReviewReleasedNotification` | Buyer + Seller |
+| Seller replies to product review | `ReviewService::addSellerReply` | `SellerReplyNotification` | Buyer |
+
+### Review System (雙向盲評)
+
+`ReviewService` (`app/Services/ReviewService.php`) is the single entry point for all review mutations. **All methods wrap in `DB::transaction` with `Order::lockForUpdate()`** to prevent race conditions.
+
+**Review state** is tracked on the `orders` table via three columns:
+- `completed_at` — set automatically by `Order::booted() updating` hook when `status → completed`
+- `review_cooling_until` — set when both parties submit; cleared if either edits/deletes during cooling
+- `review_released_at` — set at release; **NOT NULL = permanently locked, no further writes allowed**
+
+Rule: `isReviewWindowOpen()` = `review_released_at === null`. `isInCoolingPeriod()` = cooling_until set & future & window open.
+
+**Release is handled by `php artisan reviews:release`** (registered in `routes/console.php`, runs every 10 minutes via `Schedule::command(...)->everyTenMinutes()`). It uses `chunkById(100)` to prevent OOM. Two trigger conditions:
+1. `review_cooling_until <= now()` — normal path after 24h cooling
+2. `completed_at <= now()-14d` — 14-day timeout (fires regardless of whether reviews exist, to prevent long-tail retaliation)
+
+**Aggregate columns** (`reviews_count`, `rating_sum` on `products`/`shops`; `buyer_reviews_count`, `buyer_rating_sum` on `users`) are updated **only at release time** in `updateAggregates()`. Before release, aggregates never change — this preserves the blind-reveal guarantee. `updateAggregates` uses grouped updates (one `UPDATE` per product, one for the shop) rather than N individual UPDATEs.
+
+**Bulk-update caveat (same as order status logging)**: `completed_at` is set by a model `updating` event hook, which does **not** fire on query-builder bulk updates. Any code that bulk-updates `orders.status` to `completed` must also manually set `completed_at`. Use `$order->update(...)` on model instances, never `Order::where(...)->update(...)`.
+
+**`Order::productReviews()` relation** uses `hasManyThrough(ProductReview::class, OrderItem::class)` and is scoped to `STATUS_PUBLISHED`. Do not use this relation when you need all reviews (including hidden) — query `ProductReview` directly.
+
+**Review ownership rules:**
+- Buyer can review an `OrderItem` only if `$order->user_id === $user->id && status === COMPLETED && isReviewWindowOpen()`
+- Seller can review a Buyer only if `$order->shop_id === $seller->shop->id && status === COMPLETED && isReviewWindowOpen()`
+- Both checks are enforced in `ReviewService` (Service layer), not just Policy layer — defense in depth
+
+**PII protection in review responses:**
+- Public product page: `->with(['user:id,name,profile_photo_path'])` only — no email/phone/role
+- Seller buyer-credit page: `->with(['shop:id,name'])` with explicit `select(...)` — no order shipping data
+
 ### Adding New Pages
 
 1. Add a route in `routes/web.php` returning `Inertia::render('PageName')`.
@@ -162,26 +205,30 @@ The new-message broadcast (`MessageSent` event, `Conversation` chat) is **separa
 online-shop/
 ├── .claude/                    # AI 操作規範、task/decision 記錄、implementation records
 ├── app/
+│   ├── Console/Commands/       # ReleaseReviews
 │   ├── Events/                 # MessageSent (chat broadcast)
 │   ├── Http/
-│   │   ├── Controllers/        # public + utility + seller + admin (incl. NotificationController)
+│   │   ├── Controllers/        # public + utility + seller + admin (incl. NotificationController, Review controllers)
 │   │   └── Middleware/         # EnsureRole, SetLocale, HandleInertiaRequests
-│   ├── Notifications/          # 6 Notification classes (Order*, Shop*); via() = ['database','broadcast']
-│   ├── Policies/               # 3 policies (Product, Order, Shop)
-│   ├── Models/                 # 13 models (User, Shop, Product, Order, OrderCancellation, OrderStatusLog, Conversation, Message, ...)
-│   └── Services/               # Cart, Order, Payment, Conversation
+│   ├── Notifications/          # 10 Notification classes (Order*, Shop*, Review*); all use BroadcastsAsArray trait
+│   │   └── Concerns/           # BroadcastsAsArray trait
+│   ├── Policies/               # 4 policies (Product, Order, Shop, ProductReview)
+│   ├── Models/                 # 15 models (User, Shop, Product, Order, ProductReview, BuyerReview, ...)
+│   └── Services/               # Cart, Order, Payment, Conversation, Review
 ├── database/
-│   └── migrations/             # 15 migrations (incl. Laravel notifications table)
+│   └── migrations/             # 22 migrations (incl. product_reviews, buyer_reviews, aggregates, completed_at)
 ├── lang/
-│   ├── en/                     # English translations (incl. notifications.php)
+│   ├── en/                     # English translations (incl. notifications.php, reviews.php)
 │   └── zh_TW/                  # Traditional Chinese translations
 ├── resources/js/
-│   ├── Components/             # Custom (NotificationBell, ...) + Jetstream defaults
+│   ├── Components/             # Custom (NotificationBell, StarRating, ReviewCard, RatingDistribution, ...) + Jetstream defaults
+│   ├── Composables/            # useReviewCountdown
 │   ├── Layouts/                # AppLayout, SellerLayout, AdminLayout (all mount <NotificationBell />)
-│   └── Pages/                  # Public, Auth, Seller/, Admin/, Notifications/ pages
+│   └── Pages/                  # Public, Auth, Seller/, Admin/, Notifications/, Reviews/ pages
 ├── routes/
 │   ├── web.php                 # All HTTP routes (4 groups: public, auth, seller, admin)
+│   ├── console.php             # Scheduled commands (reviews:release every 10 min)
 │   └── channels.php            # Broadcast channel authorization (App.Models.User.{id}, conversation.{id})
-└── tests/Feature/              # Pest tests: Product, Shop, Cart, Seller, Admin, Order, Notification, Conversation
+└── tests/Feature/              # Pest tests: Product, Shop, Cart, Seller, Admin, Order, Notification, Conversation, Review
 ```
 
