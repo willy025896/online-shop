@@ -112,18 +112,18 @@ online-shop/
 │   │   └── Middleware/         # EnsureRole, SetLocale, HandleInertiaRequests
 │   ├── Notifications/          # Order*, Shop*, Review* (database + broadcast)；共用 BroadcastsAsArray trait
 │   ├── Policies/               # Product, Order, Shop, ProductReview
-│   ├── Models/                 # 15 models (User, Shop, Product, Order, ProductReview, BuyerReview, ...)
-│   └── Services/               # Cart, Order, Payment, Conversation, Review
+│   ├── Models/                 # 16 models (User, Shop, Product, Order, ProductReview, BuyerReview, WishlistItem, ...)
+│   └── Services/               # Cart, Order, Payment, Conversation, Review, Wishlist
 ├── database/
-│   └── migrations/             # 22 migrations
+│   └── migrations/             # 23 migrations
 ├── lang/
 │   ├── en/                     # English translations (incl. notifications.php)
 │   └── zh_TW/                  # Traditional Chinese translations
 ├── resources/js/
-│   ├── Components/             # Shared Vue components (incl. NotificationBell, StarRating, ReviewCard, RatingDistribution)
+│   ├── Components/             # Shared Vue components (incl. NotificationBell, FavoriteButton, StarRating, ReviewCard, RatingDistribution)
 │   ├── Composables/            # useReviewCountdown
 │   ├── Layouts/                # App, Seller, Admin layouts
-│   └── Pages/                  # Vue pages organized by feature (incl. Notifications/, Reviews/, Seller/Reviews/, Seller/Buyers/)
+│   └── Pages/                  # Vue pages organized by feature (incl. Wishlist/, Notifications/, Reviews/, Seller/Reviews/, Seller/Buyers/)
 ├── routes/
 │   ├── web.php                 # HTTP routes (public, auth, seller, admin)
 │   └── channels.php            # Broadcast channel authorization
@@ -134,7 +134,7 @@ online-shop/
 
 ### Core Features
 - [x] **評論/評分系統** - 雙向盲評：買家評商品 + 賣家評買家，24h 冷靜期，14 天自動公開
-- [ ] **收藏/願望清單** - 用戶可收藏喜歡的商品，提高用戶黏性
+- [x] **收藏/願望清單** - 登入會員可收藏商品，導覽列愛心徽章，收藏清單頁支援移除及一鍵加入購物車
 - [ ] **運費計算** - 完善結帳流程，根據重量/地區等計算運費（目前硬編碼為 0）
 - [ ] **折扣碼/優惠券** - 實現折扣碼和優惠券功能，促進銷售
 - [x] **產品推薦/相關商品** - 商品頁相關商品（多訊號：一起購買 → 同分類 → 同賣場遞補），由 `RecommendationService` 產生

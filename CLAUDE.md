@@ -65,6 +65,7 @@ Pages are served by Laravel controllers/routes that call `Inertia::render('PageN
 - `nav` — navigation strings from `lang/{locale}/navigation.php` (always loaded)
 - `locale` — current locale string (`en` or `zh_TW`)
 - `cartCount` — current user's cart item count
+- `wishlistProductIds` — array of product IDs the auth user has favorited (empty array for guests); the navbar badge derives count via `.length` — no separate `wishlistCount` prop
 - `unreadMessageCount` — unread chat-message count for the auth user
 - `unreadNotificationCount` — unread notification count (Laravel `notifications` table)
 - `recentNotifications` — 10 most recent notifications (for the `NotificationBell` dropdown)
@@ -107,6 +108,21 @@ Status strings and role values are defined as public constants on their respecti
 | `BuyerReview` | `STATUS_PUBLISHED`, `STATUS_HIDDEN` |
 
 Usage: `Shop::STATUS_APPROVED`, `User::ROLE_SELLER`, etc.
+
+### Wishlist (收藏 / 願望清單)
+
+`WishlistService` (`app/Services/WishlistService.php`) is the single entry point for wishlist mutations. All operations are scoped to `Auth::id()`.
+
+**Wishlist state** is stored in the `wishlist_items` pivot table with `unique(user_id, product_id)`.
+
+Key design points:
+- **Auth-only** — wishlist routes are inside the auth middleware group; guests clicking the heart icon are redirected to login, not silently ignored.
+- **`toggle(Product)`** — uses `firstOrCreate` on the add path to avoid a `QueryException` on concurrent/double-clicked requests.
+- **`remove(Product)`** — a dedicated remove method used by `WishlistController::destroy()`; never uses `toggle()` to avoid the semantic bug where DELETE on an un-favorited product would add it.
+- **`getItemsWithProducts()`** — returns products via the `User::favoritedProducts()` `BelongsToMany` relation, ordered by `pivot.created_at DESC` (most-recently favorited first).
+- **`wishlistProductIds` shared prop** — shipped on every authenticated request as a lazy closure; `FavoriteButton` reads it to determine fill state. The navbar badge derives count via `.length` — no separate count query.
+- **`FavoriteButton.vue`** uses Inertia partial reload (`only: ['wishlistProductIds', 'flash']`) so toggling a heart reloads only those two props, not the full page.
+- Adding a wishlist item to cart (`cart.store`) does **not** remove it from the wishlist — the two are independent.
 
 ### Cart
 
@@ -213,22 +229,22 @@ online-shop/
 │   ├── Notifications/          # 10 Notification classes (Order*, Shop*, Review*); all use BroadcastsAsArray trait
 │   │   └── Concerns/           # BroadcastsAsArray trait
 │   ├── Policies/               # 4 policies (Product, Order, Shop, ProductReview)
-│   ├── Models/                 # 15 models (User, Shop, Product, Order, ProductReview, BuyerReview, ...)
-│   └── Services/               # Cart, Order, Payment, Conversation, Review
+│   ├── Models/                 # 16 models (User, Shop, Product, Order, ProductReview, BuyerReview, WishlistItem, ...)
+│   └── Services/               # Cart, Order, Payment, Conversation, Review, Wishlist
 ├── database/
-│   └── migrations/             # 22 migrations (incl. product_reviews, buyer_reviews, aggregates, completed_at)
+│   └── migrations/             # 23 migrations (incl. product_reviews, buyer_reviews, aggregates, completed_at, wishlist_items)
 ├── lang/
-│   ├── en/                     # English translations (incl. notifications.php, reviews.php)
+│   ├── en/                     # English translations (incl. notifications.php, reviews.php, wishlist.php)
 │   └── zh_TW/                  # Traditional Chinese translations
 ├── resources/js/
-│   ├── Components/             # Custom (NotificationBell, StarRating, ReviewCard, RatingDistribution, ...) + Jetstream defaults
+│   ├── Components/             # Custom (NotificationBell, FavoriteButton, StarRating, ReviewCard, RatingDistribution, ...) + Jetstream defaults
 │   ├── Composables/            # useReviewCountdown
 │   ├── Layouts/                # AppLayout, SellerLayout, AdminLayout (all mount <NotificationBell />)
-│   └── Pages/                  # Public, Auth, Seller/, Admin/, Notifications/, Reviews/ pages
+│   └── Pages/                  # Public, Auth, Seller/, Admin/, Notifications/, Reviews/, Wishlist/ pages
 ├── routes/
 │   ├── web.php                 # All HTTP routes (4 groups: public, auth, seller, admin)
 │   ├── console.php             # Scheduled commands (reviews:release every 10 min)
 │   └── channels.php            # Broadcast channel authorization (App.Models.User.{id}, conversation.{id})
-└── tests/Feature/              # Pest tests: Product, Shop, Cart, Seller, Admin, Order, Notification, Conversation, Review
+└── tests/Feature/              # Pest tests: Product, Shop, Cart, Wishlist, Seller, Admin, Order, Notification, Conversation, Review
 ```
 
