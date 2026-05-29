@@ -3,6 +3,8 @@ import { computed, ref } from 'vue';
 import { router, useForm, usePage } from '@inertiajs/vue3';
 import AppLayout from '@/Layouts/AppLayout.vue';
 import OrderStatusBadge from '@/Components/OrderStatusBadge.vue';
+import StarRating from '@/Components/StarRating.vue';
+import { useReviewCountdown } from '@/Composables/useReviewCountdown';
 import DialogModal from '@/Components/DialogModal.vue';
 import DangerButton from '@/Components/DangerButton.vue';
 import SecondaryButton from '@/Components/SecondaryButton.vue';
@@ -13,6 +15,12 @@ const props = defineProps({
     canCancelDirectly: Boolean,
     canRequestCancellation: Boolean,
 });
+
+const isCompleted = computed(() => props.order.status === 'completed');
+const reviewWindowOpen = computed(() => !props.order.review_released_at);
+const canWriteReview = computed(() => isCompleted.value && reviewWindowOpen.value);
+
+const reviewDaysLeft = useReviewCountdown(() => props.order);
 
 const page = usePage();
 const lang = computed(() => page.props.lang || {});
@@ -61,6 +69,23 @@ const askSeller = (orderId) => {
                         <p class="text-sm text-gray-500">{{ new Date(order.created_at).toLocaleString() }}</p>
                     </div>
                     <OrderStatusBadge :status="order.status" />
+                </div>
+
+                <!-- Review window notice -->
+                <div
+                    v-if="canWriteReview && reviewDaysLeft !== null"
+                    class="mb-6 rounded-lg p-4 border bg-yellow-50 border-yellow-200 dark:bg-yellow-900/20 dark:border-yellow-800"
+                >
+                    <div class="flex items-start gap-3">
+                        <svg class="w-5 h-5 text-yellow-600 dark:text-yellow-400 flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+                            <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/>
+                        </svg>
+                        <div class="flex-1 text-sm text-yellow-800 dark:text-yellow-200">
+                            {{ reviewDaysLeft === 0
+                                ? (lang.window_today_notice || '今天是此訂單評論的最後一天，請把握時間。')
+                                : (lang.window_open_notice || '此訂單還有 :days 天可評論，逾期窗口將永久關閉。').replace(':days', reviewDaysLeft) }}
+                        </div>
+                    </div>
                 </div>
 
                 <!-- Cancellation status -->
@@ -140,7 +165,7 @@ const askSeller = (orderId) => {
                     <p class="text-sm text-gray-600 dark:text-gray-400">{{ order.notes }}</p>
                 </div>
 
-                <div class="flex gap-3 mt-6">
+                <div class="flex gap-3 mt-6 flex-wrap">
                     <button
                         v-if="order.status === 'pending' && !order.paid_at"
                         @click="pay(order.id)"
@@ -155,6 +180,13 @@ const askSeller = (orderId) => {
                     >
                         {{ cancelLabel }}
                     </button>
+                    <a
+                        v-if="canWriteReview"
+                        :href="route('reviews.create', order.id)"
+                        class="bg-yellow-500 text-white py-2 px-6 rounded-lg hover:bg-yellow-600 transition text-sm font-medium"
+                    >
+                        ★ {{ lang.write_review || '撰寫評論' }}
+                    </a>
                     <button
                         @click="askSeller(order.id)"
                         class="bg-indigo-600 text-white py-2 px-6 rounded-lg hover:bg-indigo-700 transition text-sm font-medium ms-auto"

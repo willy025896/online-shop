@@ -62,6 +62,12 @@ Route::middleware([
     Route::get('/seller/register', [App\Http\Controllers\Seller\RegisterController::class, 'create'])->name('seller.register');
     Route::post('/seller/register', [App\Http\Controllers\Seller\RegisterController::class, 'store'])->name('seller.register.store');
 
+    // Product reviews (buyer)
+    Route::get('/orders/{order}/review', [App\Http\Controllers\ProductReviewController::class, 'create'])->name('reviews.create');
+    Route::post('/reviews/products', [App\Http\Controllers\ProductReviewController::class, 'store'])->name('reviews.store');
+    Route::patch('/reviews/products/{productReview}', [App\Http\Controllers\ProductReviewController::class, 'update'])->name('reviews.update');
+    Route::delete('/reviews/products/{productReview}', [App\Http\Controllers\ProductReviewController::class, 'destroy'])->name('reviews.destroy');
+
     // Notifications
     Route::prefix('notifications')->name('notifications.')->group(function () {
         Route::get('/', [NotificationController::class, 'index'])->name('index');
@@ -93,6 +99,19 @@ Route::middleware([
 
     Route::get('/shop/edit', [App\Http\Controllers\Seller\ShopController::class, 'edit'])->name('shop.edit');
     Route::put('/shop', [App\Http\Controllers\Seller\ShopController::class, 'update'])->name('shop.update');
+
+    // Seller: product reviews list + reply
+    Route::get('/reviews', [App\Http\Controllers\Seller\ProductReviewIndexController::class, 'index'])->name('reviews.index');
+    Route::post('/reviews/{productReview}/reply', [App\Http\Controllers\Seller\ReviewReplyController::class, 'store'])->name('reviews.reply');
+
+    // Seller: buyer reviews (evaluate buyer)
+    Route::get('/orders/{order}/review-buyer', [App\Http\Controllers\Seller\BuyerReviewController::class, 'create'])->name('buyer-reviews.create');
+    Route::post('/orders/{order}/review-buyer', [App\Http\Controllers\Seller\BuyerReviewController::class, 'store'])->name('buyer-reviews.store');
+    Route::patch('/buyer-reviews/{buyerReview}', [App\Http\Controllers\Seller\BuyerReviewController::class, 'update'])->name('buyer-reviews.update');
+    Route::delete('/buyer-reviews/{buyerReview}', [App\Http\Controllers\Seller\BuyerReviewController::class, 'destroy'])->name('buyer-reviews.destroy');
+
+    // Seller: view buyer credit
+    Route::get('/buyers/{user}', [App\Http\Controllers\Seller\BuyerCreditController::class, 'show'])->name('buyers.show');
 });
 
 // Seller-only preference (excludes admin — admins have no seller dashboard)

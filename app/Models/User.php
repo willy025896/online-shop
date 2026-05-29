@@ -32,6 +32,8 @@ class User extends Authenticatable
         'password',
         'phone',
         'preferences',
+        'buyer_reviews_count',
+        'buyer_rating_sum',
     ];
 
     protected $hidden = [
@@ -51,6 +53,8 @@ class User extends Authenticatable
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
             'preferences' => 'array',
+            'buyer_reviews_count' => 'integer',
+            'buyer_rating_sum' => 'integer',
         ];
     }
 
@@ -87,6 +91,25 @@ class User extends Authenticatable
     public function isSeller(): bool
     {
         return $this->role === self::ROLE_SELLER;
+    }
+
+    public function buyerReviews(): HasMany
+    {
+        return $this->hasMany(BuyerReview::class);
+    }
+
+    public function productReviews(): HasMany
+    {
+        return $this->hasMany(ProductReview::class);
+    }
+
+    public function averageBuyerRating(): float
+    {
+        if ($this->buyer_reviews_count === 0) {
+            return 0;
+        }
+
+        return round($this->buyer_rating_sum / $this->buyer_reviews_count, 1);
     }
 
     public function isCustomer(): bool

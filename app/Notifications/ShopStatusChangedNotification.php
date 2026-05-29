@@ -3,13 +3,13 @@
 namespace App\Notifications;
 
 use App\Models\Shop;
+use App\Notifications\Concerns\BroadcastsAsArray;
 use Illuminate\Bus\Queueable;
-use Illuminate\Notifications\Messages\BroadcastMessage;
 use Illuminate\Notifications\Notification;
 
 class ShopStatusChangedNotification extends Notification
 {
-    use Queueable;
+    use BroadcastsAsArray, Queueable;
 
     public function __construct(public Shop $shop) {}
 
@@ -32,10 +32,5 @@ class ShopStatusChangedNotification extends Notification
                 'status' => $this->shop->status,
             ],
         ];
-    }
-
-    public function toBroadcast(object $notifiable): BroadcastMessage
-    {
-        return new BroadcastMessage($this->toArray($notifiable));
     }
 }

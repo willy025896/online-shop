@@ -7,12 +7,19 @@ import DialogModal from '@/Components/DialogModal.vue';
 import DangerButton from '@/Components/DangerButton.vue';
 import SecondaryButton from '@/Components/SecondaryButton.vue';
 import InputError from '@/Components/InputError.vue';
+import StarRating from '@/Components/StarRating.vue';
+import { Link } from '@inertiajs/vue3';
+import { useReviewCountdown } from '@/Composables/useReviewCountdown';
 
 const props = defineProps({
     order: Object,
     canSellerCancel: Boolean,
     nextStatuses: Object,
+    buyerRating: Object,
+    canReviewBuyer: Boolean,
 });
+
+const reviewDaysLeft = useReviewCountdown(() => props.order);
 
 const page = usePage();
 const lang = computed(() => page.props.lang || {});
@@ -106,9 +113,44 @@ const nextStatuses = props.nextStatuses;
                 </p>
             </div>
 
+            <!-- Review window notice -->
+            <div
+                v-if="canReviewBuyer && reviewDaysLeft !== null"
+                class="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg p-4"
+            >
+                <div class="flex items-start gap-3">
+                    <svg class="w-5 h-5 text-yellow-600 dark:text-yellow-400 flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+                        <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/>
+                    </svg>
+                    <div class="flex-1 text-sm text-yellow-800 dark:text-yellow-200">
+                        <p>
+                            {{ reviewDaysLeft === 0
+                                ? (lang.window_today_notice || '今天是此訂單評論的最後一天，請把握時間。')
+                                : (lang.window_open_notice_seller || '您還有 :days 天可評價此買家，逾期窗口將永久關閉。').replace(':days', reviewDaysLeft) }}
+                        </p>
+                        <Link
+                            :href="route('seller.buyer-reviews.create', order.id)"
+                            class="inline-block mt-2 px-3 py-1.5 bg-yellow-500 text-white text-xs font-medium rounded hover:bg-yellow-600 transition"
+                        >
+                            ★ {{ lang.review_buyer || '評價買家' }}
+                        </Link>
+                    </div>
+                </div>
+            </div>
+
             <!-- Customer Info -->
             <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-6">
-                <h3 class="text-lg font-medium text-gray-900 dark:text-gray-100 mb-4">{{ t.customer_info }}</h3>
+                <div class="flex items-center justify-between mb-4">
+                    <h3 class="text-lg font-medium text-gray-900 dark:text-gray-100">{{ t.customer_info }}</h3>
+                    <Link
+                        v-if="buyerRating"
+                        :href="route('seller.buyers.show', order.user?.id)"
+                        class="flex items-center gap-2 text-sm text-gray-600 hover:text-indigo-600"
+                    >
+                        <StarRating :model-value="Math.round(buyerRating.average)" :readonly="true" size="sm" />
+                        <span>{{ buyerRating.average.toFixed(1) }} ({{ buyerRating.count }})</span>
+                    </Link>
+                </div>
                 <dl class="grid grid-cols-2 gap-4 text-sm">
                     <div>
                         <dt class="text-gray-500 dark:text-gray-400">{{ t.name }}</dt>

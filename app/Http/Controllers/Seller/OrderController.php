@@ -33,7 +33,12 @@ class OrderController extends Controller
     {
         $this->authorize('view', $order);
 
-        $order->load('user', 'items.product', 'latestCancellation.responder');
+        $order->load('user', 'items.product', 'latestCancellation.responder', 'buyerReview');
+
+        $buyer = $order->user;
+        $buyerRating = $buyer && $buyer->buyer_reviews_count > 0
+            ? ['average' => $buyer->averageBuyerRating(), 'count' => $buyer->buyer_reviews_count]
+            : null;
 
         return Inertia::render('Seller/Orders/Show', [
             'order' => $order,
@@ -43,6 +48,10 @@ class OrderController extends Controller
                 'processing' => 'shipped',
                 'shipped' => 'completed',
             ],
+            'buyerRating' => $buyerRating,
+            'canReviewBuyer' => $order->status === Order::STATUS_COMPLETED
+                && $order->isReviewWindowOpen()
+                && ! $order->buyerReview,
         ]);
     }
 

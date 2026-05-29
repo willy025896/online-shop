@@ -45,6 +45,25 @@ return [
         ],
     ],
 
+    'review' => [
+        'cooling_started' => [
+            'title' => 'Review period closing soon',
+            'body' => 'Both parties have submitted reviews for order #:number. Reviews will be published at :time.',
+        ],
+        'released' => [
+            'title' => 'Review published',
+            'body' => 'Reviews for order #:number are now public.',
+        ],
+        'cooling_reset' => [
+            'title' => 'Review modified — cooling period reset',
+            'body' => 'The other party modified their review for order #:number. The cooling period has been reset and you may revise your review accordingly.',
+        ],
+        'seller_replied' => [
+            'title' => 'Seller replied to your review',
+            'body' => 'The seller has replied to your review for ":product".',
+        ],
+    ],
+
     'shop' => [
         'approved' => [
             'title' => 'Shop approved',

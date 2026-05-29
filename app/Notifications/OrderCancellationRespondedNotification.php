@@ -3,13 +3,13 @@
 namespace App\Notifications;
 
 use App\Models\OrderCancellation;
+use App\Notifications\Concerns\BroadcastsAsArray;
 use Illuminate\Bus\Queueable;
-use Illuminate\Notifications\Messages\BroadcastMessage;
 use Illuminate\Notifications\Notification;
 
 class OrderCancellationRespondedNotification extends Notification
 {
-    use Queueable;
+    use BroadcastsAsArray, Queueable;
 
     public function __construct(public OrderCancellation $cancellation) {}
 
@@ -35,10 +35,5 @@ class OrderCancellationRespondedNotification extends Notification
                 'status' => $this->cancellation->status,
             ],
         ];
-    }
-
-    public function toBroadcast(object $notifiable): BroadcastMessage
-    {
-        return new BroadcastMessage($this->toArray($notifiable));
     }
 }

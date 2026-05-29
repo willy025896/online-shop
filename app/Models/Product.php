@@ -29,6 +29,8 @@ class Product extends Model
         'stock',
         'status',
         'is_featured',
+        'reviews_count',
+        'rating_sum',
     ];
 
     protected function casts(): array
@@ -37,6 +39,8 @@ class Product extends Model
             'price' => 'decimal:2',
             'compare_price' => 'decimal:2',
             'is_featured' => 'boolean',
+            'reviews_count' => 'integer',
+            'rating_sum' => 'integer',
         ];
     }
 
@@ -68,6 +72,20 @@ class Product extends Model
     public function scopeFeatured($query)
     {
         return $query->where('is_featured', true);
+    }
+
+    public function reviews(): HasMany
+    {
+        return $this->hasMany(ProductReview::class);
+    }
+
+    public function averageRating(): float
+    {
+        if ($this->reviews_count === 0) {
+            return 0;
+        }
+
+        return round($this->rating_sum / $this->reviews_count, 1);
     }
 
     public function inStock(): bool

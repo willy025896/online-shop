@@ -33,17 +33,36 @@ const lang = computed(() => page.props.lang || {});
 
                 <!-- Products grid -->
                 <div class="flex-1">
-                    <div class="flex items-center justify-between mb-4">
-                        <p class="text-sm text-gray-600 dark:text-gray-400">
+                    <div class="flex flex-wrap items-center gap-3 mb-4">
+                        <p class="text-sm text-gray-600 dark:text-gray-400 flex-1">
                             {{ (lang.found || ':count product(s) found').replace(':count', products.total) }}
                         </p>
+
+                        <!-- Min rating chips -->
+                        <div class="flex gap-1">
+                            <button
+                                v-for="star in [4, 3]"
+                                :key="star"
+                                :class="[
+                                    'px-2 py-1 rounded-full text-xs font-medium border transition',
+                                    filters?.min_rating == star
+                                        ? 'bg-yellow-400 border-yellow-400 text-white'
+                                        : 'border-gray-300 text-gray-600 hover:border-yellow-400'
+                                ]"
+                                @click="$inertia.get(route('products.index'), { ...filters, min_rating: filters?.min_rating == star ? undefined : star }, { preserveState: true })"
+                            >
+                                {{ star }}★+
+                            </button>
+                        </div>
+
                         <select
                             @change="$inertia.get(route('products.index'), { ...filters, sort: $event.target.value }, { preserveState: true })"
-                            class="text-sm rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 focus:border-indigo-500 focus:ring-indigo-500 text-sm"
+                            class="text-sm rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 focus:border-indigo-500 focus:ring-indigo-500"
                         >
                             <option value="">{{ lang.sort?.latest }}</option>
                             <option value="price_asc" :selected="filters?.sort === 'price_asc'">{{ lang.sort?.price_asc }}</option>
                             <option value="price_desc" :selected="filters?.sort === 'price_desc'">{{ lang.sort?.price_desc }}</option>
+                            <option value="rating_desc" :selected="filters?.sort === 'rating_desc'">評分最高</option>
                         </select>
                     </div>
 

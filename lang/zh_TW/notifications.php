@@ -45,6 +45,25 @@ return [
         ],
     ],
 
+    'review' => [
+        'cooling_started' => [
+            'title' => '評價即將公開',
+            'body' => '訂單 #:number 雙方已完成評價，評論將於 :time 公開。',
+        ],
+        'released' => [
+            'title' => '評價已公開',
+            'body' => '訂單 #:number 的評論已正式公開。',
+        ],
+        'cooling_reset' => [
+            'title' => '對方修改評論，冷靜期已重置',
+            'body' => '訂單 #:number 對方修改了評論，冷靜期已重置，您可以對應調整自己的評論。',
+        ],
+        'seller_replied' => [
+            'title' => '賣家回覆了您的評論',
+            'body' => '賣家已回覆您對「:product」的評論。',
+        ],
+    ],
+
     'shop' => [
         'approved' => [
             'title' => '賣場已通過審核',

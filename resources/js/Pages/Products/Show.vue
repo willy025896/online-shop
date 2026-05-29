@@ -4,10 +4,16 @@ import { router, Link, usePage } from '@inertiajs/vue3';
 import AppLayout from '@/Layouts/AppLayout.vue';
 import ProductImageGallery from '@/Components/ProductImageGallery.vue';
 import ProductCard from '@/Components/ProductCard.vue';
+import StarRating from '@/Components/StarRating.vue';
+import ReviewCard from '@/Components/ReviewCard.vue';
+import RatingDistribution from '@/Components/RatingDistribution.vue';
+import Pagination from '@/Components/Pagination.vue';
 
 const props = defineProps({
     product: Object,
     relatedProducts: Array,
+    reviews: Object,
+    ratingDistribution: Object,
 });
 
 const page = usePage();
@@ -34,6 +40,14 @@ const addToCart = () => {
                         {{ product.category.name }}
                     </Link>
                     <h1 class="text-2xl font-bold text-gray-900 dark:text-gray-100 mt-1">{{ product.name }}</h1>
+
+                    <div v-if="product.reviews_count > 0" class="flex items-center gap-2 mt-2">
+                        <StarRating :model-value="Math.round(product.rating_sum / product.reviews_count)" :readonly="true" size="sm" />
+                        <span class="text-sm text-gray-500">
+                            {{ (product.rating_sum / product.reviews_count).toFixed(1) }}
+                            ({{ product.reviews_count }} 則評論)
+                        </span>
+                    </div>
 
                     <div class="mt-4 flex items-center gap-3">
                         <span class="text-3xl font-bold text-red-600">${{ product.price }}</span>
@@ -66,6 +80,36 @@ const addToCart = () => {
                         <p class="text-gray-600 dark:text-gray-400 whitespace-pre-line">{{ product.description }}</p>
                     </div>
                 </div>
+            </div>
+
+            <!-- Reviews section -->
+            <div class="mt-12">
+                <h2 class="text-xl font-bold text-gray-900 dark:text-gray-100 mb-6">顧客評論</h2>
+
+                <div v-if="product.reviews_count > 0" class="flex flex-col sm:flex-row gap-8 mb-8">
+                    <!-- Average -->
+                    <div class="text-center flex-shrink-0">
+                        <div class="text-5xl font-bold text-gray-900">
+                            {{ (product.rating_sum / product.reviews_count).toFixed(1) }}
+                        </div>
+                        <StarRating :model-value="Math.round(product.rating_sum / product.reviews_count)" :readonly="true" size="lg" />
+                        <div class="text-sm text-gray-500 mt-1">{{ product.reviews_count }} 則評論</div>
+                    </div>
+                    <!-- Distribution -->
+                    <div class="flex-1">
+                        <RatingDistribution :distribution="ratingDistribution" :total="product.reviews_count" />
+                    </div>
+                </div>
+
+                <div v-if="reviews.data.length === 0" class="text-center py-10 text-gray-400">
+                    目前尚無評論。
+                </div>
+
+                <div v-else class="space-y-4">
+                    <ReviewCard v-for="review in reviews.data" :key="review.id" :review="review" />
+                </div>
+
+                <Pagination v-if="reviews.last_page > 1" :links="reviews.links" class="mt-6" />
             </div>
 
             <div v-if="relatedProducts.length" class="mt-16">

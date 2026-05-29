@@ -21,6 +21,7 @@ return [
     'seller_dashboard' => 'Dashboard',
     'seller_products' => 'Products',
     'seller_orders' => 'Orders',
+    'seller_reviews' => 'Reviews',
     'seller_shop_settings' => 'Shop Settings',
     'back_to_store' => 'Back to Store',
 

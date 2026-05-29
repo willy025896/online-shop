@@ -22,10 +22,21 @@ class ProductController extends Controller
             $query->where('category_id', $categoryId);
         }
 
-        if ($request->input('sort') === 'price_asc') {
+        // Rating filter: only show products with enough reviews and avg >= min_rating
+        if ($minRating = $request->integer('min_rating')) {
+            $query->where('reviews_count', '>', 0)
+                ->whereRaw('(rating_sum / reviews_count) >= ?', [$minRating]);
+        }
+
+        $sort = $request->input('sort', 'latest');
+        if ($sort === 'price_asc') {
             $query->orderBy('price');
-        } elseif ($request->input('sort') === 'price_desc') {
+        } elseif ($sort === 'price_desc') {
             $query->orderByDesc('price');
+        } elseif ($sort === 'rating_desc') {
+            // Weighted: products with no reviews sink to the bottom
+            $query->orderByRaw('CASE WHEN reviews_count = 0 THEN 0 ELSE rating_sum / reviews_count END DESC')
+                ->orderByDesc('reviews_count');
         } else {
             $query->latest();
         }
@@ -33,7 +44,7 @@ class ProductController extends Controller
         return Inertia::render('Products/Index', [
             'products' => $query->paginate(12)->withQueryString(),
             'categories' => Category::active()->root()->with('children')->orderBy('sort_order')->get(),
-            'filters' => $request->only(['search', 'category', 'sort']),
+            'filters' => $request->only(['search', 'category', 'sort', 'min_rating']),
         ]);
     }
 
@@ -50,9 +61,24 @@ class ProductController extends Controller
             ->limit(4)
             ->get();
 
+        $reviews = $product->reviews()
+            ->with(['user:id,name,profile_photo_path'])
+            ->published()
+            ->latest()
+            ->paginate(10);
+
+        $ratingDistribution = $product->reviews()
+            ->published()
+            ->selectRaw('rating, count(*) as count')
+            ->groupBy('rating')
+            ->pluck('count', 'rating')
+            ->toArray();
+
         return Inertia::render('Products/Show', [
             'product' => $product,
             'relatedProducts' => $relatedProducts,
+            'reviews' => $reviews,
+            'ratingDistribution' => $ratingDistribution,
         ]);
     }
 }

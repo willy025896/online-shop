@@ -26,12 +26,16 @@ class Shop extends Model
         'logo_path',
         'status',
         'approved_at',
+        'reviews_count',
+        'rating_sum',
     ];
 
     protected function casts(): array
     {
         return [
             'approved_at' => 'datetime',
+            'reviews_count' => 'integer',
+            'rating_sum' => 'integer',
         ];
     }
 
@@ -48,6 +52,20 @@ class Shop extends Model
     public function orders(): HasMany
     {
         return $this->hasMany(Order::class);
+    }
+
+    public function productReviews(): HasMany
+    {
+        return $this->hasMany(ProductReview::class);
+    }
+
+    public function averageRating(): float
+    {
+        if ($this->reviews_count === 0) {
+            return 0;
+        }
+
+        return round($this->rating_sum / $this->reviews_count, 1);
     }
 
     public function isApproved(): bool

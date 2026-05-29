@@ -3,13 +3,13 @@
 namespace App\Notifications;
 
 use App\Models\Order;
+use App\Notifications\Concerns\BroadcastsAsArray;
 use Illuminate\Bus\Queueable;
-use Illuminate\Notifications\Messages\BroadcastMessage;
 use Illuminate\Notifications\Notification;
 
 class OrderCancelledBySellerNotification extends Notification
 {
-    use Queueable;
+    use BroadcastsAsArray, Queueable;
 
     public function __construct(public Order $order) {}
 
@@ -27,10 +27,5 @@ class OrderCancelledBySellerNotification extends Notification
             'url' => route('orders.show', $this->order),
             'meta' => ['order_id' => $this->order->id],
         ];
-    }
-
-    public function toBroadcast(object $notifiable): BroadcastMessage
-    {
-        return new BroadcastMessage($this->toArray($notifiable));
     }
 }

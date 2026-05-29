@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasManyThrough;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Order extends Model
@@ -54,6 +55,14 @@ class Order extends Model
 
     protected static function booted(): void
     {
+        static::updating(function (Order $order) {
+            if ($order->isDirty('status')
+                && $order->status === self::STATUS_COMPLETED
+                && $order->completed_at === null) {
+                $order->completed_at = now();
+            }
+        });
+
         static::updated(function (Order $order) {
             if ($order->wasChanged('status')) {
                 $order->statusLogs()->create([
@@ -83,7 +92,10 @@ class Order extends Model
         'shipping_address',
         'payment_method',
         'paid_at',
+        'completed_at',
         'notes',
+        'review_cooling_until',
+        'review_released_at',
     ];
 
     protected function casts(): array
@@ -93,6 +105,9 @@ class Order extends Model
             'shipping_fee' => 'decimal:2',
             'total' => 'decimal:2',
             'paid_at' => 'datetime',
+            'completed_at' => 'datetime',
+            'review_cooling_until' => 'datetime',
+            'review_released_at' => 'datetime',
         ];
     }
 
@@ -124,6 +139,17 @@ class Order extends Model
     public function statusLogs(): HasMany
     {
         return $this->hasMany(OrderStatusLog::class);
+    }
+
+    public function productReviews(): HasManyThrough
+    {
+        return $this->hasManyThrough(ProductReview::class, OrderItem::class)
+            ->where('product_reviews.status', ProductReview::STATUS_PUBLISHED);
+    }
+
+    public function buyerReview(): \Illuminate\Database\Eloquent\Relations\HasOne
+    {
+        return $this->hasOne(BuyerReview::class);
     }
 
     public function latestCancellation(): \Illuminate\Database\Eloquent\Relations\HasOne
@@ -175,6 +201,18 @@ class Order extends Model
     {
         return in_array($this->status, [self::STATUS_PENDING, self::STATUS_PAID, self::STATUS_PROCESSING])
             && $this->pendingCancellation() === null;
+    }
+
+    public function isReviewWindowOpen(): bool
+    {
+        return $this->review_released_at === null;
+    }
+
+    public function isInCoolingPeriod(): bool
+    {
+        return $this->review_cooling_until !== null
+            && $this->review_cooling_until->isFuture()
+            && $this->review_released_at === null;
     }
 
     public function canTransitionStatusTo(string $target): bool

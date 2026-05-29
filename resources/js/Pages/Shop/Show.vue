@@ -4,6 +4,7 @@ import { usePage } from '@inertiajs/vue3';
 import AppLayout from '@/Layouts/AppLayout.vue';
 import ProductCard from '@/Components/ProductCard.vue';
 import Pagination from '@/Components/Pagination.vue';
+import StarRating from '@/Components/StarRating.vue';
 import { router } from '@inertiajs/vue3';
 import { ref, watch } from 'vue';
 
@@ -58,6 +59,13 @@ watch([selectedCategory, sort], applyFilters);
                 <div>
                     <h1 class="text-2xl font-bold text-gray-900 dark:text-gray-100">{{ shop.name }}</h1>
                     <p v-if="shop.description" class="mt-1 text-gray-600 dark:text-gray-400">{{ shop.description }}</p>
+                    <div v-if="shop.reviews_count > 0" class="flex items-center gap-2 mt-2">
+                        <StarRating :model-value="Math.round(shop.rating_sum / shop.reviews_count)" :readonly="true" size="sm" />
+                        <span class="text-sm text-gray-600 dark:text-gray-400">
+                            {{ (shop.rating_sum / shop.reviews_count).toFixed(1) }}
+                            <span class="text-gray-400">({{ shop.reviews_count }} 則評論)</span>
+                        </span>
+                    </div>
                 </div>
             </div>
 

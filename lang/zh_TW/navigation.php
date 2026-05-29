@@ -21,6 +21,7 @@ return [
     'seller_dashboard' => '儀表板',
     'seller_products' => '商品管理',
     'seller_orders' => '訂單管理',
+    'seller_reviews' => '評論管理',
     'seller_shop_settings' => '店鋪設定',
     'back_to_store' => '返回商店',
 

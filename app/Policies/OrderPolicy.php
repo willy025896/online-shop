@@ -37,4 +37,11 @@ class OrderPolicy
         return ($user->isSeller() && $user->shop?->id === $order->shop_id)
             && $order->canBeCancelledBySeller();
     }
+
+    public function createReview(User $user, Order $order): bool
+    {
+        return $order->user_id === $user->id
+            && $order->status === Order::STATUS_COMPLETED
+            && $order->isReviewWindowOpen();
+    }
 }
