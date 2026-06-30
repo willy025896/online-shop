@@ -37,3 +37,21 @@ test('categories show page can be rendered', function () {
     $this->get(route('categories.show', $category->slug))
         ->assertStatus(200);
 });
+
+test('products index filters by min price', function () {
+    $shop = Shop::factory()->create();
+    Product::factory()->create(['shop_id' => $shop->id, 'price' => 100]);
+    Product::factory()->create(['shop_id' => $shop->id, 'price' => 500]);
+
+    $this->get(route('products.index', ['min_price' => 200]))
+        ->assertInertia(fn ($page) => $page->has('products.data', 1));
+});
+
+test('products index filters by max price', function () {
+    $shop = Shop::factory()->create();
+    Product::factory()->create(['shop_id' => $shop->id, 'price' => 100]);
+    Product::factory()->create(['shop_id' => $shop->id, 'price' => 500]);
+
+    $this->get(route('products.index', ['max_price' => 200]))
+        ->assertInertia(fn ($page) => $page->has('products.data', 1));
+});

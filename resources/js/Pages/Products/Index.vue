@@ -1,6 +1,6 @@
 <script setup>
-import { computed } from 'vue';
-import { usePage } from '@inertiajs/vue3';
+import { ref, computed } from 'vue';
+import { usePage, router } from '@inertiajs/vue3';
 import AppLayout from '@/Layouts/AppLayout.vue';
 import ProductCard from '@/Components/ProductCard.vue';
 import SearchBar from '@/Components/SearchBar.vue';
@@ -15,6 +15,24 @@ const props = defineProps({
 
 const page = usePage();
 const lang = computed(() => page.props.lang || {});
+
+const localMinPrice = ref(props.filters?.min_price ?? '');
+const localMaxPrice = ref(props.filters?.max_price ?? '');
+const hasPriceFilter = computed(() => props.filters?.min_price || props.filters?.max_price);
+
+function applyPriceFilter() {
+    router.get(route('products.index'), {
+        ...props.filters,
+        min_price: localMinPrice.value || undefined,
+        max_price: localMaxPrice.value || undefined,
+    }, { preserveState: true, only: ['products', 'filters'] });
+}
+
+function clearPriceFilter() {
+    localMinPrice.value = '';
+    localMaxPrice.value = '';
+    applyPriceFilter();
+}
 </script>
 
 <template>
@@ -25,10 +43,49 @@ const lang = computed(() => page.props.lang || {});
             </div>
 
             <div class="flex gap-8">
-                <!-- Sidebar categories -->
+                <!-- Sidebar -->
                 <aside class="hidden lg:block w-56 flex-shrink-0">
                     <h3 class="font-medium text-gray-900 dark:text-gray-100 mb-3">{{ lang.categories }}</h3>
                     <CategoryTree :categories="categories" />
+
+                    <!-- Price Range -->
+                    <div class="mt-6">
+                        <h3 class="font-medium text-gray-900 dark:text-gray-100 mb-3">{{ lang.price_range }}</h3>
+                        <div class="flex items-center gap-2 mb-2">
+                            <input
+                                v-model="localMinPrice"
+                                type="number"
+                                min="0"
+                                :placeholder="lang.min_price"
+                                class="w-full text-sm rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 focus:border-indigo-500 focus:ring-indigo-500"
+                                @keyup.enter="applyPriceFilter"
+                            />
+                            <span class="text-gray-400 flex-shrink-0">–</span>
+                            <input
+                                v-model="localMaxPrice"
+                                type="number"
+                                min="0"
+                                :placeholder="lang.max_price"
+                                class="w-full text-sm rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 focus:border-indigo-500 focus:ring-indigo-500"
+                                @keyup.enter="applyPriceFilter"
+                            />
+                        </div>
+                        <div class="flex gap-2">
+                            <button
+                                @click="applyPriceFilter"
+                                class="flex-1 px-3 py-1.5 text-xs font-medium rounded-md bg-indigo-600 text-white hover:bg-indigo-700 transition"
+                            >
+                                {{ lang.apply }}
+                            </button>
+                            <button
+                                v-if="hasPriceFilter"
+                                @click="clearPriceFilter"
+                                class="px-3 py-1.5 text-xs font-medium rounded-md border border-gray-300 text-gray-600 hover:border-gray-400 dark:border-gray-600 dark:text-gray-400 transition"
+                            >
+                                {{ lang.clear }}
+                            </button>
+                        </div>
+                    </div>
                 </aside>
 
                 <!-- Products grid -->
@@ -49,14 +106,14 @@ const lang = computed(() => page.props.lang || {});
                                         ? 'bg-yellow-400 border-yellow-400 text-white'
                                         : 'border-gray-300 text-gray-600 hover:border-yellow-400'
                                 ]"
-                                @click="$inertia.get(route('products.index'), { ...filters, min_rating: filters?.min_rating == star ? undefined : star }, { preserveState: true })"
+                                @click="router.get(route('products.index'), { ...filters, min_rating: filters?.min_rating == star ? undefined : star }, { preserveState: true, only: ['products', 'filters'] })"
                             >
                                 {{ star }}★+
                             </button>
                         </div>
 
                         <select
-                            @change="$inertia.get(route('products.index'), { ...filters, sort: $event.target.value }, { preserveState: true })"
+                            @change="router.get(route('products.index'), { ...filters, sort: $event.target.value }, { preserveState: true, only: ['products', 'filters'] })"
                             class="text-sm rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 focus:border-indigo-500 focus:ring-indigo-500"
                         >
                             <option value="">{{ lang.sort?.latest }}</option>

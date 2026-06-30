@@ -21,4 +21,9 @@ return [
     'sold_by' => 'Sold by :name',
     'in_stock_count' => ':count available',
     'related_products' => 'Related Products',
+    'price_range' => 'Price Range',
+    'min_price' => 'Min',
+    'max_price' => 'Max',
+    'apply' => 'Apply',
+    'clear' => 'Clear',
 ];

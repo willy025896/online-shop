@@ -29,6 +29,14 @@ class ProductController extends Controller
                 ->whereRaw('(rating_sum / reviews_count) >= ?', [$minRating]);
         }
 
+        if ($request->filled('min_price')) {
+            $query->where('price', '>=', (float) $request->input('min_price'));
+        }
+
+        if ($request->filled('max_price')) {
+            $query->where('price', '<=', (float) $request->input('max_price'));
+        }
+
         $sort = $request->input('sort', 'latest');
         if ($sort === 'price_asc') {
             $query->orderBy('price');
@@ -42,8 +50,8 @@ class ProductController extends Controller
 
         return Inertia::render('Products/Index', [
             'products' => $query->paginate(12)->withQueryString(),
-            'categories' => Category::active()->root()->with('children')->orderBy('sort_order')->get(),
-            'filters' => $request->only(['search', 'category', 'sort', 'min_rating']),
+            'categories' => fn () => Category::active()->root()->with('children')->orderBy('sort_order')->get(),
+            'filters' => $request->only(['search', 'category', 'sort', 'min_rating', 'min_price', 'max_price']),
         ]);
     }
 

@@ -21,4 +21,9 @@ return [
     'sold_by' => '販售者：:name',
     'in_stock_count' => '剩餘 :count 件',
     'related_products' => '相關商品',
+    'price_range' => '價格區間',
+    'min_price' => '最低',
+    'max_price' => '最高',
+    'apply' => '套用',
+    'clear' => '清除',
 ];
