@@ -128,6 +128,16 @@ Key design points:
 
 Cart supports both guests and authenticated users. `CartService` identifies a cart by `user_id` for authenticated users and `session_id` for guests. On login, `CartService::mergeGuestCart()` merges the guest cart into the user's cart. Policies in `app/Policies/` govern seller/admin resource authorization.
 
+### Shipping
+
+`ShippingService` (`app/Services/ShippingService.php`) is the single source of truth for shipping fees. The rule is a **flat fee with a free-shipping threshold**, configured globally in `config/shipping.php` (`flat_fee`, `free_threshold`; both overridable via `SHIPPING_FLAT_FEE` / `SHIPPING_FREE_THRESHOLD` env vars). Set `free_threshold` to `null` to disable free shipping.
+
+Key design points:
+- **Per-shop calculation** — shipping is evaluated **per shop**, mirroring the per-shop order split in `OrderService::createOrdersFromCart` (one `Order` per shop). Each shop's subtotal independently qualifies for free shipping or pays the flat fee.
+- **`feeForSubtotal($subtotal)`** — the core rule: `subtotal >= free_threshold ? 0 : flat_fee`. Used by `OrderService` when creating each order.
+- **`breakdownForItems($items)`** — groups a cart/order item collection into one row per shop (`shop_id`, `shop_name`, `subtotal`, `shipping_fee`), skipping soft-deleted products (null `product` relation). Used by `CheckoutController::index` (per-shop display) and `CartService::calculateTotals` (aggregate). This is the **only** place that knows the per-shop grouping rule — don't re-implement it in controllers.
+- **`publicConfig()`** — the rule as a plain array (`flat_fee`, `free_threshold`) shipped to the front-end (`shippingConfig` prop) so the cart/checkout pages can **estimate** fees client-side. The **back-end is the source of truth**; the client value is display-only and never trusted when creating orders.
+
 ### Order Status Transitions & Logging
 
 Seller status changes go through `Seller\OrderController::updateStatus`, guarded by `Order::canTransitionStatusTo()`. The rule is **forward-only** (by the `Order::STATUS_RANK` map) and rejects terminal sources (`completed`/`cancelled`) and orders with a pending cancellation — but it deliberately allows legitimate skips such as `pending → shipped` (cash-on-delivery) and `paid → completed` (virtual goods). Invalid transitions `abort(422)`.
@@ -230,7 +240,7 @@ online-shop/
 │   │   └── Concerns/           # BroadcastsAsArray trait
 │   ├── Policies/               # 4 policies (Product, Order, Shop, ProductReview)
 │   ├── Models/                 # 16 models (User, Shop, Product, Order, ProductReview, BuyerReview, WishlistItem, ...)
-│   └── Services/               # Cart, Order, Payment, Conversation, Review, Wishlist
+│   └── Services/               # Cart, Order, Payment, Shipping, Conversation, Review, Wishlist
 ├── database/
 │   └── migrations/             # 23 migrations (incl. product_reviews, buyer_reviews, aggregates, completed_at, wishlist_items)
 ├── lang/

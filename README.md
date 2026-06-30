@@ -113,7 +113,7 @@ online-shop/
 │   ├── Notifications/          # Order*, Shop*, Review* (database + broadcast)；共用 BroadcastsAsArray trait
 │   ├── Policies/               # Product, Order, Shop, ProductReview
 │   ├── Models/                 # 16 models (User, Shop, Product, Order, ProductReview, BuyerReview, WishlistItem, ...)
-│   └── Services/               # Cart, Order, Payment, Conversation, Review, Wishlist
+│   └── Services/               # Cart, Order, Payment, Shipping, Conversation, Review, Wishlist
 ├── database/
 │   └── migrations/             # 23 migrations
 ├── lang/
