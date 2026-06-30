@@ -20,4 +20,7 @@ return [
     'processing' => 'Processing...',
     'order_items' => 'Order Items',
     'notes_optional' => 'Notes (optional)',
+    'shipping_by_shop' => 'Shipping by Shop',
+    'free_shipping' => 'Free',
+    'free_shipping_hint' => 'Add $:amount more from :shop to qualify for free shipping.',
 ];

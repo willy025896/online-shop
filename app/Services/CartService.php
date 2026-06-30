@@ -9,6 +9,10 @@ use Illuminate\Support\Facades\Auth;
 
 class CartService
 {
+    public function __construct(
+        private ShippingService $shippingService,
+    ) {}
+
     public function getOrCreateCart(): Cart
     {
         if (Auth::check()) {
@@ -110,13 +114,17 @@ class CartService
 
     public function calculateTotals(Cart $cart): array
     {
-        $items = $cart->items()->with('product')->get();
+        $items = $cart->items()->with('product.shop')->get();
         $subtotal = $items->sum(fn ($item) => $item->quantity * $item->unit_price);
+
+        // ShippingService evaluates shipping per shop (mirroring the per-shop
+        // order split at checkout); sum the per-shop fees from its breakdown.
+        $shippingFee = $this->shippingService->breakdownForItems($items)->sum('shipping_fee');
 
         return [
             'subtotal' => round($subtotal, 2),
-            'shipping_fee' => 0,
-            'total' => round($subtotal, 2),
+            'shipping_fee' => round($shippingFee, 2),
+            'total' => round($subtotal + $shippingFee, 2),
         ];
     }
 

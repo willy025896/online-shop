@@ -20,4 +20,7 @@ return [
     'processing' => '處理中...',
     'order_items' => '訂單商品',
     'notes_optional' => '備註（選填）',
+    'shipping_by_shop' => '各賣場運費',
+    'free_shipping' => '免運',
+    'free_shipping_hint' => ':shop 再買 $:amount 即可享免運。',
 ];

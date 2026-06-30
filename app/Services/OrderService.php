@@ -15,6 +15,10 @@ use Illuminate\Support\Str;
 
 class OrderService
 {
+    public function __construct(
+        private ShippingService $shippingService,
+    ) {}
+
     public function createOrdersFromCart(Cart $cart, array $shippingData, array $itemIds = []): array
     {
         $cart->load('items.product.shop', 'items.product.primaryImage');
@@ -29,6 +33,7 @@ class OrderService
         DB::transaction(function () use ($itemsByShop, $shippingData, $cart, $itemIds, &$orders) {
             foreach ($itemsByShop as $shopId => $items) {
                 $subtotal = $items->sum(fn ($item) => $item->quantity * $item->unit_price);
+                $shippingFee = $this->shippingService->feeForSubtotal($subtotal);
 
                 $order = Order::create([
                     'order_number' => 'ORD-'.strtoupper(Str::random(8)).'-'.time(),
@@ -36,8 +41,8 @@ class OrderService
                     'shop_id' => $shopId,
                     'status' => Order::STATUS_PENDING,
                     'subtotal' => $subtotal,
-                    'shipping_fee' => 0,
-                    'total' => $subtotal,
+                    'shipping_fee' => $shippingFee,
+                    'total' => $subtotal + $shippingFee,
                     'shipping_name' => $shippingData['shipping_name'],
                     'shipping_phone' => $shippingData['shipping_phone'],
                     'shipping_address' => $shippingData['shipping_address'],

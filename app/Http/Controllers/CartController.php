@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\CartItem;
 use App\Models\Product;
 use App\Services\CartService;
+use App\Services\ShippingService;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 
@@ -12,6 +13,7 @@ class CartController extends Controller
 {
     public function __construct(
         private CartService $cartService,
+        private ShippingService $shippingService,
     ) {}
 
     public function index()
@@ -22,6 +24,7 @@ class CartController extends Controller
         return Inertia::render('Cart/Index', [
             'cart' => $cart,
             'totals' => $totals,
+            'shippingConfig' => $this->shippingService->publicConfig(),
         ]);
     }
 

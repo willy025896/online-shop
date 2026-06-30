@@ -8,7 +8,15 @@ import CartSummary from '@/Components/CartSummary.vue';
 const props = defineProps({
     cart: Object,
     totals: Object,
+    shippingConfig: Object,
 });
+
+// Per-shop shipping estimate, mirroring the server's ShippingService rule.
+const shippingFeeFor = (shopSubtotal) => {
+    const threshold = props.shippingConfig?.free_threshold;
+    if (threshold != null && shopSubtotal >= threshold) return 0;
+    return Number(props.shippingConfig?.flat_fee ?? 0);
+};
 
 const page = usePage();
 const lang = computed(() => page.props.lang || {});
@@ -69,10 +77,22 @@ const toggleAll = () => {
 const selectedCount = computed(() => selectedIds.value.length);
 
 const selectedTotals = computed(() => {
-    const subtotal = allItems.value
-        .filter(i => isSelected(i.id))
-        .reduce((sum, i) => sum + i.quantity * parseFloat(i.unit_price), 0);
-    return { subtotal, shipping_fee: 0, total: subtotal };
+    const selected = allItems.value.filter(i => isSelected(i.id));
+    const subtotal = selected.reduce((sum, i) => sum + i.quantity * parseFloat(i.unit_price), 0);
+
+    // Group selected items by shop, then sum each shop's shipping fee — the
+    // checkout will split these into one order per shop.
+    const subtotalByShop = new Map();
+    for (const i of selected) {
+        const shopId = i.product?.shop?.id ?? 0;
+        subtotalByShop.set(shopId, (subtotalByShop.get(shopId) ?? 0) + i.quantity * parseFloat(i.unit_price));
+    }
+    let shipping_fee = 0;
+    for (const shopSubtotal of subtotalByShop.values()) {
+        shipping_fee += shippingFeeFor(shopSubtotal);
+    }
+
+    return { subtotal, shipping_fee, total: subtotal + shipping_fee };
 });
 
 const checkoutSelected = () => {

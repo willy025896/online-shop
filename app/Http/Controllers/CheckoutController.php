@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Services\CartService;
 use App\Services\OrderService;
+use App\Services\ShippingService;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 
@@ -12,6 +13,7 @@ class CheckoutController extends Controller
     public function __construct(
         private CartService $cartService,
         private OrderService $orderService,
+        private ShippingService $shippingService,
     ) {}
 
     public function index()
@@ -33,12 +35,23 @@ class CheckoutController extends Controller
                 ->with('error', 'No items selected.');
         }
 
-        $subtotal = $selectedItems->sum(fn ($item) => $item->quantity * $item->unit_price);
-        $totals = ['subtotal' => $subtotal, 'shipping_fee' => 0, 'total' => $subtotal];
+        // Shipping is evaluated per shop (matching the per-shop order split in
+        // OrderService::createOrdersFromCart); ShippingService owns the rule.
+        $shopBreakdown = $this->shippingService->breakdownForItems($selectedItems);
+
+        $subtotal = $shopBreakdown->sum('subtotal');
+        $shippingFee = $shopBreakdown->sum('shipping_fee');
+        $totals = [
+            'subtotal' => round($subtotal, 2),
+            'shipping_fee' => round($shippingFee, 2),
+            'total' => round($subtotal + $shippingFee, 2),
+        ];
 
         return Inertia::render('Checkout/Index', [
             'cart' => ['items' => $selectedItems],
             'totals' => $totals,
+            'shopBreakdown' => $shopBreakdown,
+            'shippingConfig' => $this->shippingService->publicConfig(),
             'user' => auth()->user(),
             'itemIds' => $selectedItems->pluck('id')->values()->all(),
         ]);
