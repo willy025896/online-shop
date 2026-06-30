@@ -81,6 +81,17 @@ class Product extends Model
             ->orderByDesc('reviews_count');
     }
 
+    public function scopePriceRange($query, ?string $min, ?string $max)
+    {
+        if ($min !== null && $min !== '') {
+            $query->where('price', '>=', (float) $min);
+        }
+
+        if ($max !== null && $max !== '') {
+            $query->where('price', '<=', (float) $max);
+        }
+    }
+
     public function reviews(): HasMany
     {
         return $this->hasMany(ProductReview::class);

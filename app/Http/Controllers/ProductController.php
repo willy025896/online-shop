@@ -29,13 +29,7 @@ class ProductController extends Controller
                 ->whereRaw('(rating_sum / reviews_count) >= ?', [$minRating]);
         }
 
-        if ($request->filled('min_price')) {
-            $query->where('price', '>=', (float) $request->input('min_price'));
-        }
-
-        if ($request->filled('max_price')) {
-            $query->where('price', '<=', (float) $request->input('max_price'));
-        }
+        $query->priceRange($request->input('min_price'), $request->input('max_price'));
 
         $sort = $request->input('sort', 'latest');
         if ($sort === 'price_asc') {

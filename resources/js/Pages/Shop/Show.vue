@@ -18,12 +18,12 @@ const props = defineProps({
 const page = usePage();
 const lang = computed(() => page.props.lang || {});
 
-const search = ref(props.filters.search);
-const selectedCategory = ref(props.filters.category);
-const sort = ref(props.filters.sort);
-const localMinPrice = ref(props.filters.min_price ?? '');
-const localMaxPrice = ref(props.filters.max_price ?? '');
-const hasPriceFilter = computed(() => props.filters.min_price || props.filters.max_price);
+const search = ref(props.filters?.search ?? '');
+const selectedCategory = ref(props.filters?.category ?? '');
+const sort = ref(props.filters?.sort ?? 'latest');
+const localMinPrice = ref(props.filters?.min_price ?? '');
+const localMaxPrice = ref(props.filters?.max_price ?? '');
+const hasPriceFilter = computed(() => localMinPrice.value || localMaxPrice.value);
 
 let searchTimer = null;
 

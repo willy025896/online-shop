@@ -38,13 +38,7 @@ class ShopController extends Controller
             $query->where('category_id', $request->category);
         }
 
-        if ($request->filled('min_price')) {
-            $query->where('price', '>=', (float) $request->input('min_price'));
-        }
-
-        if ($request->filled('max_price')) {
-            $query->where('price', '<=', (float) $request->input('max_price'));
-        }
+        $query->priceRange($request->input('min_price'), $request->input('max_price'));
 
         match ($request->get('sort', 'latest')) {
             'price_asc' => $query->orderBy('price', 'asc'),
@@ -58,15 +52,11 @@ class ShopController extends Controller
         return Inertia::render('Shop/Show', [
             'shop' => $shop,
             'products' => $products,
-            'categories' => fn () => Category::whereHas('products', fn ($q) => $q->where('shop_id', $shop->id)->where('status', Product::STATUS_ACTIVE)
+            'categories' => fn () => Category::whereIn(
+                'id',
+                Product::where('shop_id', $shop->id)->where('status', Product::STATUS_ACTIVE)->select('category_id')
             )->active()->orderBy('sort_order')->get(['id', 'name']),
-            'filters' => [
-                'search' => $request->get('search', ''),
-                'category' => $request->get('category', ''),
-                'sort' => $request->get('sort', 'latest'),
-                'min_price' => $request->get('min_price', ''),
-                'max_price' => $request->get('max_price', ''),
-            ],
+            'filters' => $request->only(['search', 'category', 'sort', 'min_price', 'max_price']),
         ]);
     }
 }

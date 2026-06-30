@@ -18,7 +18,7 @@ const lang = computed(() => page.props.lang || {});
 
 const localMinPrice = ref(props.filters?.min_price ?? '');
 const localMaxPrice = ref(props.filters?.max_price ?? '');
-const hasPriceFilter = computed(() => props.filters?.min_price || props.filters?.max_price);
+const hasPriceFilter = computed(() => localMinPrice.value || localMaxPrice.value);
 
 function applyPriceFilter() {
     router.get(route('products.index'), {
