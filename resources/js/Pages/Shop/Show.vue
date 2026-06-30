@@ -21,6 +21,9 @@ const lang = computed(() => page.props.lang || {});
 const search = ref(props.filters.search);
 const selectedCategory = ref(props.filters.category);
 const sort = ref(props.filters.sort);
+const localMinPrice = ref(props.filters.min_price ?? '');
+const localMaxPrice = ref(props.filters.max_price ?? '');
+const hasPriceFilter = computed(() => props.filters.min_price || props.filters.max_price);
 
 let searchTimer = null;
 
@@ -29,12 +32,21 @@ const applyFilters = () => {
     if (search.value) params.search = search.value;
     if (selectedCategory.value) params.category = selectedCategory.value;
     if (sort.value !== 'latest') params.sort = sort.value;
+    if (localMinPrice.value) params.min_price = localMinPrice.value;
+    if (localMaxPrice.value) params.max_price = localMaxPrice.value;
 
     router.get(route('shops.show', props.shop.slug), params, {
         preserveState: true,
         preserveScroll: true,
         replace: true,
+        only: ['products', 'filters'],
     });
+};
+
+const clearPriceFilter = () => {
+    localMinPrice.value = '';
+    localMaxPrice.value = '';
+    applyFilters();
 };
 
 watch(search, () => {
@@ -88,6 +100,41 @@ watch([selectedCategory, sort], applyFilters);
                     <option value="price_desc">{{ lang.sort?.price_desc }}</option>
                     <option value="name">{{ lang.sort?.name }}</option>
                 </select>
+            </div>
+
+            <!-- Price Range -->
+            <div class="flex items-center gap-2 mb-4">
+                <span class="text-sm text-gray-600 dark:text-gray-400 flex-shrink-0">{{ lang.price_range }}</span>
+                <input
+                    v-model="localMinPrice"
+                    type="number"
+                    min="0"
+                    :placeholder="lang.min_price"
+                    class="w-24 text-sm rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 focus:border-indigo-500 focus:ring-indigo-500"
+                    @keyup.enter="applyFilters"
+                />
+                <span class="text-gray-400">–</span>
+                <input
+                    v-model="localMaxPrice"
+                    type="number"
+                    min="0"
+                    :placeholder="lang.max_price"
+                    class="w-24 text-sm rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 focus:border-indigo-500 focus:ring-indigo-500"
+                    @keyup.enter="applyFilters"
+                />
+                <button
+                    @click="applyFilters"
+                    class="px-3 py-1.5 text-xs font-medium rounded-md bg-indigo-600 text-white hover:bg-indigo-700 transition"
+                >
+                    {{ lang.apply }}
+                </button>
+                <button
+                    v-if="hasPriceFilter"
+                    @click="clearPriceFilter"
+                    class="px-3 py-1.5 text-xs font-medium rounded-md border border-gray-300 text-gray-600 hover:border-gray-400 dark:border-gray-600 dark:text-gray-400 transition"
+                >
+                    {{ lang.clear }}
+                </button>
             </div>
 
             <!-- Category filters -->

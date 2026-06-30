@@ -16,4 +16,9 @@ return [
         'price_desc' => 'Price: High to Low',
         'name' => 'Name A–Z',
     ],
+    'price_range' => 'Price Range',
+    'min_price' => 'Min',
+    'max_price' => 'Max',
+    'apply' => 'Apply',
+    'clear' => 'Clear',
 ];

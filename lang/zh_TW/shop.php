@@ -16,4 +16,9 @@ return [
         'price_desc' => '價格：高到低',
         'name' => '名稱 A–Z',
     ],
+    'price_range' => '價格區間',
+    'min_price' => '最低',
+    'max_price' => '最高',
+    'apply' => '套用',
+    'clear' => '清除',
 ];

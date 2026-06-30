@@ -38,6 +38,14 @@ class ShopController extends Controller
             $query->where('category_id', $request->category);
         }
 
+        if ($request->filled('min_price')) {
+            $query->where('price', '>=', (float) $request->input('min_price'));
+        }
+
+        if ($request->filled('max_price')) {
+            $query->where('price', '<=', (float) $request->input('max_price'));
+        }
+
         match ($request->get('sort', 'latest')) {
             'price_asc' => $query->orderBy('price', 'asc'),
             'price_desc' => $query->orderBy('price', 'desc'),
@@ -47,17 +55,17 @@ class ShopController extends Controller
 
         $products = $query->paginate(12)->withQueryString();
 
-        $categories = Category::whereHas('products', fn ($q) => $q->where('shop_id', $shop->id)->where('status', Product::STATUS_ACTIVE)
-        )->active()->orderBy('sort_order')->get(['id', 'name']);
-
         return Inertia::render('Shop/Show', [
             'shop' => $shop,
             'products' => $products,
-            'categories' => $categories,
+            'categories' => fn () => Category::whereHas('products', fn ($q) => $q->where('shop_id', $shop->id)->where('status', Product::STATUS_ACTIVE)
+            )->active()->orderBy('sort_order')->get(['id', 'name']),
             'filters' => [
                 'search' => $request->get('search', ''),
                 'category' => $request->get('category', ''),
                 'sort' => $request->get('sort', 'latest'),
+                'min_price' => $request->get('min_price', ''),
+                'max_price' => $request->get('max_price', ''),
             ],
         ]);
     }
