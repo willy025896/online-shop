@@ -59,7 +59,6 @@ test('dashboard returns correct stats shape', function () {
             ->has('chartData')
             ->has('topProducts')
             ->has('lowStockProducts')
-            ->has('lowStockThreshold')
         );
 });
 
@@ -78,7 +77,6 @@ test('low stock count and list reflect the configured threshold', function () {
         ->get(route('seller.dashboard'))
         ->assertInertia(fn ($page) => $page
             ->where('stats.low_stock_count', 3)
-            ->where('lowStockThreshold', 5)
             ->has('lowStockProducts', 3)
             // ordered by stock ascending → out-of-stock first
             ->where('lowStockProducts.0.stock', 0)

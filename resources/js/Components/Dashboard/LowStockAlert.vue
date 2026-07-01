@@ -5,7 +5,6 @@ import { Link } from '@inertiajs/vue3';
 const props = defineProps({
     products: { type: Array, default: () => [] },
     count: { type: Number, default: 0 },
-    threshold: { type: Number, default: 0 },
     lang: { type: Object, default: () => ({}) },
 });
 

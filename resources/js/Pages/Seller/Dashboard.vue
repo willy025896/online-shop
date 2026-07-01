@@ -18,7 +18,6 @@ const props = defineProps({
     chartData: Array,
     topProducts: Array,
     lowStockProducts: Array,
-    lowStockThreshold: Number,
     recentOrders: Array,
     userPreferences: Object,
     widgets: Object,
@@ -143,7 +142,6 @@ const formatCurrency = (v) => `$${Number(v ?? 0).toFixed(2)}`;
             <LowStockAlert
                 :products="lowStockProducts"
                 :count="stats.low_stock_count"
-                :threshold="lowStockThreshold"
                 :lang="lang"
             />
         </div>

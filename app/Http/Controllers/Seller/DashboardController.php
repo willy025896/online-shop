@@ -116,7 +116,6 @@ class DashboardController extends Controller
             'chartData' => $chartData,
             'topProducts' => $topProducts,
             'lowStockProducts' => $lowStockProducts,
-            'lowStockThreshold' => $lowStockThreshold,
             'recentOrders' => $shop->orders()->latest()->limit(5)->get(),
             'userPreferences' => $user->preferences,
             'widgets' => $widgets,
