@@ -139,7 +139,7 @@ online-shop/
 - [x] **運費計算** - 全站統一固定費率 + 滿額免運（`config/shipping.php`，env 可調），由 `ShippingService` 依賣場各自計算
 - [ ] **折扣碼/優惠券** - 折扣碼驗證、結帳套用、賣家建立優惠活動
 - [ ] **Admin Dashboard 強化** - 目前僅顯示靜態總數，補上平台級收益圖表與訂單趨勢（對齊賣家後台的完整度）
-- [ ] **商品價格區間篩選** - 商品列表已有搜尋、分類、評分、排序，補上 price range 篩選
+- [x] **商品價格區間篩選** - 商品列表與店鋪頁均支援 min_price / max_price 篩選（`scopePriceRange`，`$request->filled()` 防空值）
 - [ ] **低庫存警示** - 庫存扣減邏輯已完整，賣家後台補上低庫存商品提醒
 
 ### UI/UX Optimization
