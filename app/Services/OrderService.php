@@ -17,9 +17,13 @@ class OrderService
 {
     public function __construct(
         private ShippingService $shippingService,
+        private CouponService $couponService,
     ) {}
 
-    public function createOrdersFromCart(Cart $cart, array $shippingData, array $itemIds = []): array
+    /**
+     * @param  array<int|string, string>  $appliedCoupons  map of shop_id => coupon code
+     */
+    public function createOrdersFromCart(Cart $cart, array $shippingData, array $itemIds = [], array $appliedCoupons = []): array
     {
         $cart->load('items.product.shop', 'items.product.primaryImage');
 
@@ -30,19 +34,41 @@ class OrderService
         $itemsByShop = $items->groupBy('product.shop_id');
         $orders = [];
 
-        DB::transaction(function () use ($itemsByShop, $shippingData, $cart, $itemIds, &$orders) {
+        // Coupons are user-scoped (per-user limit + redemption record). Checkout
+        // is auth-only, so the cart always has a user when a coupon is applied.
+        $userId = (int) $cart->user_id;
+
+        DB::transaction(function () use ($itemsByShop, $shippingData, $cart, $itemIds, $appliedCoupons, $userId, &$orders) {
             foreach ($itemsByShop as $shopId => $items) {
                 $subtotal = $items->sum(fn ($item) => $item->quantity * $item->unit_price);
+                // Shipping (and its free-shipping threshold) is evaluated on the
+                // pre-discount subtotal — the coupon discounts goods, not shipping.
                 $shippingFee = $this->shippingService->feeForSubtotal($subtotal);
+
+                $coupon = null;
+                $discount = 0.0;
+                if (isset($appliedCoupons[$shopId]) && $appliedCoupons[$shopId] !== '') {
+                    // Re-validate server-side (source of truth); a stale/exhausted
+                    // code throws CouponException and rolls back the whole checkout.
+                    // NOTE: v1 only supports shop-scoped coupons, so a code maps to
+                    // exactly one shop. If platform-wide coupons (shop_id null) are
+                    // enabled later, guard here against the same coupon being applied
+                    // to multiple shops in one checkout (double redeem / self-rollback).
+                    $coupon = $this->couponService->validate($appliedCoupons[$shopId], (int) $shopId, (float) $subtotal, $userId);
+                    $discount = $this->couponService->discountFor($coupon, (float) $subtotal);
+                }
 
                 $order = Order::create([
                     'order_number' => 'ORD-'.strtoupper(Str::random(8)).'-'.time(),
                     'user_id' => $cart->user_id,
                     'shop_id' => $shopId,
+                    'coupon_id' => $coupon?->id,
+                    'coupon_code' => $coupon?->code,
                     'status' => Order::STATUS_PENDING,
                     'subtotal' => $subtotal,
+                    'discount' => $discount,
                     'shipping_fee' => $shippingFee,
-                    'total' => $subtotal + $shippingFee,
+                    'total' => $subtotal - $discount + $shippingFee,
                     'shipping_name' => $shippingData['shipping_name'],
                     'shipping_phone' => $shippingData['shipping_phone'],
                     'shipping_address' => $shippingData['shipping_address'],
@@ -67,6 +93,10 @@ class OrderService
                         'unit_price' => $cartItem->unit_price,
                         'subtotal' => $cartItem->quantity * $cartItem->unit_price,
                     ]);
+                }
+
+                if ($coupon !== null) {
+                    $this->couponService->redeem($coupon, $userId, $order, $discount);
                 }
 
                 $orders[] = $order;
@@ -200,6 +230,10 @@ class OrderService
             Product::where('id', $item->product_id)
                 ->increment('stock', $item->quantity);
         }
+
+        // Release any coupon consumed by this order so a cancellation doesn't
+        // permanently burn the buyer's per-user allowance or the total budget.
+        $this->couponService->releaseForOrder($order);
 
         $order->update(['status' => Order::STATUS_CANCELLED]);
     }

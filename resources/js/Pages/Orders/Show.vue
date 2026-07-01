@@ -150,6 +150,10 @@ const askSeller = (orderId) => {
                         <span>{{ lang.subtotal }}</span>
                         <span>${{ Number(order.subtotal).toFixed(2) }}</span>
                     </div>
+                    <div v-if="Number(order.discount) > 0" class="flex justify-between text-sm text-green-600 mb-1">
+                        <span>{{ lang.discount }}<span v-if="order.coupon_code" class="text-xs text-gray-400"> ({{ order.coupon_code }})</span></span>
+                        <span>-${{ Number(order.discount).toFixed(2) }}</span>
+                    </div>
                     <div class="flex justify-between text-sm text-gray-600 dark:text-gray-400 mb-2">
                         <span>{{ lang.shipping }}</span>
                         <span>{{ order.shipping_fee > 0 ? `$${Number(order.shipping_fee).toFixed(2)}` : lang.free }}</span>

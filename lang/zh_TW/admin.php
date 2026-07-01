@@ -98,6 +98,7 @@ return [
         'quantity' => '數量',
         'subtotal' => '小計',
         'shipping' => '運費',
+        'discount' => '折扣',
         'shipping_to' => '收件資訊',
         'name' => '姓名',
         'phone' => '電話',

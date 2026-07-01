@@ -23,4 +23,8 @@ return [
     'shipping_by_shop' => 'Shipping by Shop',
     'free_shipping' => 'Free',
     'free_shipping_hint' => 'Add $:amount more from :shop to qualify for free shipping.',
+    'coupon_title' => 'Coupon Codes',
+    'coupon_placeholder' => 'Enter code',
+    'coupon_apply' => 'Apply',
+    'coupon_remove' => 'Remove',
 ];

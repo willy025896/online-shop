@@ -137,7 +137,7 @@ online-shop/
 - [x] **收藏/願望清單** - 登入會員可收藏商品，導覽列愛心徽章，收藏清單頁支援移除及一鍵加入購物車
 - [x] **產品推薦/相關商品** - 商品頁相關商品（多訊號：一起購買 → 同分類 → 同賣場遞補），由 `RecommendationService` 產生
 - [x] **運費計算** - 全站統一固定費率 + 滿額免運（`config/shipping.php`，env 可調），由 `ShippingService` 依賣場各自計算
-- [ ] **折扣碼/優惠券** - 折扣碼驗證、結帳套用、賣家建立優惠活動
+- [x] **折扣碼/優惠券** - 賣家建立賣場折扣碼（百分比/固定、最低消費、用量與每人上限、有效期），買家結帳每賣場各套用一碼、折抵商品小計；`CouponService` 為單一真相來源，結帳交易內鎖定重驗與 redemption（ADR-008）
 - [x] **Admin Dashboard 強化** - 平台級數據分析：時段篩選（今日/本週/本月/全部）、收益與成長率、收益折線圖、訂單狀態分佈、Top 5 熱門店鋪；時段/圖表邏輯由 `ResolvesDashboardPeriod` trait 與賣家後台共用
 - [x] **商品價格區間篩選** - 商品列表與店鋪頁均支援 min_price / max_price 篩選（`scopePriceRange`，`$request->filled()` 防空值）
 - [x] **低庫存警示** - 賣家儀表板低庫存 widget（數量徽章 + 清單）＋商品列表 `low_stock` 篩選與庫存徽章；門檻由 `config/inventory.php`（`INVENTORY_LOW_STOCK_THRESHOLD` env 可調）控制，`Product::scopeLowStock()` 為單一判定入口

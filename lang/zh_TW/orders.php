@@ -19,6 +19,7 @@ return [
     'quantity' => '數量',
     'subtotal' => '小計',
     'shipping' => '運費',
+    'discount' => '折扣',
     'pay_now' => '立即付款',
     'cancel_order' => '取消訂單',
     'notes' => '備註',

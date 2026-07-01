@@ -124,6 +124,7 @@ const cancellationStatusLabel = (status) =>
                 </table>
                 <div class="px-6 py-4 border-t border-gray-200 dark:border-gray-700 text-right space-y-1">
                     <p class="text-sm text-gray-500">{{ t.subtotal }}: ${{ formatMoney(order.subtotal) }}</p>
+                    <p v-if="Number(order.discount) > 0" class="text-sm text-green-600">{{ t.discount }}<span v-if="order.coupon_code"> ({{ order.coupon_code }})</span>: -${{ formatMoney(order.discount) }}</p>
                     <p class="text-sm text-gray-500">{{ t.shipping }}: ${{ formatMoney(order.shipping_fee) }}</p>
                     <p class="text-lg font-semibold text-gray-900 dark:text-gray-100">{{ t.total }}: ${{ formatMoney(order.total) }}</p>
                 </div>

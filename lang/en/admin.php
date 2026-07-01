@@ -98,6 +98,7 @@ return [
         'quantity' => 'Qty',
         'subtotal' => 'Subtotal',
         'shipping' => 'Shipping',
+        'discount' => 'Discount',
         'shipping_to' => 'Shipping To',
         'name' => 'Name',
         'phone' => 'Phone',

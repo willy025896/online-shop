@@ -54,6 +54,11 @@ class Shop extends Model
         return $this->hasMany(Order::class);
     }
 
+    public function coupons(): HasMany
+    {
+        return $this->hasMany(Coupon::class);
+    }
+
     public function productReviews(): HasMany
     {
         return $this->hasMany(ProductReview::class);

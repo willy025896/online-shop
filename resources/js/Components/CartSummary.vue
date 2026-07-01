@@ -20,6 +20,10 @@ defineProps({
                 <span>Shipping</span>
                 <span>{{ totals.shipping_fee > 0 ? `$${Number(totals.shipping_fee).toFixed(2)}` : 'Free' }}</span>
             </div>
+            <div v-if="Number(totals.discount) > 0" class="flex justify-between text-green-600">
+                <span>Discount</span>
+                <span>-${{ Number(totals.discount).toFixed(2) }}</span>
+            </div>
             <div class="border-t border-gray-200 dark:border-gray-700 pt-2 flex justify-between font-semibold text-gray-900 dark:text-gray-100">
                 <span>Total</span>
                 <span>${{ Number(totals.total).toFixed(2) }}</span>

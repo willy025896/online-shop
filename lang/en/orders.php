@@ -19,6 +19,7 @@ return [
     'quantity' => 'Qty',
     'subtotal' => 'Subtotal',
     'shipping' => 'Shipping',
+    'discount' => 'Discount',
     'pay_now' => 'Pay Now',
     'cancel_order' => 'Cancel Order',
     'notes' => 'Notes',

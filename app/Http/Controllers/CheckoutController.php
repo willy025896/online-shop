@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Exceptions\CouponException;
 use App\Services\CartService;
 use App\Services\OrderService;
 use App\Services\ShippingService;
@@ -67,6 +68,8 @@ class CheckoutController extends Controller
             'notes' => 'nullable|string|max:500',
             'item_ids' => 'array',
             'item_ids.*' => 'integer',
+            'coupons' => 'array', // map of shop_id => coupon code
+            'coupons.*' => 'string|max:50',
         ]);
 
         $cart = $this->cartService->getCartWithItems();
@@ -79,10 +82,12 @@ class CheckoutController extends Controller
         $itemIds = $validated['item_ids'] ?? [];
 
         try {
-            $orders = $this->orderService->createOrdersFromCart($cart, $validated, $itemIds);
+            $orders = $this->orderService->createOrdersFromCart($cart, $validated, $itemIds, $validated['coupons'] ?? []);
 
             return redirect()->route('orders.index')
                 ->with('success', count($orders).' order(s) created successfully.');
+        } catch (CouponException $e) {
+            return back()->withErrors(['checkout' => $e->translatedMessage()]);
         } catch (\Exception $e) {
             return back()->withErrors(['checkout' => $e->getMessage()]);
         }

@@ -23,4 +23,8 @@ return [
     'shipping_by_shop' => '各賣場運費',
     'free_shipping' => '免運',
     'free_shipping_hint' => ':shop 再買 $:amount 即可享免運。',
+    'coupon_title' => '折扣碼',
+    'coupon_placeholder' => '輸入折扣碼',
+    'coupon_apply' => '套用',
+    'coupon_remove' => '移除',
 ];

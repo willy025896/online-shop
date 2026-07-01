@@ -1,5 +1,5 @@
 <script setup>
-import { computed } from 'vue';
+import { computed, reactive, ref } from 'vue';
 import { useForm, usePage } from '@inertiajs/vue3';
 import AppLayout from '@/Layouts/AppLayout.vue';
 import CartSummary from '@/Components/CartSummary.vue';
@@ -15,6 +15,53 @@ const props = defineProps({
 
 const page = usePage();
 const lang = computed(() => page.props.lang || {});
+
+// --- Coupons (per shop) ---
+const couponInputs = reactive({});   // shop_id -> code being typed
+const appliedCoupons = reactive({}); // shop_id -> { code, discount }
+const couponErrors = reactive({});   // shop_id -> error message
+const applyingShop = ref(null);
+
+const applyCoupon = async (shop) => {
+    const code = (couponInputs[shop.shop_id] || '').trim();
+    if (!code) return;
+
+    applyingShop.value = shop.shop_id;
+    delete couponErrors[shop.shop_id];
+    try {
+        const { data } = await window.axios.post(route('checkout.coupon.preview'), {
+            code,
+            shop_id: shop.shop_id,
+            item_ids: props.itemIds ?? [],
+        });
+        if (data.valid) {
+            appliedCoupons[shop.shop_id] = { code: data.code, discount: Number(data.discount) };
+        } else {
+            delete appliedCoupons[shop.shop_id];
+            couponErrors[shop.shop_id] = data.message;
+        }
+    } catch {
+        couponErrors[shop.shop_id] = 'Could not validate coupon.';
+    } finally {
+        applyingShop.value = null;
+    }
+};
+
+const removeCoupon = (shopId) => {
+    delete appliedCoupons[shopId];
+    delete couponErrors[shopId];
+    couponInputs[shopId] = '';
+};
+
+const totalDiscount = computed(() =>
+    Object.values(appliedCoupons).reduce((sum, c) => sum + c.discount, 0));
+
+const displayTotals = computed(() => ({
+    subtotal: props.totals.subtotal,
+    shipping_fee: props.totals.shipping_fee,
+    discount: totalDiscount.value,
+    total: Math.max(0, Number(props.totals.total) - totalDiscount.value),
+}));
 
 const freeThreshold = computed(() => props.shippingConfig?.free_threshold ?? null);
 
@@ -34,9 +81,14 @@ const form = useForm({
     payment_method: 'simulated',
     notes: '',
     item_ids: props.itemIds ?? [],
+    coupons: {},
 });
 
 const submit = () => {
+    // shop_id -> code map of the applied coupons; server re-validates.
+    form.coupons = Object.fromEntries(
+        Object.entries(appliedCoupons).map(([shopId, c]) => [shopId, c.code]),
+    );
     form.post(route('checkout.store'));
 };
 </script>
@@ -109,7 +161,44 @@ const submit = () => {
                             </p>
                         </div>
 
-                        <CartSummary :totals="totals" :show-checkout="false">
+                        <!-- Per-shop coupon codes -->
+                        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-4 text-sm">
+                            <h3 class="font-medium text-gray-900 dark:text-gray-100 mb-3">{{ lang.coupon_title }}</h3>
+                            <div v-for="s in shopBreakdown" :key="s.shop_id" class="py-2 border-b border-gray-100 dark:border-gray-700 last:border-0">
+                                <p v-if="shopBreakdown.length > 1" class="text-xs text-gray-500 mb-1 truncate">{{ s.shop_name }}</p>
+
+                                <div v-if="appliedCoupons[s.shop_id]" class="flex items-center justify-between">
+                                    <span class="inline-flex items-center gap-1 text-green-700 dark:text-green-400 font-medium">
+                                        {{ appliedCoupons[s.shop_id].code }}
+                                        <span class="text-xs">(-${{ appliedCoupons[s.shop_id].discount.toFixed(2) }})</span>
+                                    </span>
+                                    <button type="button" @click="removeCoupon(s.shop_id)" class="text-xs text-red-600 hover:text-red-800">{{ lang.coupon_remove }}</button>
+                                </div>
+
+                                <div v-else>
+                                    <div class="flex gap-2">
+                                        <input
+                                            v-model="couponInputs[s.shop_id]"
+                                            type="text"
+                                            :placeholder="lang.coupon_placeholder"
+                                            class="flex-1 rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 text-sm uppercase"
+                                            @keydown.enter.prevent="applyCoupon(s)"
+                                        />
+                                        <button
+                                            type="button"
+                                            :disabled="applyingShop === s.shop_id"
+                                            @click="applyCoupon(s)"
+                                            class="px-3 py-1.5 bg-gray-800 dark:bg-gray-600 text-white text-xs font-medium rounded-md hover:bg-gray-700 disabled:opacity-50"
+                                        >
+                                            {{ lang.coupon_apply }}
+                                        </button>
+                                    </div>
+                                    <p v-if="couponErrors[s.shop_id]" class="mt-1 text-xs text-red-500">{{ couponErrors[s.shop_id] }}</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <CartSummary :totals="displayTotals" :show-checkout="false">
                             <div v-if="form.errors.checkout" class="mt-3 text-sm text-red-500">{{ form.errors.checkout }}</div>
                             <button
                                 type="submit"

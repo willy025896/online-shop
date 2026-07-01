@@ -200,6 +200,7 @@ const nextStatuses = props.nextStatuses;
                 </table>
                 <div class="px-6 py-4 border-t border-gray-200 dark:border-gray-700 text-right space-y-1">
                     <p class="text-sm text-gray-500">{{ t.subtotal }}: ${{ Number(order.subtotal).toFixed(2) }}</p>
+                    <p v-if="Number(order.discount) > 0" class="text-sm text-green-600">{{ t.discount }}<span v-if="order.coupon_code"> ({{ order.coupon_code }})</span>: -${{ Number(order.discount).toFixed(2) }}</p>
                     <p class="text-sm text-gray-500">{{ t.shipping }}: ${{ Number(order.shipping_fee).toFixed(2) }}</p>
                     <p class="text-lg font-semibold text-gray-900 dark:text-gray-100">{{ t.total }}: ${{ Number(order.total).toFixed(2) }}</p>
                 </div>

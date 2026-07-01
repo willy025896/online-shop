@@ -50,6 +50,7 @@ Route::middleware([
     // Checkout
     Route::get('/checkout', [CheckoutController::class, 'index'])->name('checkout.index');
     Route::post('/checkout', [CheckoutController::class, 'store'])->name('checkout.store');
+    Route::post('/checkout/coupon/preview', [App\Http\Controllers\CouponController::class, 'preview'])->name('checkout.coupon.preview');
 
     // Customer orders
     Route::get('/orders', [OrderController::class, 'index'])->name('orders.index');
@@ -105,6 +106,9 @@ Route::middleware([
 
     Route::get('/shop/edit', [App\Http\Controllers\Seller\ShopController::class, 'edit'])->name('shop.edit');
     Route::put('/shop', [App\Http\Controllers\Seller\ShopController::class, 'update'])->name('shop.update');
+
+    // Coupons (discount codes)
+    Route::resource('coupons', App\Http\Controllers\Seller\CouponController::class)->except(['show']);
 
     // Seller: product reviews list + reply
     Route::get('/reviews', [App\Http\Controllers\Seller\ProductReviewIndexController::class, 'index'])->name('reviews.index');

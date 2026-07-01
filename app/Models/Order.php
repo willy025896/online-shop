@@ -83,8 +83,11 @@ class Order extends Model
         'order_number',
         'user_id',
         'shop_id',
+        'coupon_id',
+        'coupon_code',
         'status',
         'subtotal',
+        'discount',
         'shipping_fee',
         'total',
         'shipping_name',
@@ -102,6 +105,7 @@ class Order extends Model
     {
         return [
             'subtotal' => 'decimal:2',
+            'discount' => 'decimal:2',
             'shipping_fee' => 'decimal:2',
             'total' => 'decimal:2',
             'paid_at' => 'datetime',
@@ -119,6 +123,11 @@ class Order extends Model
     public function shop(): BelongsTo
     {
         return $this->belongsTo(Shop::class);
+    }
+
+    public function coupon(): BelongsTo
+    {
+        return $this->belongsTo(Coupon::class);
     }
 
     public function items(): HasMany
