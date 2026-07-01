@@ -138,7 +138,7 @@ online-shop/
 - [x] **產品推薦/相關商品** - 商品頁相關商品（多訊號：一起購買 → 同分類 → 同賣場遞補），由 `RecommendationService` 產生
 - [x] **運費計算** - 全站統一固定費率 + 滿額免運（`config/shipping.php`，env 可調），由 `ShippingService` 依賣場各自計算
 - [ ] **折扣碼/優惠券** - 折扣碼驗證、結帳套用、賣家建立優惠活動
-- [ ] **Admin Dashboard 強化** - 目前僅顯示靜態總數，補上平台級收益圖表與訂單趨勢（對齊賣家後台的完整度）
+- [x] **Admin Dashboard 強化** - 平台級數據分析：時段篩選（今日/本週/本月/全部）、收益與成長率、收益折線圖、訂單狀態分佈、Top 5 熱門店鋪；時段/圖表邏輯由 `ResolvesDashboardPeriod` trait 與賣家後台共用
 - [x] **商品價格區間篩選** - 商品列表與店鋪頁均支援 min_price / max_price 篩選（`scopePriceRange`，`$request->filled()` 防空值）
 - [ ] **低庫存警示** - 庫存扣減邏輯已完整，賣家後台補上低庫存商品提醒
 

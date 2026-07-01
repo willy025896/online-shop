@@ -151,6 +151,18 @@ Key design points:
 - **`breakdownForItems($items)`** — groups a cart/order item collection into one row per shop (`shop_id`, `shop_name`, `subtotal`, `shipping_fee`), skipping soft-deleted products (null `product` relation). Used by `CheckoutController::index` (per-shop display) and `CartService::calculateTotals` (aggregate). This is the **only** place that knows the per-shop grouping rule — don't re-implement it in controllers.
 - **`publicConfig()`** — the rule as a plain array (`flat_fee`, `free_threshold`) shipped to the front-end (`shippingConfig` prop) so the cart/checkout pages can **estimate** fees client-side. The **back-end is the source of truth**; the client value is display-only and never trusted when creating orders.
 
+### Dashboard Analytics (Seller + Admin)
+
+Both `Seller\DashboardController` and `Admin\DashboardController` render period-scoped analytics. The period-window logic is **not duplicated** — it lives in the `ResolvesDashboardPeriod` trait (`app/Http/Controllers/Concerns/ResolvesDashboardPeriod.php`), the single source of truth for both dashboards. Don't re-implement period math in a controller; `use` the trait.
+
+Key design points:
+- **Periods** — `today` / `week` / `month` / `all`, resolved via `resolvePeriod($request)` (invalid input falls back to `month`). `periodRange()` / `prevPeriodRange()` return the current and preceding windows; `'all'` has no comparison window (returns `[null, null]`), so growth is null for `'all'`.
+- **Timestamp convention** — **revenue is keyed on `paid_at`** (when payment cleared); **order-activity counts are keyed on `created_at`** (when the order was placed). The trait owns only the period math, not the choice of column — each query picks the right timestamp.
+- **`periodGrowth($current, $prev)`** — percent change vs the previous period (1dp); returns `null` when there is no baseline and `100.0` when growing from zero.
+- **`dailyRevenueSeries($base, $period, $start, $end)`** — zero-filled daily revenue buckets for the line chart. `$base` is a **fresh** `Order` query already scoped to the caller (`Order::query()` for admin, `Order::where('shop_id', ...)` for a seller); the method mutates the builder, so never pass one you intend to reuse. For `'all'` it shows the last 30 days.
+- **Scope difference** — the seller dashboard scopes every query to its own shop; the admin dashboard is platform-wide (all shops) and adds a **Top Shops by revenue** table (the platform analog of the seller's top-products). Admin also keeps period-independent all-time totals (users/shops/products/orders/revenue) as a header row.
+- **Front-end** — the `PeriodTabs` component (`resources/js/Components/Dashboard/PeriodTabs.vue`) renders the shared period selector for both pages; each page keeps its own `setPeriod` because their partial-reload `only:` lists differ. Charts/cards reuse `RevenueLineChart`, `StatCard`, `OrderStatusGrid`. Period navigations use `only: [...]` partial reloads (same convention as listing filters).
+
 ### Order Status Transitions & Logging
 
 Seller status changes go through `Seller\OrderController::updateStatus`, guarded by `Order::canTransitionStatusTo()`. The rule is **forward-only** (by the `Order::STATUS_RANK` map) and rejects terminal sources (`completed`/`cancelled`) and orders with a pending cancellation — but it deliberately allows legitimate skips such as `pending → shipped` (cash-on-delivery) and `paid → completed` (virtual goods). Invalid transitions `abort(422)`.
