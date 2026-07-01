@@ -15,6 +15,7 @@ class PreferenceController extends Controller
             'dashboard_widgets.order_status' => 'boolean',
             'dashboard_widgets.top_products' => 'boolean',
             'dashboard_widgets.revenue_chart' => 'boolean',
+            'dashboard_widgets.low_stock' => 'boolean',
         ]);
 
         $user = auth()->user();

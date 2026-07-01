@@ -18,6 +18,7 @@ const widgetKeys = [
     { key: 'order_status', labelKey: 'widget_order_status' },
     { key: 'top_products', labelKey: 'widget_top_products' },
     { key: 'revenue_chart', labelKey: 'widget_revenue_chart' },
+    { key: 'low_stock', labelKey: 'widget_low_stock' },
 ];
 
 const save = () => {

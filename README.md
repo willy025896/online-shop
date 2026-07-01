@@ -140,7 +140,7 @@ online-shop/
 - [ ] **折扣碼/優惠券** - 折扣碼驗證、結帳套用、賣家建立優惠活動
 - [x] **Admin Dashboard 強化** - 平台級數據分析：時段篩選（今日/本週/本月/全部）、收益與成長率、收益折線圖、訂單狀態分佈、Top 5 熱門店鋪；時段/圖表邏輯由 `ResolvesDashboardPeriod` trait 與賣家後台共用
 - [x] **商品價格區間篩選** - 商品列表與店鋪頁均支援 min_price / max_price 篩選（`scopePriceRange`，`$request->filled()` 防空值）
-- [ ] **低庫存警示** - 庫存扣減邏輯已完整，賣家後台補上低庫存商品提醒
+- [x] **低庫存警示** - 賣家儀表板低庫存 widget（數量徽章 + 清單）＋商品列表 `low_stock` 篩選與庫存徽章；門檻由 `config/inventory.php`（`INVENTORY_LOW_STOCK_THRESHOLD` env 可調）控制，`Product::scopeLowStock()` 為單一判定入口
 
 ### UI/UX Optimization
 - [ ] 前端組件視覺美化

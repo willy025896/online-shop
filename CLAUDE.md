@@ -163,6 +163,14 @@ Key design points:
 - **Scope difference** — the seller dashboard scopes every query to its own shop; the admin dashboard is platform-wide (all shops) and adds a **Top Shops by revenue** table (the platform analog of the seller's top-products). Admin also keeps period-independent all-time totals (users/shops/products/orders/revenue) as a header row.
 - **Front-end** — the `PeriodTabs` component (`resources/js/Components/Dashboard/PeriodTabs.vue`) renders the shared period selector for both pages; each page keeps its own `setPeriod` because their partial-reload `only:` lists differ. Charts/cards reuse `RevenueLineChart`, `StatCard`, `OrderStatusGrid`. Period navigations use `only: [...]` partial reloads (same convention as listing filters).
 
+### Low Stock Alert
+
+`Product::scopeLowStock($query, ?int $threshold = null)` is the **single source of truth** for "what counts as low stock" — `stock <= threshold` (includes out-of-stock at 0), defaulting to `config('inventory.low_stock_threshold')`. The threshold lives in `config/inventory.php` (overridable via `INVENTORY_LOW_STOCK_THRESHOLD` env), same config-driven pattern as Shipping. Don't hard-code a stock cutoff anywhere — call the scope.
+
+Surfaced in two places, both scoped to the seller's own shop:
+- **Seller dashboard** — a toggleable `low_stock` widget (part of `DEFAULT_WIDGETS`; whitelist it in `PreferenceController` when adding widget keys) showing a count badge + the 5 lowest-stock products, rendered by `LowStockAlert.vue`. It is **period-independent** (current inventory, not a time window), so its data is not in the period `only:` partial-reload list — but `low_stock_count` rides inside the `stats` prop which *is* reloaded, and stays correct because the controller recomputes it every request.
+- **Products list** — a `low_stock` boolean filter (`ProductController::index`, tested with `$request->boolean()` since it is a flag, not a value filter) plus an amber/red stock badge on each row.
+
 ### Order Status Transitions & Logging
 
 Seller status changes go through `Seller\OrderController::updateStatus`, guarded by `Order::canTransitionStatusTo()`. The rule is **forward-only** (by the `Order::STATUS_RANK` map) and rejects terminal sources (`completed`/`cancelled`) and orders with a pending cancellation — but it deliberately allows legitimate skips such as `pending → shipped` (cash-on-delivery) and `paid → completed` (virtual goods). Invalid transitions `abort(422)`.

@@ -55,9 +55,47 @@ test('dashboard returns correct stats shape', function () {
             ->has('stats.revenue')
             ->has('stats.order_counts')
             ->has('stats.total_orders')
+            ->has('stats.low_stock_count')
             ->has('chartData')
             ->has('topProducts')
+            ->has('lowStockProducts')
+            ->has('lowStockThreshold')
         );
+});
+
+// ---- Low stock alert ----
+
+test('low stock count and list reflect the configured threshold', function () {
+    config()->set('inventory.low_stock_threshold', 5);
+    ['seller' => $seller, 'shop' => $shop] = makeSeller();
+
+    Product::factory()->create(['shop_id' => $shop->id, 'stock' => 0]);   // out of stock
+    Product::factory()->create(['shop_id' => $shop->id, 'stock' => 3]);   // low
+    Product::factory()->create(['shop_id' => $shop->id, 'stock' => 5]);   // low (== threshold)
+    Product::factory()->create(['shop_id' => $shop->id, 'stock' => 6]);   // healthy — excluded
+
+    $this->actingAs($seller)
+        ->get(route('seller.dashboard'))
+        ->assertInertia(fn ($page) => $page
+            ->where('stats.low_stock_count', 3)
+            ->where('lowStockThreshold', 5)
+            ->has('lowStockProducts', 3)
+            // ordered by stock ascending → out-of-stock first
+            ->where('lowStockProducts.0.stock', 0)
+        );
+});
+
+test('low stock alert is scoped to the seller own shop', function () {
+    config()->set('inventory.low_stock_threshold', 5);
+    ['seller' => $seller, 'shop' => $shop] = makeSeller();
+    ['shop' => $otherShop] = makeSeller();
+
+    Product::factory()->create(['shop_id' => $shop->id, 'stock' => 1]);
+    Product::factory()->create(['shop_id' => $otherShop->id, 'stock' => 1]);
+
+    $this->actingAs($seller)
+        ->get(route('seller.dashboard'))
+        ->assertInertia(fn ($page) => $page->where('stats.low_stock_count', 1));
 });
 
 // ---- Revenue counting ----

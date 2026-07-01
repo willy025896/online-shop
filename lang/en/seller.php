@@ -31,11 +31,18 @@ return [
     'revenue_col' => 'Revenue',
     'sales_trend' => 'Sales Trend',
 
+    'low_stock' => 'Low Stock',
+    'low_stock_empty' => 'All products are well stocked.',
+    'out_of_stock' => 'Out of stock',
+    'stock_left' => ':n left',
+    'low_stock_more' => '+:n more low-stock products',
+
     'widget_settings' => 'Customize Widgets',
     'widget_revenue' => 'Revenue Card',
     'widget_order_status' => 'Order Status',
     'widget_top_products' => 'Top Products',
     'widget_revenue_chart' => 'Sales Chart',
+    'widget_low_stock' => 'Low Stock',
     'save_preferences' => 'Save',
 
     'register' => [
@@ -66,6 +73,7 @@ return [
         'delete_confirm' => 'Are you sure you want to delete ":name"?',
         'no_products' => 'No products yet.',
         'create_first' => 'Create your first product',
+        'low_stock_filter' => 'Low stock',
         'draft' => 'Draft',
         'active' => 'Active',
         'inactive' => 'Inactive',

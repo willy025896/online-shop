@@ -7,6 +7,7 @@ import StatCard from '@/Components/Dashboard/StatCard.vue';
 import OrderStatusGrid from '@/Components/Dashboard/OrderStatusGrid.vue';
 import PeriodTabs from '@/Components/Dashboard/PeriodTabs.vue';
 import TopProductsTable from '@/Components/Dashboard/TopProductsTable.vue';
+import LowStockAlert from '@/Components/Dashboard/LowStockAlert.vue';
 import WidgetSettings from '@/Components/Dashboard/WidgetSettings.vue';
 import RevenueLineChart from '@/Components/Charts/RevenueLineChart.vue';
 
@@ -16,6 +17,8 @@ const props = defineProps({
     stats: Object,
     chartData: Array,
     topProducts: Array,
+    lowStockProducts: Array,
+    lowStockThreshold: Number,
     recentOrders: Array,
     userPreferences: Object,
     widgets: Object,
@@ -133,6 +136,16 @@ const formatCurrency = (v) => `$${Number(v ?? 0).toFixed(2)}`;
                     {{ lang.no_orders }}
                 </div>
             </div>
+        </div>
+
+        <!-- Low stock alert row -->
+        <div v-if="localWidgets.low_stock" class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+            <LowStockAlert
+                :products="lowStockProducts"
+                :count="stats.low_stock_count"
+                :threshold="lowStockThreshold"
+                :lang="lang"
+            />
         </div>
 
         <!-- Widget settings FAB -->

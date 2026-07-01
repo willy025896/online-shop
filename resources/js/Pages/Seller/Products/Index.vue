@@ -4,12 +4,22 @@ import { Link, router, usePage } from '@inertiajs/vue3';
 import SellerLayout from '@/Layouts/SellerLayout.vue';
 import Pagination from '@/Components/Pagination.vue';
 
-defineProps({
+const props = defineProps({
     products: Object,
+    filters: { type: Object, default: () => ({}) },
+    lowStockThreshold: { type: Number, default: 0 },
 });
 
 const page = usePage();
 const lang = computed(() => page.props.lang || {});
+
+const toggleLowStock = () => {
+    router.get(
+        route('seller.products.index'),
+        props.filters.low_stock ? {} : { low_stock: 1 },
+        { preserveScroll: true, preserveState: true },
+    );
+};
 
 const deleteProduct = (product) => {
     const msg = (lang.value.products?.delete_confirm || 'Are you sure you want to delete ":name"?').replace(':name', product.name);
@@ -24,9 +34,22 @@ const deleteProduct = (product) => {
         <template #header>
             <div class="flex justify-between items-center">
                 <h2 class="text-xl font-semibold text-gray-800 dark:text-gray-200">{{ lang.products?.title }}</h2>
-                <Link :href="route('seller.products.create')" class="inline-flex items-center px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-md hover:bg-indigo-700">
-                    {{ lang.products?.add }}
-                </Link>
+                <div class="flex items-center gap-2">
+                    <button
+                        @click="toggleLowStock"
+                        :class="[
+                            'inline-flex items-center px-3 py-2 text-sm font-medium rounded-md border transition-colors',
+                            filters.low_stock
+                                ? 'bg-amber-100 border-amber-300 text-amber-800'
+                                : 'bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700'
+                        ]"
+                    >
+                        {{ lang.products?.low_stock_filter }}
+                    </button>
+                    <Link :href="route('seller.products.create')" class="inline-flex items-center px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-md hover:bg-indigo-700">
+                        {{ lang.products?.add }}
+                    </Link>
+                </div>
             </div>
         </template>
 
@@ -56,7 +79,16 @@ const deleteProduct = (product) => {
                         </td>
                         <td class="px-6 py-4 text-sm text-gray-500 dark:text-gray-400">{{ product.category?.name || '-' }}</td>
                         <td class="px-6 py-4 text-sm text-gray-900 dark:text-gray-100">${{ product.price }}</td>
-                        <td class="px-6 py-4 text-sm" :class="product.stock === 0 ? 'text-red-600' : 'text-gray-900 dark:text-gray-100'">{{ product.stock }}</td>
+                        <td class="px-6 py-4 text-sm">
+                            <span
+                                v-if="product.stock <= lowStockThreshold"
+                                :class="[
+                                    'inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium',
+                                    product.stock === 0 ? 'bg-red-100 text-red-800' : 'bg-amber-100 text-amber-800'
+                                ]"
+                            >{{ product.stock }}</span>
+                            <span v-else class="text-gray-900 dark:text-gray-100">{{ product.stock }}</span>
+                        </td>
                         <td class="px-6 py-4">
                             <span :class="[
                                 'inline-flex rounded-full px-2 py-0.5 text-xs font-medium',

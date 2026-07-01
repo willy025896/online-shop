@@ -11,15 +11,21 @@ use Inertia\Inertia;
 
 class ProductController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
+        $lowStockThreshold = (int) config('inventory.low_stock_threshold');
+
         $products = auth()->user()->shop->products()
             ->with('primaryImage', 'category')
+            ->when($request->boolean('low_stock'), fn ($q) => $q->lowStock($lowStockThreshold))
             ->latest()
-            ->paginate(10);
+            ->paginate(10)
+            ->withQueryString();
 
         return Inertia::render('Seller/Products/Index', [
             'products' => $products,
+            'filters' => ['low_stock' => $request->boolean('low_stock')],
+            'lowStockThreshold' => $lowStockThreshold,
         ]);
     }
 

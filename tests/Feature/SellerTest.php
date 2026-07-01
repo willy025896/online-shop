@@ -69,6 +69,23 @@ test('seller can view products list', function () {
         );
 });
 
+test('products list can be filtered to low stock only', function () {
+    config()->set('inventory.low_stock_threshold', 5);
+    $user = User::factory()->seller()->create();
+    $shop = Shop::factory()->create(['user_id' => $user->id]);
+    Product::factory()->create(['shop_id' => $shop->id, 'stock' => 2]);
+    Product::factory()->create(['shop_id' => $shop->id, 'stock' => 0]);
+    Product::factory()->create(['shop_id' => $shop->id, 'stock' => 50]);
+
+    $this->actingAs($user)
+        ->get(route('seller.products.index', ['low_stock' => 1]))
+        ->assertInertia(fn ($page) => $page
+            ->has('products.data', 2)
+            ->where('filters.low_stock', true)
+            ->where('lowStockThreshold', 5)
+        );
+});
+
 test('seller can create a product', function () {
     $user = User::factory()->seller()->create();
     Shop::factory()->create(['user_id' => $user->id]);

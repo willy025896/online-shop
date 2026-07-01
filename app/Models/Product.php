@@ -81,6 +81,15 @@ class Product extends Model
             ->orderByDesc('reviews_count');
     }
 
+    /**
+     * Products at or below the low-stock threshold (includes out-of-stock).
+     * Defaults to config('inventory.low_stock_threshold') when $threshold is null.
+     */
+    public function scopeLowStock($query, ?int $threshold = null)
+    {
+        return $query->where('stock', '<=', $threshold ?? config('inventory.low_stock_threshold'));
+    }
+
     public function scopePriceRange($query, ?string $min, ?string $max)
     {
         if ($min !== null && $min !== '') {

@@ -31,11 +31,18 @@ return [
     'revenue_col' => '營收',
     'sales_trend' => '銷售趨勢',
 
+    'low_stock' => '低庫存',
+    'low_stock_empty' => '所有商品庫存充足。',
+    'out_of_stock' => '已售罄',
+    'stock_left' => '剩 :n 件',
+    'low_stock_more' => '另有 :n 項低庫存商品',
+
     'widget_settings' => '自訂顯示',
     'widget_revenue' => '營收卡片',
     'widget_order_status' => '訂單狀態',
     'widget_top_products' => '熱賣商品',
     'widget_revenue_chart' => '銷售圖表',
+    'widget_low_stock' => '低庫存',
     'save_preferences' => '儲存',
 
     'register' => [
@@ -66,6 +73,7 @@ return [
         'delete_confirm' => '確定要刪除「:name」嗎？',
         'no_products' => '尚無商品。',
         'create_first' => '建立您的第一個商品',
+        'low_stock_filter' => '低庫存',
         'draft' => '草稿',
         'active' => '上架',
         'inactive' => '下架',

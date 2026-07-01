@@ -18,6 +18,7 @@ class DashboardController extends Controller
         'order_status' => true,
         'top_products' => true,
         'revenue_chart' => true,
+        'low_stock' => true,
     ];
 
     public function index(Request $request)
@@ -83,6 +84,15 @@ class DashboardController extends Controller
             $end
         );
 
+        // Low-stock alert (period-independent — reflects current inventory).
+        $lowStockThreshold = (int) config('inventory.low_stock_threshold');
+        $lowStockProducts = $shop->products()
+            ->lowStock($lowStockThreshold)
+            ->orderBy('stock')
+            ->limit(5)
+            ->get(['id', 'name', 'stock']);
+        $lowStockCount = $shop->products()->lowStock($lowStockThreshold)->count();
+
         $stats = [
             'total_products' => $shop->products()->count(),
             'active_products' => $shop->products()->active()->count(),
@@ -91,6 +101,7 @@ class DashboardController extends Controller
             'revenue_growth' => $revenueGrowth,
             'order_counts' => $orderCounts,
             'total_orders' => array_sum($orderCounts),
+            'low_stock_count' => $lowStockCount,
         ];
 
         $widgets = array_merge(
@@ -104,6 +115,8 @@ class DashboardController extends Controller
             'stats' => $stats,
             'chartData' => $chartData,
             'topProducts' => $topProducts,
+            'lowStockProducts' => $lowStockProducts,
+            'lowStockThreshold' => $lowStockThreshold,
             'recentOrders' => $shop->orders()->latest()->limit(5)->get(),
             'userPreferences' => $user->preferences,
             'widgets' => $widgets,
