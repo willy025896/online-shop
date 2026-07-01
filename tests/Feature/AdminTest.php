@@ -1,8 +1,10 @@
 <?php
 
 use App\Models\Category;
+use App\Models\Order;
 use App\Models\Shop;
 use App\Models\User;
+use Carbon\Carbon;
 
 test('guest cannot access admin pages', function () {
     $this->get(route('admin.dashboard'))->assertRedirect('/login');
@@ -33,8 +35,56 @@ test('admin can access dashboard', function () {
         ->assertStatus(200)
         ->assertInertia(fn ($page) => $page
             ->component('Admin/Dashboard')
-            ->has('stats')
+            ->has('stats.total_users')
+            ->has('stats.total_revenue')
+            ->has('stats.revenue')
+            ->has('stats.order_counts.pending')
+            ->has('chartData')
+            ->has('topShops')
+            ->where('period', 'month')
         );
+});
+
+test('admin dashboard revenue is platform-wide and period-scoped', function () {
+    $admin = User::factory()->admin()->create();
+    $shopA = Shop::factory()->create(['status' => Shop::STATUS_APPROVED]);
+    $shopB = Shop::factory()->create(['status' => Shop::STATUS_APPROVED]);
+
+    // Two shops paid today, one pending (excluded), one paid yesterday.
+    Order::factory()->create(['shop_id' => $shopA->id, 'user_id' => User::factory()->create()->id, 'status' => Order::STATUS_PAID, 'total' => 300.0, 'paid_at' => Carbon::now()]);
+    Order::factory()->create(['shop_id' => $shopB->id, 'user_id' => User::factory()->create()->id, 'status' => Order::STATUS_PAID, 'total' => 200.0, 'paid_at' => Carbon::now()]);
+    Order::factory()->create(['shop_id' => $shopA->id, 'user_id' => User::factory()->create()->id, 'status' => Order::STATUS_PENDING, 'total' => 999.0, 'paid_at' => null]);
+    Order::factory()->create(['shop_id' => $shopB->id, 'user_id' => User::factory()->create()->id, 'status' => Order::STATUS_PAID, 'total' => 777.0, 'paid_at' => Carbon::yesterday()]);
+
+    $this->actingAs($admin)
+        ->get(route('admin.dashboard', ['period' => 'today']))
+        ->assertInertia(fn ($page) => $page
+            ->where('stats.revenue', fn ($v) => (float) $v === 500.0)
+        );
+});
+
+test('admin dashboard top shops are ordered by revenue descending', function () {
+    $admin = User::factory()->admin()->create();
+    $big = Shop::factory()->create(['name' => 'Big Shop', 'status' => Shop::STATUS_APPROVED]);
+    $small = Shop::factory()->create(['name' => 'Small Shop', 'status' => Shop::STATUS_APPROVED]);
+
+    Order::factory()->create(['shop_id' => $big->id, 'user_id' => User::factory()->create()->id, 'status' => Order::STATUS_PAID, 'total' => 900.0, 'paid_at' => Carbon::now()]);
+    Order::factory()->create(['shop_id' => $small->id, 'user_id' => User::factory()->create()->id, 'status' => Order::STATUS_PAID, 'total' => 50.0, 'paid_at' => Carbon::now()]);
+
+    $this->actingAs($admin)
+        ->get(route('admin.dashboard', ['period' => 'all']))
+        ->assertInertia(fn ($page) => $page
+            ->where('topShops.0.shop_name', 'Big Shop')
+            ->where('topShops.1.shop_name', 'Small Shop')
+        );
+});
+
+test('admin dashboard invalid period falls back to month', function () {
+    $admin = User::factory()->admin()->create();
+
+    $this->actingAs($admin)
+        ->get(route('admin.dashboard', ['period' => 'bogus']))
+        ->assertInertia(fn ($page) => $page->where('period', 'month'));
 });
 
 test('admin can view users list', function () {

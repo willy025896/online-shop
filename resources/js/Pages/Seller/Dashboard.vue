@@ -5,6 +5,7 @@ import SellerLayout from '@/Layouts/SellerLayout.vue';
 import OrderStatusBadge from '@/Components/OrderStatusBadge.vue';
 import StatCard from '@/Components/Dashboard/StatCard.vue';
 import OrderStatusGrid from '@/Components/Dashboard/OrderStatusGrid.vue';
+import PeriodTabs from '@/Components/Dashboard/PeriodTabs.vue';
 import TopProductsTable from '@/Components/Dashboard/TopProductsTable.vue';
 import WidgetSettings from '@/Components/Dashboard/WidgetSettings.vue';
 import RevenueLineChart from '@/Components/Charts/RevenueLineChart.vue';
@@ -28,13 +29,6 @@ const localWidgets = ref({ ...props.widgets });
 watch(() => props.widgets, (v) => {
     localWidgets.value = { ...v };
 }, { deep: true });
-
-const periods = [
-    { key: 'today', label: () => lang.value.period_today },
-    { key: 'week', label: () => lang.value.period_week },
-    { key: 'month', label: () => lang.value.period_month },
-    { key: 'all', label: () => lang.value.period_all },
-];
 
 const setPeriod = (p) => {
     router.get(route('seller.dashboard'), { period: p }, {
@@ -65,21 +59,7 @@ const formatCurrency = (v) => `$${Number(v ?? 0).toFixed(2)}`;
         </div>
 
         <!-- Period tabs -->
-        <div class="flex gap-1 mb-6 bg-gray-100 dark:bg-gray-700 rounded-lg p-1 w-fit">
-            <button
-                v-for="p in periods"
-                :key="p.key"
-                @click="setPeriod(p.key)"
-                :class="[
-                    'px-4 py-1.5 rounded-md text-sm font-medium transition-colors',
-                    period === p.key
-                        ? 'bg-white dark:bg-gray-800 text-indigo-600 shadow-sm'
-                        : 'text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200'
-                ]"
-            >
-                {{ p.label() }}
-            </button>
-        </div>
+        <PeriodTabs :period="period" :lang="lang" class="mb-6" @change="setPeriod" />
 
         <!-- Stat cards row -->
         <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">

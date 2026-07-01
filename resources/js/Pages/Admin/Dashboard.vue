@@ -1,14 +1,31 @@
 <script setup>
 import { computed } from 'vue';
-import { usePage } from '@inertiajs/vue3';
+import { router, usePage } from '@inertiajs/vue3';
 import AdminLayout from '@/Layouts/AdminLayout.vue';
+import StatCard from '@/Components/Dashboard/StatCard.vue';
+import OrderStatusGrid from '@/Components/Dashboard/OrderStatusGrid.vue';
+import PeriodTabs from '@/Components/Dashboard/PeriodTabs.vue';
+import RevenueLineChart from '@/Components/Charts/RevenueLineChart.vue';
 
 defineProps({
+    period: String,
     stats: Object,
+    chartData: Array,
+    topShops: Array,
 });
 
 const page = usePage();
 const lang = computed(() => page.props.lang || {});
+
+const setPeriod = (p) => {
+    router.get(route('admin.dashboard'), { period: p }, {
+        preserveState: true,
+        preserveScroll: true,
+        only: ['stats', 'chartData', 'topShops', 'period'],
+    });
+};
+
+const formatCurrency = (v) => `$${Number(v ?? 0).toFixed(2)}`;
 </script>
 
 <template>
@@ -17,31 +34,69 @@ const lang = computed(() => page.props.lang || {});
             <h2 class="text-xl font-semibold text-gray-800 dark:text-gray-200">{{ lang.dashboard }}</h2>
         </template>
 
-        <div class="grid grid-cols-2 lg:grid-cols-3 gap-4">
-            <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-5">
-                <p class="text-sm text-gray-500 dark:text-gray-400">{{ lang.total_users }}</p>
-                <p class="text-2xl font-bold text-gray-900 dark:text-gray-100 mt-1">{{ stats.total_users }}</p>
+        <!-- All-time platform totals -->
+        <div class="grid grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
+            <StatCard :label="lang.total_users" :value="stats.total_users" />
+            <StatCard :label="lang.total_shops" :value="stats.total_shops" />
+            <StatCard :label="lang.pending_shops" :value="stats.pending_shops" color="yellow" />
+            <StatCard :label="lang.total_products" :value="stats.total_products" />
+            <StatCard :label="lang.total_orders" :value="stats.total_orders" />
+            <StatCard :label="lang.total_revenue" :value="formatCurrency(stats.total_revenue)" color="green" />
+        </div>
+
+        <!-- Period-scoped analytics -->
+        <div class="flex items-center justify-between mb-4">
+            <h3 class="text-base font-semibold text-gray-700 dark:text-gray-200">{{ lang.analytics }}</h3>
+            <PeriodTabs :period="period" :lang="lang" @change="setPeriod" />
+        </div>
+
+        <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+            <StatCard
+                :label="lang.revenue"
+                :value="formatCurrency(stats.revenue)"
+                :growth="stats.revenue_growth"
+                color="green"
+            />
+            <StatCard :label="lang.period_orders" :value="stats.period_orders" />
+        </div>
+
+        <!-- Chart + status grid -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
+            <div class="lg:col-span-2">
+                <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-5">
+                    <p class="text-sm font-semibold text-gray-700 dark:text-gray-200 mb-3">{{ lang.sales_trend }}</p>
+                    <RevenueLineChart :data="chartData" :label="lang.revenue" />
+                </div>
             </div>
-            <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-5">
-                <p class="text-sm text-gray-500 dark:text-gray-400">{{ lang.total_shops }}</p>
-                <p class="text-2xl font-bold text-gray-900 dark:text-gray-100 mt-1">{{ stats.total_shops }}</p>
+            <div>
+                <OrderStatusGrid :counts="stats.order_counts" :lang="lang" />
             </div>
-            <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-5">
-                <p class="text-sm text-gray-500 dark:text-gray-400">{{ lang.pending_shops }}</p>
-                <p class="text-2xl font-bold text-yellow-600 mt-1">{{ stats.pending_shops }}</p>
+        </div>
+
+        <!-- Top shops -->
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-5">
+            <p class="text-sm font-semibold text-gray-700 dark:text-gray-200 mb-3">{{ lang.top_shops }}</p>
+            <div v-if="topShops.length === 0" class="text-sm text-gray-500 dark:text-gray-400 py-4 text-center">
+                {{ lang.top_shops_empty }}
             </div>
-            <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-5">
-                <p class="text-sm text-gray-500 dark:text-gray-400">{{ lang.total_products }}</p>
-                <p class="text-2xl font-bold text-gray-900 dark:text-gray-100 mt-1">{{ stats.total_products }}</p>
-            </div>
-            <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-5">
-                <p class="text-sm text-gray-500 dark:text-gray-400">{{ lang.total_orders }}</p>
-                <p class="text-2xl font-bold text-gray-900 dark:text-gray-100 mt-1">{{ stats.total_orders }}</p>
-            </div>
-            <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-5">
-                <p class="text-sm text-gray-500 dark:text-gray-400">{{ lang.total_revenue }}</p>
-                <p class="text-2xl font-bold text-green-600 mt-1">${{ Number(stats.total_revenue).toFixed(2) }}</p>
-            </div>
+            <table v-else class="w-full text-sm">
+                <thead>
+                    <tr class="text-xs text-gray-400 dark:text-gray-500 border-b border-gray-100 dark:border-gray-700">
+                        <th class="pb-2 text-left font-medium">#</th>
+                        <th class="pb-2 text-left font-medium">{{ lang.shop_name }}</th>
+                        <th class="pb-2 text-right font-medium">{{ lang.orders_col }}</th>
+                        <th class="pb-2 text-right font-medium">{{ lang.revenue_col }}</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-gray-50 dark:divide-gray-700">
+                    <tr v-for="(s, i) in topShops" :key="i" class="text-gray-700 dark:text-gray-300">
+                        <td class="py-2 pr-2 text-gray-400 font-medium">{{ i + 1 }}</td>
+                        <td class="py-2 truncate max-w-[200px]">{{ s.shop_name }}</td>
+                        <td class="py-2 text-right">{{ s.orders }}</td>
+                        <td class="py-2 text-right font-medium">{{ formatCurrency(s.revenue) }}</td>
+                    </tr>
+                </tbody>
+            </table>
         </div>
     </AdminLayout>
 </template>

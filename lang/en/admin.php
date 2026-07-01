@@ -10,6 +10,22 @@ return [
     'total_orders' => 'Total Orders',
     'total_revenue' => 'Total Revenue',
 
+    // Dashboard analytics
+    'analytics' => 'Analytics',
+    'period_today' => 'Today',
+    'period_week' => 'This Week',
+    'period_month' => 'This Month',
+    'period_all' => 'All Time',
+    'revenue' => 'Revenue',
+    'period_orders' => 'Orders',
+    'sales_trend' => 'Sales Trend',
+    'order_status_dist' => 'Order Status',
+    'top_shops' => 'Top Shops',
+    'top_shops_empty' => 'No sales data yet.',
+    'shop_name' => 'Shop',
+    'orders_col' => 'Orders',
+    'revenue_col' => 'Revenue',
+
     'users' => [
         'title' => 'Users',
         'name' => 'Name',
@@ -67,6 +83,14 @@ return [
         'date' => 'Date',
         'no_orders' => 'No orders yet.',
         'view' => 'View',
+        'statuses' => [
+            'pending' => 'Pending',
+            'paid' => 'Paid',
+            'processing' => 'Processing',
+            'shipped' => 'Shipped',
+            'completed' => 'Completed',
+            'cancelled' => 'Cancelled',
+        ],
         'details' => 'Order Details',
         'order_items' => 'Order Items',
         'product' => 'Product',

@@ -10,6 +10,22 @@ return [
     'total_orders' => '訂單總數',
     'total_revenue' => '總營收',
 
+    // 儀表板分析
+    'analytics' => '數據分析',
+    'period_today' => '今日',
+    'period_week' => '本週',
+    'period_month' => '本月',
+    'period_all' => '全部',
+    'revenue' => '營收',
+    'period_orders' => '訂單數',
+    'sales_trend' => '銷售趨勢',
+    'order_status_dist' => '訂單狀態',
+    'top_shops' => '熱門店鋪',
+    'top_shops_empty' => '尚無銷售資料。',
+    'shop_name' => '店鋪',
+    'orders_col' => '訂單數',
+    'revenue_col' => '營收',
+
     'users' => [
         'title' => '使用者管理',
         'name' => '姓名',
@@ -67,6 +83,14 @@ return [
         'date' => '日期',
         'no_orders' => '尚無訂單。',
         'view' => '檢視',
+        'statuses' => [
+            'pending' => '待付款',
+            'paid' => '已付款',
+            'processing' => '處理中',
+            'shipped' => '已出貨',
+            'completed' => '已完成',
+            'cancelled' => '已取消',
+        ],
         'details' => '訂單詳情',
         'order_items' => '訂單商品',
         'product' => '商品',
