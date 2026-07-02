@@ -8,8 +8,10 @@ import DangerButton from '@/Components/DangerButton.vue';
 import SecondaryButton from '@/Components/SecondaryButton.vue';
 import InputError from '@/Components/InputError.vue';
 import StarRating from '@/Components/StarRating.vue';
+import Spinner from '@/Components/Spinner.vue';
 import { Link } from '@inertiajs/vue3';
 import { useReviewCountdown } from '@/Composables/useReviewCountdown';
+import { useAsyncAction } from '@/Composables/useAsyncAction';
 
 const props = defineProps({
     order: Object,
@@ -30,16 +32,26 @@ const isCancelled = computed(() => props.order.status === 'cancelled');
 const requestPending = computed(() => cancellation.value?.status === 'requested');
 const canSellerCancel = computed(() => props.canSellerCancel);
 
+const { processing: updatingStatus, run: runUpdateStatus } = useAsyncAction();
 const updateStatus = (status) => {
-    router.patch(route('seller.orders.status', props.order.id), { status });
+    runUpdateStatus((finish) => router.patch(route('seller.orders.status', props.order.id), { status }, {
+        onFinish: finish,
+    }));
 };
 
+const { processing: replying, run: runReply } = useAsyncAction();
 const replyCustomer = () => {
-    router.post(route('orders.conversation', props.order.id));
+    runReply((finish) => router.post(route('orders.conversation', props.order.id), {}, {
+        onFinish: finish,
+    }));
 };
 
+const { processing: approving, run: runApprove } = useAsyncAction();
 const approve = () => {
-    router.post(route('seller.orders.cancellation.approve', props.order.id), {}, { preserveScroll: true });
+    runApprove((finish) => router.post(route('seller.orders.cancellation.approve', props.order.id), {}, {
+        preserveScroll: true,
+        onFinish: finish,
+    }));
 };
 
 const showRejectModal = ref(false);
@@ -82,8 +94,10 @@ const nextStatuses = props.nextStatuses;
                     <OrderStatusBadge :status="order.status" />
                     <button
                         @click="replyCustomer"
-                        class="inline-flex items-center px-3 py-1.5 bg-indigo-600 text-white text-xs font-medium rounded-md hover:bg-indigo-700 transition"
+                        :disabled="replying"
+                        class="inline-flex items-center gap-2 px-3 py-1.5 bg-indigo-600 text-white text-xs font-medium rounded-md hover:bg-indigo-700 transition disabled:opacity-50"
                     >
+                        <Spinner v-if="replying" class="h-3.5 w-3.5" />
                         {{ t.reply_customer || 'Reply Customer' }}
                     </button>
                 </div>
@@ -98,7 +112,10 @@ const nextStatuses = props.nextStatuses;
                     <span class="font-medium">{{ t.cancel_reason }}:</span> {{ cancellation.reason }}
                 </p>
                 <div class="flex gap-3">
-                    <DangerButton @click="approve">{{ t.approve_cancellation }}</DangerButton>
+                    <DangerButton :disabled="approving" class="inline-flex items-center gap-2" @click="approve">
+                        <Spinner v-if="approving" class="h-4 w-4" />
+                        {{ t.approve_cancellation }}
+                    </DangerButton>
                     <SecondaryButton @click="openRejectModal">{{ t.reject_cancellation }}</SecondaryButton>
                 </div>
             </div>
@@ -212,8 +229,10 @@ const nextStatuses = props.nextStatuses;
                 <div class="flex gap-3">
                     <button
                         @click="updateStatus(nextStatuses[order.status])"
-                        class="inline-flex items-center px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-md hover:bg-indigo-700"
+                        :disabled="updatingStatus"
+                        class="inline-flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-md hover:bg-indigo-700 disabled:opacity-50"
                     >
+                        <Spinner v-if="updatingStatus" class="h-4 w-4" />
                         {{ t.mark_as?.replace(':status', nextStatuses[order.status]) }}
                     </button>
                     <button

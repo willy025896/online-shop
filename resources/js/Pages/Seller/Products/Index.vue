@@ -3,6 +3,8 @@ import { computed } from 'vue';
 import { Link, router, usePage } from '@inertiajs/vue3';
 import SellerLayout from '@/Layouts/SellerLayout.vue';
 import Pagination from '@/Components/Pagination.vue';
+import RowActions from '@/Components/RowActions.vue';
+import { useAsyncActionGroup } from '@/Composables/useAsyncAction';
 
 const props = defineProps({
     products: Object,
@@ -21,10 +23,14 @@ const toggleLowStock = () => {
     );
 };
 
+const { isProcessing: isDeleting, run } = useAsyncActionGroup();
+
 const deleteProduct = (product) => {
     const msg = (lang.value.products?.delete_confirm || 'Are you sure you want to delete ":name"?').replace(':name', product.name);
     if (confirm(msg)) {
-        router.delete(route('seller.products.destroy', product.id));
+        run(product.id, (finish) => router.delete(route('seller.products.destroy', product.id), {
+            onFinish: finish,
+        }));
     }
 };
 </script>
@@ -98,8 +104,10 @@ const deleteProduct = (product) => {
                             ]">{{ lang.products?.[product.status] || product.status }}</span>
                         </td>
                         <td class="px-6 py-4 text-right text-sm space-x-2">
-                            <Link :href="route('seller.products.edit', product.id)" class="text-indigo-600 hover:text-indigo-900">{{ lang.products?.action_edit }}</Link>
-                            <button @click="deleteProduct(product)" class="text-red-600 hover:text-red-900">{{ lang.products?.action_delete }}</button>
+                            <RowActions :loading="isDeleting(product.id)">
+                                <Link :href="route('seller.products.edit', product.id)" class="text-indigo-600 hover:text-indigo-900">{{ lang.products?.action_edit }}</Link>
+                                <button @click="deleteProduct(product)" class="text-red-600 hover:text-red-900">{{ lang.products?.action_delete }}</button>
+                            </RowActions>
                         </td>
                     </tr>
                 </tbody>

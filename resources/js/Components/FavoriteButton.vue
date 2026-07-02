@@ -1,6 +1,8 @@
 <script setup>
 import { computed } from 'vue';
 import { router, Link, usePage } from '@inertiajs/vue3';
+import Spinner from '@/Components/Spinner.vue';
+import { useAsyncAction } from '@/Composables/useAsyncAction';
 
 const props = defineProps({
     productId: {
@@ -19,15 +21,21 @@ const isFavorited = computed(() =>
     (page.props.wishlistProductIds || []).includes(props.productId)
 );
 
+const { processing, run } = useAsyncAction();
+
 const toggle = (e) => {
     e.preventDefault();
     e.stopPropagation();
 
-    router.post(
+    run((finish) => router.post(
         route('wishlist.toggle'),
         { product_id: props.productId },
-        { preserveScroll: true, only: ['wishlistProductIds', 'flash'] }
-    );
+        {
+            preserveScroll: true,
+            only: ['wishlistProductIds', 'flash'],
+            onFinish: finish,
+        }
+    ));
 };
 </script>
 
@@ -48,12 +56,15 @@ const toggle = (e) => {
     <button
         v-else
         type="button"
-        class="inline-flex items-center justify-center rounded-full transition"
+        class="inline-flex items-center justify-center rounded-full transition disabled:opacity-50"
         :class="size === 'md' ? 'p-2' : 'p-1.5'"
+        :disabled="processing"
         @click="toggle"
         :title="isFavorited ? 'Remove from wishlist' : 'Add to wishlist'"
     >
+        <Spinner v-if="processing" :class="size === 'md' ? 'h-6 w-6 text-gray-400' : 'h-5 w-5 text-gray-400'" />
         <svg
+            v-else
             :class="[size === 'md' ? 'h-6 w-6' : 'h-5 w-5', isFavorited ? 'text-red-500' : 'text-gray-400 hover:text-red-500']"
             :fill="isFavorited ? 'currentColor' : 'none'"
             viewBox="0 0 24 24"

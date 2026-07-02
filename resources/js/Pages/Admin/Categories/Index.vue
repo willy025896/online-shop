@@ -6,6 +6,8 @@ import InputLabel from '@/Components/InputLabel.vue';
 import TextInput from '@/Components/TextInput.vue';
 import InputError from '@/Components/InputError.vue';
 import PrimaryButton from '@/Components/PrimaryButton.vue';
+import RowActions from '@/Components/RowActions.vue';
+import { useAsyncActionGroup } from '@/Composables/useAsyncAction';
 
 const props = defineProps({
     categories: Array,
@@ -53,9 +55,13 @@ const submit = () => {
     }
 };
 
+const { isProcessing: isDeleting, run } = useAsyncActionGroup();
+
 const deleteCategory = (category) => {
     if (confirm(lang.value.categories?.delete_confirm?.replace(':name', category.name))) {
-        router.delete(route('admin.categories.destroy', category.id));
+        run(category.id, (finish) => router.delete(route('admin.categories.destroy', category.id), {
+            onFinish: finish,
+        }));
     }
 };
 </script>
@@ -144,8 +150,10 @@ const deleteCategory = (category) => {
                                 </span>
                             </td>
                             <td class="px-6 py-4 text-right text-sm space-x-2">
-                                <button @click="startEdit(category)" class="text-indigo-600 hover:text-indigo-900">{{ lang.categories?.action_edit }}</button>
-                                <button @click="deleteCategory(category)" class="text-red-600 hover:text-red-900">{{ lang.categories?.action_delete }}</button>
+                                <RowActions :loading="isDeleting(category.id)">
+                                    <button @click="startEdit(category)" class="text-indigo-600 hover:text-indigo-900">{{ lang.categories?.action_edit }}</button>
+                                    <button @click="deleteCategory(category)" class="text-red-600 hover:text-red-900">{{ lang.categories?.action_delete }}</button>
+                                </RowActions>
                             </td>
                         </tr>
                         <!-- Children -->
@@ -159,8 +167,10 @@ const deleteCategory = (category) => {
                                 </span>
                             </td>
                             <td class="px-6 py-3 text-right text-sm space-x-2">
-                                <button @click="startEdit(child)" class="text-indigo-600 hover:text-indigo-900">{{ lang.categories?.action_edit }}</button>
-                                <button @click="deleteCategory(child)" class="text-red-600 hover:text-red-900">{{ lang.categories?.action_delete }}</button>
+                                <RowActions :loading="isDeleting(child.id)">
+                                    <button @click="startEdit(child)" class="text-indigo-600 hover:text-indigo-900">{{ lang.categories?.action_edit }}</button>
+                                    <button @click="deleteCategory(child)" class="text-red-600 hover:text-red-900">{{ lang.categories?.action_delete }}</button>
+                                </RowActions>
                             </td>
                         </tr>
                     </template>

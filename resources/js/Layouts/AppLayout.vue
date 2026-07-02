@@ -8,6 +8,7 @@ import DropdownLink from '@/Components/DropdownLink.vue';
 import NavLink from '@/Components/NavLink.vue';
 import NotificationBell from '@/Components/NotificationBell.vue';
 import ResponsiveNavLink from '@/Components/ResponsiveNavLink.vue';
+import DarkModeToggle from '@/Components/DarkModeToggle.vue';
 
 defineProps({
     title: String,
@@ -89,6 +90,8 @@ const logout = () => {
                                     中文
                                 </button>
                             </div>
+
+                            <DarkModeToggle />
 
                             <!-- Wishlist Badge (auth only) -->
                             <Link v-if="$page.props.auth?.user" :href="route('wishlist.index')" class="relative p-2 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300">
@@ -309,15 +312,18 @@ const logout = () => {
                     </div>
 
                     <!-- Responsive locale switcher -->
-                    <div class="pt-3 pb-2 px-4 border-t border-gray-200 dark:border-gray-600 flex gap-3 text-sm font-medium">
-                        <button @click="switchLocale('en')"
-                            :class="locale === 'en' ? 'text-indigo-600 dark:text-indigo-400 font-bold' : 'text-gray-500 dark:text-gray-400'">
-                            English
-                        </button>
-                        <button @click="switchLocale('zh_TW')"
-                            :class="locale === 'zh_TW' ? 'text-indigo-600 dark:text-indigo-400 font-bold' : 'text-gray-500 dark:text-gray-400'">
-                            中文
-                        </button>
+                    <div class="pt-3 pb-2 px-4 border-t border-gray-200 dark:border-gray-600 flex items-center justify-between">
+                        <div class="flex gap-3 text-sm font-medium">
+                            <button @click="switchLocale('en')"
+                                :class="locale === 'en' ? 'text-indigo-600 dark:text-indigo-400 font-bold' : 'text-gray-500 dark:text-gray-400'">
+                                English
+                            </button>
+                            <button @click="switchLocale('zh_TW')"
+                                :class="locale === 'zh_TW' ? 'text-indigo-600 dark:text-indigo-400 font-bold' : 'text-gray-500 dark:text-gray-400'">
+                                中文
+                            </button>
+                        </div>
+                        <DarkModeToggle />
                     </div>
 
                     <!-- Responsive Settings Options -->

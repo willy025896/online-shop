@@ -5,6 +5,7 @@ import ApplicationMark from '@/Components/ApplicationMark.vue';
 import Dropdown from '@/Components/Dropdown.vue';
 import DropdownLink from '@/Components/DropdownLink.vue';
 import NotificationBell from '@/Components/NotificationBell.vue';
+import DarkModeToggle from '@/Components/DarkModeToggle.vue';
 
 defineProps({
     title: String,
@@ -82,16 +83,19 @@ const navItems = computed(() => [
 
                     <div class="absolute bottom-0 w-64 p-4 border-t border-gray-200 dark:border-gray-700">
                         <!-- Locale switcher -->
-                        <div class="flex gap-2 text-xs font-medium mb-3">
-                            <button @click="switchLocale('en')"
-                                :class="locale === 'en' ? 'text-indigo-600 dark:text-indigo-400 font-bold' : 'text-gray-400 hover:text-gray-600 dark:hover:text-gray-300'">
-                                EN
-                            </button>
-                            <span class="text-gray-300 dark:text-gray-600">|</span>
-                            <button @click="switchLocale('zh_TW')"
-                                :class="locale === 'zh_TW' ? 'text-indigo-600 dark:text-indigo-400 font-bold' : 'text-gray-400 hover:text-gray-600 dark:hover:text-gray-300'">
-                                中文
-                            </button>
+                        <div class="flex items-center justify-between mb-3">
+                            <div class="flex gap-2 text-xs font-medium">
+                                <button @click="switchLocale('en')"
+                                    :class="locale === 'en' ? 'text-indigo-600 dark:text-indigo-400 font-bold' : 'text-gray-400 hover:text-gray-600 dark:hover:text-gray-300'">
+                                    EN
+                                </button>
+                                <span class="text-gray-300 dark:text-gray-600">|</span>
+                                <button @click="switchLocale('zh_TW')"
+                                    :class="locale === 'zh_TW' ? 'text-indigo-600 dark:text-indigo-400 font-bold' : 'text-gray-400 hover:text-gray-600 dark:hover:text-gray-300'">
+                                    中文
+                                </button>
+                            </div>
+                            <DarkModeToggle />
                         </div>
                         <div class="flex items-center justify-between">
                             <div class="text-sm text-gray-600 dark:text-gray-400 truncate">
@@ -125,14 +129,6 @@ const navItems = computed(() => [
                     <header v-if="$slots.header" class="mb-6">
                         <slot name="header" />
                     </header>
-
-                    <!-- Flash messages -->
-                    <div v-if="$page.props.flash?.success" class="mb-4 rounded-md bg-green-50 p-4">
-                        <p class="text-sm text-green-800">{{ $page.props.flash.success }}</p>
-                    </div>
-                    <div v-if="$page.props.flash?.error" class="mb-4 rounded-md bg-red-50 p-4">
-                        <p class="text-sm text-red-800">{{ $page.props.flash.error }}</p>
-                    </div>
 
                     <slot />
                 </main>

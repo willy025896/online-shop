@@ -3,6 +3,8 @@ import { computed } from 'vue';
 import { router, usePage } from '@inertiajs/vue3';
 import AdminLayout from '@/Layouts/AdminLayout.vue';
 import Pagination from '@/Components/Pagination.vue';
+import RowActions from '@/Components/RowActions.vue';
+import { useAsyncActionGroup } from '@/Composables/useAsyncAction';
 
 defineProps({
     shops: Object,
@@ -11,8 +13,12 @@ defineProps({
 const page = usePage();
 const lang = computed(() => page.props.lang || {});
 
+const { isProcessing: isUpdating, run } = useAsyncActionGroup();
+
 const updateStatus = (shop, status) => {
-    router.patch(route('admin.shops.status', shop.id), { status });
+    run(shop.id, (finish) => router.patch(route('admin.shops.status', shop.id), { status }, {
+        onFinish: finish,
+    }));
 };
 
 const statusClass = (status) => {
@@ -56,8 +62,10 @@ const statusClass = (status) => {
                         </td>
                         <td class="px-6 py-4 text-sm text-gray-500">{{ new Date(shop.created_at).toLocaleDateString() }}</td>
                         <td class="px-6 py-4 text-right text-sm space-x-2">
-                            <button v-if="shop.status !== 'approved'" @click="updateStatus(shop, 'approved')" class="text-green-600 hover:text-green-900">{{ lang.shops?.approve }}</button>
-                            <button v-if="shop.status !== 'suspended'" @click="updateStatus(shop, 'suspended')" class="text-red-600 hover:text-red-900">{{ lang.shops?.suspend }}</button>
+                            <RowActions :loading="isUpdating(shop.id)">
+                                <button v-if="shop.status !== 'approved'" @click="updateStatus(shop, 'approved')" class="text-green-600 hover:text-green-900">{{ lang.shops?.approve }}</button>
+                                <button v-if="shop.status !== 'suspended'" @click="updateStatus(shop, 'suspended')" class="text-red-600 hover:text-red-900">{{ lang.shops?.suspend }}</button>
+                            </RowActions>
                         </td>
                     </tr>
                 </tbody>

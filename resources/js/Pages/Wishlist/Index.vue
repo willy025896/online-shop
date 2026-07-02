@@ -2,6 +2,8 @@
 import { computed } from 'vue';
 import { router, Link, usePage } from '@inertiajs/vue3';
 import AppLayout from '@/Layouts/AppLayout.vue';
+import Spinner from '@/Components/Spinner.vue';
+import { useAsyncActionGroup } from '@/Composables/useAsyncAction';
 
 const props = defineProps({
     products: Array,
@@ -10,18 +12,22 @@ const props = defineProps({
 const page = usePage();
 const lang = computed(() => page.props.lang || {});
 
+const { isProcessing: isRemoving, run: runRemove } = useAsyncActionGroup();
+const { isProcessing: isAdding, run: runAdd } = useAsyncActionGroup();
+
 const removeFromWishlist = (productId) => {
-    router.delete(route('wishlist.destroy', productId), {
+    runRemove(productId, (finish) => router.delete(route('wishlist.destroy', productId), {
         preserveScroll: true,
-    });
+        onFinish: finish,
+    }));
 };
 
 const addToCart = (productId) => {
-    router.post(
+    runAdd(productId, (finish) => router.post(
         route('cart.store'),
         { product_id: productId, quantity: 1 },
-        { preserveScroll: true }
-    );
+        { preserveScroll: true, onFinish: finish }
+    ));
 };
 </script>
 
@@ -73,8 +79,10 @@ const addToCart = (productId) => {
                             <button
                                 v-if="product.stock > 0"
                                 @click="addToCart(product.id)"
-                                class="flex-1 text-sm bg-indigo-600 text-white py-2 px-3 rounded-lg hover:bg-indigo-700 transition font-medium"
+                                :disabled="isAdding(product.id)"
+                                class="flex-1 flex items-center justify-center gap-1.5 text-sm bg-indigo-600 text-white py-2 px-3 rounded-lg hover:bg-indigo-700 transition font-medium disabled:opacity-50"
                             >
+                                <Spinner v-if="isAdding(product.id)" class="h-3.5 w-3.5" />
                                 {{ lang.add_to_cart || 'Add to Cart' }}
                             </button>
                             <span v-else class="flex-1 text-sm text-center py-2 text-red-500 font-medium">
@@ -83,10 +91,12 @@ const addToCart = (productId) => {
 
                             <button
                                 @click="removeFromWishlist(product.id)"
-                                class="p-2 text-gray-400 hover:text-red-500 transition rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700"
+                                :disabled="isRemoving(product.id)"
+                                class="p-2 text-gray-400 hover:text-red-500 transition rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 disabled:opacity-50"
                                 :title="lang.remove || 'Remove'"
                             >
-                                <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                <Spinner v-if="isRemoving(product.id)" class="h-5 w-5" />
+                                <svg v-else class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                                     <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
                                 </svg>
                             </button>

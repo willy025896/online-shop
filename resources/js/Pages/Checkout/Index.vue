@@ -1,8 +1,10 @@
 <script setup>
-import { computed, reactive, ref } from 'vue';
+import { computed, reactive } from 'vue';
 import { useForm, usePage } from '@inertiajs/vue3';
 import AppLayout from '@/Layouts/AppLayout.vue';
 import CartSummary from '@/Components/CartSummary.vue';
+import Spinner from '@/Components/Spinner.vue';
+import { useAsyncActionGroup } from '@/Composables/useAsyncAction';
 
 const props = defineProps({
     cart: Object,
@@ -20,31 +22,32 @@ const lang = computed(() => page.props.lang || {});
 const couponInputs = reactive({});   // shop_id -> code being typed
 const appliedCoupons = reactive({}); // shop_id -> { code, discount }
 const couponErrors = reactive({});   // shop_id -> error message
-const applyingShop = ref(null);
+const { isProcessing: isApplyingCoupon, run } = useAsyncActionGroup();
 
-const applyCoupon = async (shop) => {
+const applyCoupon = (shop) => {
     const code = (couponInputs[shop.shop_id] || '').trim();
     if (!code) return;
 
-    applyingShop.value = shop.shop_id;
     delete couponErrors[shop.shop_id];
-    try {
-        const { data } = await window.axios.post(route('checkout.coupon.preview'), {
-            code,
-            shop_id: shop.shop_id,
-            item_ids: props.itemIds ?? [],
-        });
-        if (data.valid) {
-            appliedCoupons[shop.shop_id] = { code: data.code, discount: Number(data.discount) };
-        } else {
-            delete appliedCoupons[shop.shop_id];
-            couponErrors[shop.shop_id] = data.message;
+    run(shop.shop_id, async (finish) => {
+        try {
+            const { data } = await window.axios.post(route('checkout.coupon.preview'), {
+                code,
+                shop_id: shop.shop_id,
+                item_ids: props.itemIds ?? [],
+            });
+            if (data.valid) {
+                appliedCoupons[shop.shop_id] = { code: data.code, discount: Number(data.discount) };
+            } else {
+                delete appliedCoupons[shop.shop_id];
+                couponErrors[shop.shop_id] = data.message;
+            }
+        } catch {
+            couponErrors[shop.shop_id] = 'Could not validate coupon.';
+        } finally {
+            finish();
         }
-    } catch {
-        couponErrors[shop.shop_id] = 'Could not validate coupon.';
-    } finally {
-        applyingShop.value = null;
-    }
+    });
 };
 
 const removeCoupon = (shopId) => {
@@ -186,10 +189,11 @@ const submit = () => {
                                         />
                                         <button
                                             type="button"
-                                            :disabled="applyingShop === s.shop_id"
+                                            :disabled="isApplyingCoupon(s.shop_id)"
                                             @click="applyCoupon(s)"
-                                            class="px-3 py-1.5 bg-gray-800 dark:bg-gray-600 text-white text-xs font-medium rounded-md hover:bg-gray-700 disabled:opacity-50"
+                                            class="px-3 py-1.5 flex items-center gap-1.5 bg-gray-800 dark:bg-gray-600 text-white text-xs font-medium rounded-md hover:bg-gray-700 disabled:opacity-50"
                                         >
+                                            <Spinner v-if="isApplyingCoupon(s.shop_id)" class="h-3 w-3" />
                                             {{ lang.coupon_apply }}
                                         </button>
                                     </div>
@@ -203,8 +207,9 @@ const submit = () => {
                             <button
                                 type="submit"
                                 :disabled="form.processing"
-                                class="mt-4 w-full bg-indigo-600 text-white py-3 px-6 rounded-lg hover:bg-indigo-700 transition font-medium disabled:opacity-50"
+                                class="mt-4 w-full flex items-center justify-center gap-2 bg-indigo-600 text-white py-3 px-6 rounded-lg hover:bg-indigo-700 transition font-medium disabled:opacity-50"
                             >
+                                <Spinner v-if="form.processing" class="h-4 w-4" />
                                 {{ form.processing ? lang.processing : lang.place_order }}
                             </button>
                         </CartSummary>

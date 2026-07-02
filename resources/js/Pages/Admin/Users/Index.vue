@@ -3,6 +3,8 @@ import { computed } from 'vue';
 import { router, usePage } from '@inertiajs/vue3';
 import AdminLayout from '@/Layouts/AdminLayout.vue';
 import Pagination from '@/Components/Pagination.vue';
+import Spinner from '@/Components/Spinner.vue';
+import { useAsyncActionGroup } from '@/Composables/useAsyncAction';
 
 defineProps({
     users: Object,
@@ -11,8 +13,12 @@ defineProps({
 const page = usePage();
 const lang = computed(() => page.props.lang || {});
 
+const { isProcessing: isUpdating, run } = useAsyncActionGroup();
+
 const updateRole = (user, role) => {
-    router.patch(route('admin.users.role', user.id), { role });
+    run(user.id, (finish) => router.patch(route('admin.users.role', user.id), { role }, {
+        onFinish: finish,
+    }));
 };
 </script>
 
@@ -37,15 +43,19 @@ const updateRole = (user, role) => {
                         <td class="px-6 py-4 text-sm font-medium text-gray-900 dark:text-gray-100">{{ user.name }}</td>
                         <td class="px-6 py-4 text-sm text-gray-500 dark:text-gray-400">{{ user.email }}</td>
                         <td class="px-6 py-4">
-                            <select
-                                :value="user.role"
-                                @change="updateRole(user, $event.target.value)"
-                                class="text-sm rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-300"
-                            >
-                                <option value="customer">{{ lang.users?.customer }}</option>
-                                <option value="seller">{{ lang.users?.seller }}</option>
-                                <option value="admin">{{ lang.users?.admin }}</option>
-                            </select>
+                            <div class="flex items-center gap-2">
+                                <select
+                                    :value="user.role"
+                                    @change="updateRole(user, $event.target.value)"
+                                    :disabled="isUpdating(user.id)"
+                                    class="text-sm rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-300 disabled:opacity-50"
+                                >
+                                    <option value="customer">{{ lang.users?.customer }}</option>
+                                    <option value="seller">{{ lang.users?.seller }}</option>
+                                    <option value="admin">{{ lang.users?.admin }}</option>
+                                </select>
+                                <Spinner v-if="isUpdating(user.id)" class="h-4 w-4 text-gray-400" />
+                            </div>
                         </td>
                         <td class="px-6 py-4 text-sm text-gray-500">{{ new Date(user.created_at).toLocaleDateString() }}</td>
                     </tr>

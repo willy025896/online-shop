@@ -1,6 +1,7 @@
 <script setup>
 import { ref, computed } from 'vue';
 import { router, Link, usePage } from '@inertiajs/vue3';
+import { useAsyncAction } from '@/Composables/useAsyncAction';
 import AppLayout from '@/Layouts/AppLayout.vue';
 import ProductImageGallery from '@/Components/ProductImageGallery.vue';
 import ProductCard from '@/Components/ProductCard.vue';
@@ -9,6 +10,7 @@ import ReviewCard from '@/Components/ReviewCard.vue';
 import RatingDistribution from '@/Components/RatingDistribution.vue';
 import Pagination from '@/Components/Pagination.vue';
 import FavoriteButton from '@/Components/FavoriteButton.vue';
+import Spinner from '@/Components/Spinner.vue';
 
 const props = defineProps({
     product: Object,
@@ -21,12 +23,16 @@ const page = usePage();
 const lang = computed(() => page.props.lang || {});
 
 const quantity = ref(1);
+const { processing: addingToCart, run } = useAsyncAction();
 
 const addToCart = () => {
-    router.post(route('cart.store'), {
+    run((finish) => router.post(route('cart.store'), {
         product_id: props.product.id,
         quantity: quantity.value,
-    });
+    }, {
+        preserveScroll: true,
+        onFinish: finish,
+    }));
 };
 </script>
 
@@ -67,7 +73,12 @@ const addToCart = () => {
                             <select v-model="quantity" class="rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700">
                                 <option v-for="n in Math.min(product.stock, 10)" :key="n" :value="n">{{ n }}</option>
                             </select>
-                            <button @click="addToCart" class="flex-1 bg-indigo-600 text-white py-3 px-6 rounded-lg hover:bg-indigo-700 transition font-medium">
+                            <button
+                                @click="addToCart"
+                                :disabled="addingToCart"
+                                class="flex-1 flex items-center justify-center gap-2 bg-indigo-600 text-white py-3 px-6 rounded-lg hover:bg-indigo-700 transition font-medium disabled:opacity-50"
+                            >
+                                <Spinner v-if="addingToCart" class="h-4 w-4" />
                                 {{ lang.add_to_cart }}
                             </button>
                             <FavoriteButton :product-id="product.id" size="md" />

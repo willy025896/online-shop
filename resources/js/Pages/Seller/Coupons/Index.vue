@@ -3,6 +3,8 @@ import { computed } from 'vue';
 import { Link, router, usePage } from '@inertiajs/vue3';
 import SellerLayout from '@/Layouts/SellerLayout.vue';
 import Pagination from '@/Components/Pagination.vue';
+import RowActions from '@/Components/RowActions.vue';
+import { useAsyncActionGroup } from '@/Composables/useAsyncAction';
 
 defineProps({
     coupons: Object,
@@ -17,10 +19,14 @@ const formatValue = (coupon) =>
 const usageText = (coupon) =>
     coupon.usage_limit === null ? `${coupon.used_count}` : `${coupon.used_count} / ${coupon.usage_limit}`;
 
+const { isProcessing: isDeleting, run } = useAsyncActionGroup();
+
 const deleteCoupon = (coupon) => {
     const msg = (c.value.delete_confirm || 'Delete ":code"?').replace(':code', coupon.code);
     if (confirm(msg)) {
-        router.delete(route('seller.coupons.destroy', coupon.id));
+        run(coupon.id, (finish) => router.delete(route('seller.coupons.destroy', coupon.id), {
+            onFinish: finish,
+        }));
     }
 };
 </script>
@@ -61,8 +67,10 @@ const deleteCoupon = (coupon) => {
                             ]">{{ coupon.is_active ? c.active : c.inactive }}</span>
                         </td>
                         <td class="px-6 py-4 text-right text-sm space-x-2">
-                            <Link :href="route('seller.coupons.edit', coupon.id)" class="text-indigo-600 hover:text-indigo-900">{{ c.action_edit }}</Link>
-                            <button @click="deleteCoupon(coupon)" class="text-red-600 hover:text-red-900">{{ c.action_delete }}</button>
+                            <RowActions :loading="isDeleting(coupon.id)">
+                                <Link :href="route('seller.coupons.edit', coupon.id)" class="text-indigo-600 hover:text-indigo-900">{{ c.action_edit }}</Link>
+                                <button @click="deleteCoupon(coupon)" class="text-red-600 hover:text-red-900">{{ c.action_delete }}</button>
+                            </RowActions>
                         </td>
                     </tr>
                 </tbody>
