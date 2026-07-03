@@ -75,6 +75,22 @@ Pages are served by Laravel controllers/routes that call `Inertia::render('PageN
 
 All user-scoped props are lazy closures and only computed when Inertia requests them (full load or partial reload).
 
+### Inertia `onSuccess`/`onError` — how it actually decides
+
+Confirmed by reading `node_modules/@inertiajs/core/dist/index.js` (not documented behavior we'd otherwise guess at): Inertia's `visit()` decides `onSuccess` vs `onError` by checking whether the **final rendered page's `page.props.errors` is non-empty** — it does **not** branch on the response's HTTP status code:
+
+```js
+.then(() => {
+    let r = this.page.props.errors || {};
+    if (Object.keys(r).length > 0) return onError(r);
+    return onSuccess(page);
+})
+```
+
+This means a controller returning `back()->withErrors([...])` (a plain 302 redirect, not a thrown `ValidationException`/422) still correctly triggers the front-end's `onError` — because the redirected-to page's `errors` prop (shared by Inertia's base `Middleware::share()`, inherited via `parent::share($request)` in `HandleInertiaRequests`) is populated from `session('errors')`. **`back()->withErrors()` is not a bug or a "silent success" trap** — don't treat it as one during review; only `useForm()` submissions have automatic error rendering (via `form.errors.*`).
+
+The real, recurring gap: any `router.post/patch/delete(...)` call that **isn't** wrapped in `useForm()` must pass its own `onError` — otherwise a `back()->withErrors(...)` failure is silent (no `onSuccess`, but nothing shown either, since nothing reacts to `page.props.errors` outside of a bound `useForm()` instance or an explicit `onError` callback). Project convention: pass `onError: (errors) => toast.error(errors.<field>)` (`useToast()`) on every non-`useForm()` mutation that can fail server-side — see `Admin/Categories/Index.vue`'s `useDeleteConfirmation` usage, `Products/Show.vue`'s `addToCart`, `ImageUploader.vue`'s `uploadImages`.
+
 ### i18n (Localization) System
 
 There is a custom two-part localization approach:
