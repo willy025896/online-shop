@@ -35,7 +35,7 @@ const selectedIndex = ref(0);
                     index === selectedIndex ? 'border-indigo-500' : 'border-transparent'
                 ]"
             >
-                <img :src="`/storage/${image.path}`" class="w-full h-full object-cover" />
+                <img :src="`/storage/${image.path}`" loading="lazy" class="w-full h-full object-cover" />
             </button>
         </div>
     </div>

@@ -77,7 +77,7 @@ const {
                         <td class="px-6 py-4">
                             <div class="flex items-center">
                                 <div class="h-10 w-10 flex-shrink-0 rounded bg-gray-200 dark:bg-gray-600 overflow-hidden">
-                                    <img v-if="product.primary_image" :src="`/storage/${product.primary_image.path}`" class="h-full w-full object-cover" />
+                                    <img v-if="product.primary_image" :src="`/storage/${product.primary_image.path}`" loading="lazy" class="h-full w-full object-cover" />
                                 </div>
                                 <div class="ml-3">
                                     <p class="text-sm font-medium text-gray-900 dark:text-gray-100">{{ product.name }}</p>
