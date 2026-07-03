@@ -89,7 +89,7 @@ Route::middleware([
     'auth:sanctum',
     config('jetstream.auth_session'),
     'verified',
-    'role:seller,admin',
+    'role:seller',
 ])->prefix('seller')->name('seller.')->group(function () {
     Route::get('/dashboard', [App\Http\Controllers\Seller\DashboardController::class, 'index'])->name('dashboard');
 
