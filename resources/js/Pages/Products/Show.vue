@@ -2,6 +2,7 @@
 import { ref, computed } from 'vue';
 import { router, Link, usePage } from '@inertiajs/vue3';
 import { useAsyncAction } from '@/Composables/useAsyncAction';
+import { useToast } from '@/Composables/useToast';
 import AppLayout from '@/Layouts/AppLayout.vue';
 import ProductImageGallery from '@/Components/ProductImageGallery.vue';
 import ProductCard from '@/Components/ProductCard.vue';
@@ -24,6 +25,7 @@ const lang = computed(() => page.props.lang || {});
 
 const quantity = ref(1);
 const { processing: addingToCart, run } = useAsyncAction();
+const toast = useToast();
 
 const addToCart = () => {
     run((finish) => router.post(route('cart.store'), {
@@ -31,6 +33,7 @@ const addToCart = () => {
         quantity: quantity.value,
     }, {
         preserveScroll: true,
+        onError: (errors) => toast.error(errors.product),
         onFinish: finish,
     }));
 };

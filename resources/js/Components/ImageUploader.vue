@@ -1,6 +1,7 @@
 <script setup>
 import { ref } from 'vue';
 import { router } from '@inertiajs/vue3';
+import { useToast } from '@/Composables/useToast';
 
 const props = defineProps({
     product: Object,
@@ -12,6 +13,7 @@ const props = defineProps({
 
 const fileInput = ref(null);
 const dragOver = ref(false);
+const toast = useToast();
 
 const uploadImages = (files) => {
     const formData = new FormData();
@@ -21,6 +23,7 @@ const uploadImages = (files) => {
 
     router.post(route('seller.products.images.store', props.product.id), formData, {
         preserveScroll: true,
+        onError: (errors) => toast.error(errors.images),
     });
 };
 
