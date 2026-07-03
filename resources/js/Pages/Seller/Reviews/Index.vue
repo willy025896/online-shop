@@ -50,7 +50,7 @@ function applyFilters() {
             <div class="flex flex-wrap gap-3 mb-6">
                 <select
                     v-model="filterRating"
-                    class="border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-300 rounded-md text-sm px-3 py-1.5"
+                    class="border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 rounded-md text-sm px-3 py-1.5"
                     @change="applyFilters"
                 >
                     <option value="">全部星等</option>
@@ -58,7 +58,7 @@ function applyFilters() {
                 </select>
                 <select
                     v-model="filterReplied"
-                    class="border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-300 rounded-md text-sm px-3 py-1.5"
+                    class="border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 rounded-md text-sm px-3 py-1.5"
                     @change="applyFilters"
                 >
                     <option value="">全部</option>

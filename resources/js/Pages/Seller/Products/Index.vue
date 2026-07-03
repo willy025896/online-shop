@@ -1,5 +1,5 @@
 <script setup>
-import { computed, ref, watch } from 'vue';
+import { computed } from 'vue';
 import { Link, router, usePage } from '@inertiajs/vue3';
 import SellerLayout from '@/Layouts/SellerLayout.vue';
 import Pagination from '@/Components/Pagination.vue';
@@ -7,7 +7,7 @@ import RowActions from '@/Components/RowActions.vue';
 import ConfirmationModal from '@/Components/ConfirmationModal.vue';
 import SecondaryButton from '@/Components/SecondaryButton.vue';
 import DangerButton from '@/Components/DangerButton.vue';
-import { useAsyncActionGroup } from '@/Composables/useAsyncAction';
+import { useDeleteConfirmation } from '@/Composables/useDeleteConfirmation';
 
 const props = defineProps({
     products: Object,
@@ -26,24 +26,14 @@ const toggleLowStock = () => {
     );
 };
 
-const { isProcessing: isDeleting, run } = useAsyncActionGroup();
-
-const productPendingDelete = ref(null);
-const productPendingDeleteName = ref('');
-const confirmDeleteProduct = (product) => {
-    productPendingDelete.value = product;
-};
-watch(productPendingDelete, (product) => {
-    if (product) productPendingDeleteName.value = product.name;
-});
-
-const deleteProduct = () => {
-    const product = productPendingDelete.value;
-    run(product.id, (finish) => router.delete(route('seller.products.destroy', product.id), {
-        onSuccess: () => { productPendingDelete.value = null; },
-        onFinish: finish,
-    }));
-};
+const {
+    pending: productPendingDelete,
+    label: productPendingDeleteName,
+    isDeleting,
+    confirm: confirmDeleteProduct,
+    cancel: cancelDeleteProduct,
+    execute: deleteProduct,
+} = useDeleteConfirmation('seller.products.destroy');
 </script>
 
 <template>
@@ -132,13 +122,13 @@ const deleteProduct = () => {
             <Pagination :links="products.links" />
         </div>
 
-        <ConfirmationModal :show="productPendingDelete !== null" @close="productPendingDelete = null">
+        <ConfirmationModal :show="productPendingDelete !== null" @close="cancelDeleteProduct">
             <template #title>{{ lang.products?.action_delete }}</template>
             <template #content>
                 {{ (lang.products?.delete_confirm || 'Are you sure you want to delete ":name"?').replace(':name', productPendingDeleteName) }}
             </template>
             <template #footer>
-                <SecondaryButton @click="productPendingDelete = null">{{ lang.products?.cancel }}</SecondaryButton>
+                <SecondaryButton @click="cancelDeleteProduct">{{ lang.products?.cancel }}</SecondaryButton>
                 <DangerButton
                     class="ms-3"
                     :class="{ 'opacity-25': productPendingDelete && isDeleting(productPendingDelete.id) }"

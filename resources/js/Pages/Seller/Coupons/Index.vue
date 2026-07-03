@@ -1,13 +1,13 @@
 <script setup>
-import { computed, ref, watch } from 'vue';
-import { Link, router, usePage } from '@inertiajs/vue3';
+import { computed } from 'vue';
+import { Link, usePage } from '@inertiajs/vue3';
 import SellerLayout from '@/Layouts/SellerLayout.vue';
 import Pagination from '@/Components/Pagination.vue';
 import RowActions from '@/Components/RowActions.vue';
 import ConfirmationModal from '@/Components/ConfirmationModal.vue';
 import SecondaryButton from '@/Components/SecondaryButton.vue';
 import DangerButton from '@/Components/DangerButton.vue';
-import { useAsyncActionGroup } from '@/Composables/useAsyncAction';
+import { useDeleteConfirmation } from '@/Composables/useDeleteConfirmation';
 
 defineProps({
     coupons: Object,
@@ -22,24 +22,14 @@ const formatValue = (coupon) =>
 const usageText = (coupon) =>
     coupon.usage_limit === null ? `${coupon.used_count}` : `${coupon.used_count} / ${coupon.usage_limit}`;
 
-const { isProcessing: isDeleting, run } = useAsyncActionGroup();
-
-const couponPendingDelete = ref(null);
-const couponPendingDeleteCode = ref('');
-const confirmDeleteCoupon = (coupon) => {
-    couponPendingDelete.value = coupon;
-};
-watch(couponPendingDelete, (coupon) => {
-    if (coupon) couponPendingDeleteCode.value = coupon.code;
-});
-
-const deleteCoupon = () => {
-    const coupon = couponPendingDelete.value;
-    run(coupon.id, (finish) => router.delete(route('seller.coupons.destroy', coupon.id), {
-        onSuccess: () => { couponPendingDelete.value = null; },
-        onFinish: finish,
-    }));
-};
+const {
+    pending: couponPendingDelete,
+    label: couponPendingDeleteCode,
+    isDeleting,
+    confirm: confirmDeleteCoupon,
+    cancel: cancelDeleteCoupon,
+    execute: deleteCoupon,
+} = useDeleteConfirmation('seller.coupons.destroy', { labelField: 'code' });
 </script>
 
 <template>
@@ -95,13 +85,13 @@ const deleteCoupon = () => {
             <Pagination :links="coupons.links" />
         </div>
 
-        <ConfirmationModal :show="couponPendingDelete !== null" @close="couponPendingDelete = null">
+        <ConfirmationModal :show="couponPendingDelete !== null" @close="cancelDeleteCoupon">
             <template #title>{{ c.action_delete }}</template>
             <template #content>
                 {{ (c.delete_confirm || 'Delete ":code"?').replace(':code', couponPendingDeleteCode) }}
             </template>
             <template #footer>
-                <SecondaryButton @click="couponPendingDelete = null">{{ c.cancel }}</SecondaryButton>
+                <SecondaryButton @click="cancelDeleteCoupon">{{ c.cancel }}</SecondaryButton>
                 <DangerButton
                     class="ms-3"
                     :class="{ 'opacity-25': couponPendingDelete && isDeleting(couponPendingDelete.id) }"
