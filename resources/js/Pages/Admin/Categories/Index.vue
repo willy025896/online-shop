@@ -11,6 +11,7 @@ import DangerButton from '@/Components/DangerButton.vue';
 import RowActions from '@/Components/RowActions.vue';
 import ConfirmationModal from '@/Components/ConfirmationModal.vue';
 import { useDeleteConfirmation } from '@/Composables/useDeleteConfirmation';
+import TableSkeletonRows from '@/Components/TableSkeletonRows.vue';
 
 const props = defineProps({
     categories: Array,
@@ -19,6 +20,8 @@ const props = defineProps({
 
 const page = usePage();
 const lang = computed(() => page.props.lang || {});
+const isLoading = ref(false);
+const skeletonRows = computed(() => props.categories.length || 5);
 
 const showForm = ref(false);
 const editing = ref(null);
@@ -49,10 +52,14 @@ const startEdit = (category) => {
 const submit = () => {
     if (editing.value) {
         form.put(route('admin.categories.update', editing.value.id), {
+            onStart: () => { isLoading.value = true; },
+            onFinish: () => { isLoading.value = false; },
             onSuccess: () => { showForm.value = false; },
         });
     } else {
         form.post(route('admin.categories.store'), {
+            onStart: () => { isLoading.value = true; },
+            onFinish: () => { isLoading.value = false; },
             onSuccess: () => { showForm.value = false; form.reset(); },
         });
     }
@@ -132,7 +139,7 @@ const {
 
         <!-- Categories List -->
         <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm overflow-x-auto">
-            <table v-if="categories.length" class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+            <table v-if="isLoading || categories.length" class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
                 <thead class="bg-gray-50 dark:bg-gray-700">
                     <tr>
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase">{{ lang.categories?.name }}</th>
@@ -142,7 +149,10 @@ const {
                         <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-300 uppercase">{{ lang.categories?.actions }}</th>
                     </tr>
                 </thead>
-                <tbody class="divide-y divide-gray-200 dark:divide-gray-700">
+                <tbody v-if="isLoading" role="status" aria-busy="true" class="divide-y divide-gray-200 dark:divide-gray-700">
+                    <TableSkeletonRows :columns="5" :rows="skeletonRows" />
+                </tbody>
+                <tbody v-else class="divide-y divide-gray-200 dark:divide-gray-700">
                     <template v-for="category in categories" :key="category.id">
                         <tr>
                             <td class="px-6 py-4 text-sm font-medium text-gray-900 dark:text-gray-100">{{ category.name }}</td>

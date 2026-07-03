@@ -1,16 +1,19 @@
 <script setup>
-import { computed } from 'vue';
+import { computed, ref } from 'vue';
 import { Link, usePage } from '@inertiajs/vue3';
 import AdminLayout from '@/Layouts/AdminLayout.vue';
 import Pagination from '@/Components/Pagination.vue';
 import ImageWithFallback from '@/Components/ImageWithFallback.vue';
+import TableSkeletonRows from '@/Components/TableSkeletonRows.vue';
 
-defineProps({
+const props = defineProps({
     products: Object,
 });
 
 const page = usePage();
 const lang = computed(() => page.props.lang || {});
+const isLoading = ref(false);
+const skeletonRows = computed(() => props.products.data.length || props.products.per_page || 5);
 </script>
 
 <template>
@@ -20,7 +23,7 @@ const lang = computed(() => page.props.lang || {});
         </template>
 
         <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm overflow-x-auto">
-            <table v-if="products.data.length" class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+            <table v-if="isLoading || products.data.length" class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
                 <thead class="bg-gray-50 dark:bg-gray-700">
                     <tr>
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase">{{ lang.products?.product }}</th>
@@ -31,7 +34,10 @@ const lang = computed(() => page.props.lang || {});
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase">{{ lang.products?.status }}</th>
                     </tr>
                 </thead>
-                <tbody class="divide-y divide-gray-200 dark:divide-gray-700">
+                <tbody v-if="isLoading" role="status" aria-busy="true" class="divide-y divide-gray-200 dark:divide-gray-700">
+                    <TableSkeletonRows :columns="6" :rows="skeletonRows" />
+                </tbody>
+                <tbody v-else class="divide-y divide-gray-200 dark:divide-gray-700">
                     <tr v-for="product in products.data" :key="product.id">
                         <td class="px-6 py-4">
                             <div class="flex items-center">
@@ -66,7 +72,7 @@ const lang = computed(() => page.props.lang || {});
         </div>
 
         <div class="mt-6">
-            <Pagination :links="products.links" />
+            <Pagination :links="products.links" @start="isLoading = true" @finish="isLoading = false" />
         </div>
     </AdminLayout>
 </template>
