@@ -48,7 +48,7 @@ const submit = () => {
 <template>
     <form @submit.prevent="submit" class="border-t border-gray-200 dark:border-gray-700 p-3 bg-white dark:bg-gray-800">
         <div v-if="previewUrl" class="mb-2 relative inline-block">
-            <img :src="previewUrl" class="h-20 w-20 object-cover rounded-lg" />
+            <img :src="previewUrl" :alt="lang.image_label || 'Image'" class="h-20 w-20 object-cover rounded-lg" />
             <button
                 type="button"
                 @click="removeImage"

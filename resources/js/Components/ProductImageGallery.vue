@@ -6,6 +6,10 @@ const props = defineProps({
         type: Array,
         default: () => [],
     },
+    productName: {
+        type: String,
+        default: '',
+    },
 });
 
 const selectedIndex = ref(0);
@@ -17,6 +21,7 @@ const selectedIndex = ref(0);
             <img
                 v-if="images.length"
                 :src="`/storage/${images[selectedIndex].path}`"
+                :alt="productName"
                 class="w-full h-full object-cover"
             />
             <div v-else class="w-full h-full flex items-center justify-center text-gray-400">
@@ -35,7 +40,7 @@ const selectedIndex = ref(0);
                     index === selectedIndex ? 'border-indigo-500' : 'border-transparent'
                 ]"
             >
-                <img :src="`/storage/${image.path}`" class="w-full h-full object-cover" />
+                <img :src="`/storage/${image.path}`" :alt="`${productName} ${index + 1}`" class="w-full h-full object-cover" />
             </button>
         </div>
     </div>

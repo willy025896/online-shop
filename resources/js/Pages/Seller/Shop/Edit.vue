@@ -39,7 +39,7 @@ const submit = () => {
                 <!-- Current Logo -->
                 <div v-if="shop.logo_path">
                     <InputLabel :value="lang.shop?.current_logo" />
-                    <img :src="`/storage/${shop.logo_path}`" class="mt-2 h-20 w-20 rounded-lg object-cover" />
+                    <img :src="`/storage/${shop.logo_path}`" :alt="shop.name" class="mt-2 h-20 w-20 rounded-lg object-cover" />
                 </div>
 
                 <div>

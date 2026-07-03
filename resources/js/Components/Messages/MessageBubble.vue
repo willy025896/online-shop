@@ -7,6 +7,7 @@ const props = defineProps({
 });
 
 const page = usePage();
+const lang = computed(() => page.props.lang || {});
 const isSelf = computed(() => props.message.sender_id === page.props.auth.user.id);
 
 const time = computed(() => {
@@ -34,6 +35,7 @@ const time = computed(() => {
                 <img
                     v-if="message.image_path"
                     :src="`/storage/${message.image_path}`"
+                    :alt="lang.image_label || 'Image'"
                     class="rounded-lg max-w-full max-h-64 object-cover mb-1"
                     @click.stop
                 />
