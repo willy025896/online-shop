@@ -59,6 +59,7 @@ const addToCart = (productId) => {
                             v-if="product.primary_image"
                             :src="`/storage/${product.primary_image.path}`"
                             :alt="product.name"
+                            loading="lazy"
                             class="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
                         />
                         <div v-else class="w-full h-full flex items-center justify-center text-gray-400">

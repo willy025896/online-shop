@@ -40,7 +40,7 @@ const selectedIndex = ref(0);
                     index === selectedIndex ? 'border-indigo-500' : 'border-transparent'
                 ]"
             >
-                <img :src="`/storage/${image.path}`" :alt="`${productName} ${index + 1}`" class="w-full h-full object-cover" />
+                <img :src="`/storage/${image.path}`" :alt="`${productName} ${index + 1}`" loading="lazy" class="w-full h-full object-cover" />
             </button>
         </div>
     </div>

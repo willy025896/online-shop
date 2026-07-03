@@ -26,7 +26,7 @@ const lang = computed(() => page.props.lang || {});
                 >
                     <div class="flex items-center gap-4">
                         <div class="h-16 w-16 rounded-full bg-gray-200 dark:bg-gray-700 overflow-hidden flex-shrink-0">
-                            <img v-if="shop.logo_path" :src="`/storage/${shop.logo_path}`" :alt="shop.name" class="w-full h-full object-cover" />
+                            <img v-if="shop.logo_path" :src="`/storage/${shop.logo_path}`" :alt="shop.name" loading="lazy" class="w-full h-full object-cover" />
                             <div v-else class="w-full h-full flex items-center justify-center text-2xl font-bold text-gray-400">
                                 {{ shop.name[0] }}
                             </div>

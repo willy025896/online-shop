@@ -49,6 +49,7 @@ const removeItem = () => {
                 v-if="item.product?.primary_image"
                 :src="`/storage/${item.product.primary_image.path}`"
                 :alt="item.product?.name"
+                loading="lazy"
                 class="w-full h-full object-cover"
             />
         </div>
