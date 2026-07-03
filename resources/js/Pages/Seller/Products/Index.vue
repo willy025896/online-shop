@@ -1,5 +1,5 @@
 <script setup>
-import { computed } from 'vue';
+import { computed, ref } from 'vue';
 import { Link, router, usePage } from '@inertiajs/vue3';
 import SellerLayout from '@/Layouts/SellerLayout.vue';
 import Pagination from '@/Components/Pagination.vue';
@@ -9,6 +9,7 @@ import SecondaryButton from '@/Components/SecondaryButton.vue';
 import DangerButton from '@/Components/DangerButton.vue';
 import { useDeleteConfirmation } from '@/Composables/useDeleteConfirmation';
 import ImageWithFallback from '@/Components/ImageWithFallback.vue';
+import TableSkeletonRows from '@/Components/TableSkeletonRows.vue';
 
 const props = defineProps({
     products: Object,
@@ -18,12 +19,19 @@ const props = defineProps({
 
 const page = usePage();
 const lang = computed(() => page.props.lang || {});
+const isLoading = ref(false);
+const skeletonRows = computed(() => props.products.data.length || props.products.per_page || 5);
 
 const toggleLowStock = () => {
     router.get(
         route('seller.products.index'),
         props.filters.low_stock ? {} : { low_stock: 1 },
-        { preserveScroll: true, preserveState: true },
+        {
+            preserveScroll: true,
+            preserveState: true,
+            onStart: () => { isLoading.value = true; },
+            onFinish: () => { isLoading.value = false; },
+        },
     );
 };
 
@@ -62,7 +70,7 @@ const {
         </template>
 
         <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm overflow-x-auto">
-            <table v-if="products.data.length" class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+            <table v-if="isLoading || products.data.length" class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
                 <thead class="bg-gray-50 dark:bg-gray-700">
                     <tr>
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase">{{ lang.products?.name }}</th>
@@ -73,7 +81,10 @@ const {
                         <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-300 uppercase">{{ lang.products?.actions }}</th>
                     </tr>
                 </thead>
-                <tbody class="divide-y divide-gray-200 dark:divide-gray-700">
+                <tbody v-if="isLoading" role="status" aria-busy="true" class="divide-y divide-gray-200 dark:divide-gray-700">
+                    <TableSkeletonRows :columns="6" :rows="skeletonRows" />
+                </tbody>
+                <tbody v-else class="divide-y divide-gray-200 dark:divide-gray-700">
                     <tr v-for="product in products.data" :key="product.id">
                         <td class="px-6 py-4">
                             <div class="flex items-center">
@@ -120,7 +131,7 @@ const {
         </div>
 
         <div class="mt-6">
-            <Pagination :links="products.links" />
+            <Pagination :links="products.links" @start="isLoading = true" @finish="isLoading = false" />
         </div>
 
         <ConfirmationModal :show="productPendingDelete !== null" @close="cancelDeleteProduct">

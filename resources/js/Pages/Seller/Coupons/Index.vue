@@ -1,5 +1,5 @@
 <script setup>
-import { computed } from 'vue';
+import { computed, ref } from 'vue';
 import { Link, usePage } from '@inertiajs/vue3';
 import SellerLayout from '@/Layouts/SellerLayout.vue';
 import Pagination from '@/Components/Pagination.vue';
@@ -8,13 +8,16 @@ import ConfirmationModal from '@/Components/ConfirmationModal.vue';
 import SecondaryButton from '@/Components/SecondaryButton.vue';
 import DangerButton from '@/Components/DangerButton.vue';
 import { useDeleteConfirmation } from '@/Composables/useDeleteConfirmation';
+import TableSkeletonRows from '@/Components/TableSkeletonRows.vue';
 
-defineProps({
+const props = defineProps({
     coupons: Object,
 });
 
 const page = usePage();
 const c = computed(() => page.props.lang?.coupons || {});
+const isLoading = ref(false);
+const skeletonRows = computed(() => props.coupons.data.length || props.coupons.per_page || 5);
 
 const formatValue = (coupon) =>
     coupon.type === 'percentage' ? `${Number(coupon.value)}%` : `$${Number(coupon.value).toFixed(2)}`;
@@ -44,7 +47,7 @@ const {
         </template>
 
         <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm overflow-x-auto">
-            <table v-if="coupons.data.length" class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+            <table v-if="isLoading || coupons.data.length" class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
                 <thead class="bg-gray-50 dark:bg-gray-700">
                     <tr>
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase">{{ c.code }}</th>
@@ -55,7 +58,10 @@ const {
                         <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-300 uppercase">{{ c.actions }}</th>
                     </tr>
                 </thead>
-                <tbody class="divide-y divide-gray-200 dark:divide-gray-700">
+                <tbody v-if="isLoading" role="status" aria-busy="true" class="divide-y divide-gray-200 dark:divide-gray-700">
+                    <TableSkeletonRows :columns="6" :rows="skeletonRows" />
+                </tbody>
+                <tbody v-else class="divide-y divide-gray-200 dark:divide-gray-700">
                     <tr v-for="coupon in coupons.data" :key="coupon.id">
                         <td class="px-6 py-4 text-sm font-medium text-gray-900 dark:text-gray-100">{{ coupon.code }}</td>
                         <td class="px-6 py-4 text-sm text-gray-900 dark:text-gray-100">{{ formatValue(coupon) }}</td>
@@ -82,7 +88,7 @@ const {
         </div>
 
         <div class="mt-6">
-            <Pagination :links="coupons.links" />
+            <Pagination :links="coupons.links" @start="isLoading = true" @finish="isLoading = false" />
         </div>
 
         <ConfirmationModal :show="couponPendingDelete !== null" @close="cancelDeleteCoupon">
