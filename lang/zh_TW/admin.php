@@ -67,6 +67,7 @@ return [
         'create' => '建立',
         'update' => '更新',
         'cancel' => '取消',
+        'confirm' => '確認',
         'delete_confirm' => '刪除「:name」？',
         'no_categories' => '尚無分類。',
         'action_edit' => '編輯',

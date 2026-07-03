@@ -67,6 +67,7 @@ return [
         'create' => 'Create',
         'update' => 'Update',
         'cancel' => 'Cancel',
+        'confirm' => 'Confirm',
         'delete_confirm' => 'Delete ":name"?',
         'no_categories' => 'No categories yet.',
         'action_edit' => 'Edit',

@@ -1,9 +1,12 @@
 <script setup>
-import { computed } from 'vue';
+import { computed, ref } from 'vue';
 import { Link, router, usePage } from '@inertiajs/vue3';
 import SellerLayout from '@/Layouts/SellerLayout.vue';
 import Pagination from '@/Components/Pagination.vue';
 import RowActions from '@/Components/RowActions.vue';
+import ConfirmationModal from '@/Components/ConfirmationModal.vue';
+import SecondaryButton from '@/Components/SecondaryButton.vue';
+import DangerButton from '@/Components/DangerButton.vue';
 import { useAsyncActionGroup } from '@/Composables/useAsyncAction';
 
 defineProps({
@@ -21,13 +24,17 @@ const usageText = (coupon) =>
 
 const { isProcessing: isDeleting, run } = useAsyncActionGroup();
 
-const deleteCoupon = (coupon) => {
-    const msg = (c.value.delete_confirm || 'Delete ":code"?').replace(':code', coupon.code);
-    if (confirm(msg)) {
-        run(coupon.id, (finish) => router.delete(route('seller.coupons.destroy', coupon.id), {
-            onFinish: finish,
-        }));
-    }
+const couponPendingDelete = ref(null);
+const confirmDeleteCoupon = (coupon) => {
+    couponPendingDelete.value = coupon;
+};
+
+const deleteCoupon = () => {
+    const coupon = couponPendingDelete.value;
+    run(coupon.id, (finish) => router.delete(route('seller.coupons.destroy', coupon.id), {
+        onSuccess: () => { couponPendingDelete.value = null; },
+        onFinish: finish,
+    }));
 };
 </script>
 
@@ -69,7 +76,7 @@ const deleteCoupon = (coupon) => {
                         <td class="px-6 py-4 text-right text-sm space-x-2">
                             <RowActions :loading="isDeleting(coupon.id)">
                                 <Link :href="route('seller.coupons.edit', coupon.id)" class="text-indigo-600 hover:text-indigo-900">{{ c.action_edit }}</Link>
-                                <button @click="deleteCoupon(coupon)" class="text-red-600 hover:text-red-900">{{ c.action_delete }}</button>
+                                <button @click="confirmDeleteCoupon(coupon)" class="text-red-600 hover:text-red-900">{{ c.action_delete }}</button>
                             </RowActions>
                         </td>
                     </tr>
@@ -83,5 +90,23 @@ const deleteCoupon = (coupon) => {
         <div class="mt-6">
             <Pagination :links="coupons.links" />
         </div>
+
+        <ConfirmationModal :show="couponPendingDelete !== null" @close="couponPendingDelete = null">
+            <template #title>{{ c.action_delete }}</template>
+            <template #content>
+                {{ (c.delete_confirm || 'Delete ":code"?').replace(':code', couponPendingDelete?.code) }}
+            </template>
+            <template #footer>
+                <SecondaryButton @click="couponPendingDelete = null">{{ c.cancel }}</SecondaryButton>
+                <DangerButton
+                    class="ms-3"
+                    :class="{ 'opacity-25': couponPendingDelete && isDeleting(couponPendingDelete.id) }"
+                    :disabled="couponPendingDelete && isDeleting(couponPendingDelete.id)"
+                    @click="deleteCoupon"
+                >
+                    {{ c.confirm }}
+                </DangerButton>
+            </template>
+        </ConfirmationModal>
     </SellerLayout>
 </template>

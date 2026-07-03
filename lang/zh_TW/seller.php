@@ -80,6 +80,8 @@ return [
         'update' => '更新商品',
         'action_edit' => '編輯',
         'action_delete' => '刪除',
+        'cancel' => '取消',
+        'confirm' => '確認',
     ],
 
     'coupons' => [
@@ -114,6 +116,8 @@ return [
         'delete_confirm' => '確定要刪除折扣碼「:code」嗎？',
         'no_coupons' => '尚無折扣碼。',
         'create_first' => '建立您的第一個折扣碼',
+        'cancel' => '取消',
+        'confirm' => '確認',
     ],
 
     'orders' => [

@@ -6,7 +6,10 @@ import InputLabel from '@/Components/InputLabel.vue';
 import TextInput from '@/Components/TextInput.vue';
 import InputError from '@/Components/InputError.vue';
 import PrimaryButton from '@/Components/PrimaryButton.vue';
+import SecondaryButton from '@/Components/SecondaryButton.vue';
+import DangerButton from '@/Components/DangerButton.vue';
 import RowActions from '@/Components/RowActions.vue';
+import ConfirmationModal from '@/Components/ConfirmationModal.vue';
 import { useAsyncActionGroup } from '@/Composables/useAsyncAction';
 
 const props = defineProps({
@@ -57,12 +60,17 @@ const submit = () => {
 
 const { isProcessing: isDeleting, run } = useAsyncActionGroup();
 
-const deleteCategory = (category) => {
-    if (confirm(lang.value.categories?.delete_confirm?.replace(':name', category.name))) {
-        run(category.id, (finish) => router.delete(route('admin.categories.destroy', category.id), {
-            onFinish: finish,
-        }));
-    }
+const categoryPendingDelete = ref(null);
+const confirmDeleteCategory = (category) => {
+    categoryPendingDelete.value = category;
+};
+
+const deleteCategory = () => {
+    const category = categoryPendingDelete.value;
+    run(category.id, (finish) => router.delete(route('admin.categories.destroy', category.id), {
+        onSuccess: () => { categoryPendingDelete.value = null; },
+        onFinish: finish,
+    }));
 };
 </script>
 
@@ -152,7 +160,7 @@ const deleteCategory = (category) => {
                             <td class="px-6 py-4 text-right text-sm space-x-2">
                                 <RowActions :loading="isDeleting(category.id)">
                                     <button @click="startEdit(category)" class="text-indigo-600 hover:text-indigo-900">{{ lang.categories?.action_edit }}</button>
-                                    <button @click="deleteCategory(category)" class="text-red-600 hover:text-red-900">{{ lang.categories?.action_delete }}</button>
+                                    <button @click="confirmDeleteCategory(category)" class="text-red-600 hover:text-red-900">{{ lang.categories?.action_delete }}</button>
                                 </RowActions>
                             </td>
                         </tr>
@@ -169,7 +177,7 @@ const deleteCategory = (category) => {
                             <td class="px-6 py-3 text-right text-sm space-x-2">
                                 <RowActions :loading="isDeleting(child.id)">
                                     <button @click="startEdit(child)" class="text-indigo-600 hover:text-indigo-900">{{ lang.categories?.action_edit }}</button>
-                                    <button @click="deleteCategory(child)" class="text-red-600 hover:text-red-900">{{ lang.categories?.action_delete }}</button>
+                                    <button @click="confirmDeleteCategory(child)" class="text-red-600 hover:text-red-900">{{ lang.categories?.action_delete }}</button>
                                 </RowActions>
                             </td>
                         </tr>
@@ -180,5 +188,23 @@ const deleteCategory = (category) => {
                 {{ lang.categories?.no_categories }}
             </div>
         </div>
+
+        <ConfirmationModal :show="categoryPendingDelete !== null" @close="categoryPendingDelete = null">
+            <template #title>{{ lang.categories?.action_delete }}</template>
+            <template #content>
+                {{ lang.categories?.delete_confirm?.replace(':name', categoryPendingDelete?.name) }}
+            </template>
+            <template #footer>
+                <SecondaryButton @click="categoryPendingDelete = null">{{ lang.categories?.cancel }}</SecondaryButton>
+                <DangerButton
+                    class="ms-3"
+                    :class="{ 'opacity-25': categoryPendingDelete && isDeleting(categoryPendingDelete.id) }"
+                    :disabled="categoryPendingDelete && isDeleting(categoryPendingDelete.id)"
+                    @click="deleteCategory"
+                >
+                    {{ lang.categories?.confirm }}
+                </DangerButton>
+            </template>
+        </ConfirmationModal>
     </AdminLayout>
 </template>

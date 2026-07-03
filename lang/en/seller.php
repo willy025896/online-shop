@@ -80,6 +80,8 @@ return [
         'update' => 'Update Product',
         'action_edit' => 'Edit',
         'action_delete' => 'Delete',
+        'cancel' => 'Cancel',
+        'confirm' => 'Confirm',
     ],
 
     'coupons' => [
@@ -114,6 +116,8 @@ return [
         'delete_confirm' => 'Delete coupon ":code"?',
         'no_coupons' => 'No coupons yet.',
         'create_first' => 'Create your first coupon',
+        'cancel' => 'Cancel',
+        'confirm' => 'Confirm',
     ],
 
     'orders' => [
