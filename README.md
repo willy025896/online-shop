@@ -147,8 +147,8 @@ online-shop/
 - **商品篩選強化** - 價格區間、低庫存篩選
 - **低庫存警示** - 賣家儀表板 widget + 商品列表篩選
 - **全站非同步操作回饋** - 統一 Toast、Dark Mode、loading 狀態管理
-- **無障礙（a11y）優化** - navbar aria-label、表單 label 關聯、圖片 alt
-- **列表頁體驗優化** - 手機橫向捲動、skeleton loading 過渡、圖片 lazy load／錯誤 fallback
+- **無障礙（a11y）優化** - navbar aria-label、表單 label 關聯、圖片 alt、icon-only 按鈕 aria-label 與可視 focus 樣式
+- **列表頁體驗優化** - 手機橫向捲動、skeleton loading 過渡、圖片 lazy load／錯誤 fallback、清單頁空狀態設計、手機版聊天室返回導覽
 - **刪除確認互動統一** - 改用 ConfirmationModal 取代原生 `confirm()`
 
 詳細實作細節（服務層設計、資料表結構、ADR 決策）請見 `CLAUDE.md`。
