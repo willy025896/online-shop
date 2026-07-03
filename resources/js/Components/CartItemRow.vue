@@ -2,6 +2,7 @@
 import { ref, watch } from 'vue';
 import { router } from '@inertiajs/vue3';
 import Spinner from '@/Components/Spinner.vue';
+import ImageWithFallback from '@/Components/ImageWithFallback.vue';
 import { useAsyncAction } from '@/Composables/useAsyncAction';
 
 const props = defineProps({
@@ -45,10 +46,10 @@ const removeItem = () => {
             class="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500 cursor-pointer flex-shrink-0"
         />
         <div class="h-20 w-20 flex-shrink-0 bg-gray-200 dark:bg-gray-700 rounded-md overflow-hidden">
-            <img
-                v-if="item.product?.primary_image"
-                :src="`/storage/${item.product.primary_image.path}`"
+            <ImageWithFallback
+                :src="item.product?.primary_image ? `/storage/${item.product.primary_image.path}` : null"
                 :alt="item.product?.name"
+                icon-class="h-8 w-8"
                 loading="lazy"
                 class="w-full h-full object-cover"
             />

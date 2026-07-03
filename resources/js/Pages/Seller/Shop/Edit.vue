@@ -6,6 +6,7 @@ import InputLabel from '@/Components/InputLabel.vue';
 import TextInput from '@/Components/TextInput.vue';
 import InputError from '@/Components/InputError.vue';
 import PrimaryButton from '@/Components/PrimaryButton.vue';
+import ImageWithFallback from '@/Components/ImageWithFallback.vue';
 
 const props = defineProps({
     shop: Object,
@@ -39,7 +40,9 @@ const submit = () => {
                 <!-- Current Logo -->
                 <div v-if="shop.logo_path">
                     <InputLabel :value="lang.shop?.current_logo" />
-                    <img :src="`/storage/${shop.logo_path}`" :alt="shop.name" class="mt-2 h-20 w-20 rounded-lg object-cover" />
+                    <div class="mt-2 h-20 w-20 rounded-lg overflow-hidden">
+                        <ImageWithFallback :src="`/storage/${shop.logo_path}`" :alt="shop.name" icon-class="h-8 w-8" class="w-full h-full object-cover" />
+                    </div>
                 </div>
 
                 <div>
