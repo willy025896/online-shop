@@ -130,23 +130,27 @@ online-shop/
 └── tests/                      # Pest tests
 ```
 
+## Features
+
+- **雙向盲評論系統** - 買家評商品、賣家評買家，24h 冷靜期後自動公開
+- **收藏／願望清單** - 登入會員可收藏商品，一鍵加入購物車
+- **產品推薦／相關商品** - 商品頁多訊號相關商品推薦
+- **運費計算** - 固定費率 + 滿額免運，依賣場各自計算
+- **折扣碼／優惠券** - 賣家自訂賣場折扣碼，結帳套用與 redemption 皆有交易鎖定防護
+- **Dashboard 數據分析** - 賣家／管理員後台時段篩選、收益趨勢、Top 商品／店鋪
+- **商品篩選強化** - 價格區間、低庫存篩選
+- **低庫存警示** - 賣家儀表板 widget + 商品列表篩選
+- **全站非同步操作回饋** - 統一 Toast、Dark Mode、loading 狀態管理
+- **無障礙（a11y）優化** - navbar aria-label、表單 label 關聯、圖片 alt
+- **列表頁體驗優化** - 手機橫向捲動、skeleton loading 過渡、圖片 lazy load／錯誤 fallback
+- **刪除確認互動統一** - 改用 ConfirmationModal 取代原生 `confirm()`
+
+詳細實作細節（服務層設計、資料表結構、ADR 決策）請見 `CLAUDE.md`。
+
 ## TODO
 
-### Core Features
-- [x] **評論/評分系統** - 雙向盲評：買家評商品 + 賣家評買家，24h 冷靜期，14 天自動公開
-- [x] **收藏/願望清單** - 登入會員可收藏商品，導覽列愛心徽章，收藏清單頁支援移除及一鍵加入購物車
-- [x] **產品推薦/相關商品** - 商品頁相關商品（多訊號：一起購買 → 同分類 → 同賣場遞補），由 `RecommendationService` 產生
-- [x] **運費計算** - 全站統一固定費率 + 滿額免運（`config/shipping.php`，env 可調），由 `ShippingService` 依賣場各自計算
-- [x] **折扣碼/優惠券** - 賣家建立賣場折扣碼（百分比/固定、最低消費、用量與每人上限、有效期），買家結帳每賣場各套用一碼、折抵商品小計；`CouponService` 為單一真相來源，結帳交易內鎖定重驗與 redemption（ADR-008）
-- [x] **Admin Dashboard 強化** - 平台級數據分析：時段篩選（今日/本週/本月/全部）、收益與成長率、收益折線圖、訂單狀態分佈、Top 5 熱門店鋪；時段/圖表邏輯由 `ResolvesDashboardPeriod` trait 與賣家後台共用
-- [x] **商品價格區間篩選** - 商品列表與店鋪頁均支援 min_price / max_price 篩選（`scopePriceRange`，`$request->filled()` 防空值）
-- [x] **低庫存警示** - 賣家儀表板低庫存 widget（數量徽章 + 清單）＋商品列表 `low_stock` 篩選與庫存徽章；門檻由 `config/inventory.php`（`INVENTORY_LOW_STOCK_THRESHOLD` env 可調）控制，`Product::scopeLowStock()` 為單一判定入口
-
-### UI/UX Optimization
-- [ ] 前端組件視覺美化
-- [ ] 使用者體驗流暢性改善
-- [ ] 響應式設計完善
-- [ ] 動畫與過渡效果
+- [ ] **Skeleton loading 推廣** - 已套用於 `Products/Index`、`Seller/Dashboard`、`Seller/Orders/Index`、`Shop/Show`、`Admin/Dashboard`；其餘清單頁尚未套用：`Seller/Products`、`Seller/Coupons`、`Admin/Shops`、`Admin/Categories`、`Admin/Users`、`Admin/Products`、`Admin/Orders`
+- [ ] **聊天圖片 lazy load** - `Messages/ConversationList`、`Messages/MessageBubble` 的圖片列表尚未評估是否需要 `loading="lazy"`
 
 ## License
 
