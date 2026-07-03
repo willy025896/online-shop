@@ -104,6 +104,7 @@ const cancellationStatusLabel = (status) =>
                 <div class="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
                     <h3 class="text-lg font-medium text-gray-900 dark:text-gray-100">{{ t.order_items }}</h3>
                 </div>
+                <div class="overflow-x-auto">
                 <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
                     <thead class="bg-gray-50 dark:bg-gray-700">
                         <tr>
@@ -122,6 +123,7 @@ const cancellationStatusLabel = (status) =>
                         </tr>
                     </tbody>
                 </table>
+                </div>
                 <div class="px-6 py-4 border-t border-gray-200 dark:border-gray-700 text-right space-y-1">
                     <p class="text-sm text-gray-500">{{ t.subtotal }}: ${{ formatMoney(order.subtotal) }}</p>
                     <p v-if="Number(order.discount) > 0" class="text-sm text-green-600">{{ t.discount }}<span v-if="order.coupon_code"> ({{ order.coupon_code }})</span>: -${{ formatMoney(order.discount) }}</p>
@@ -135,7 +137,8 @@ const cancellationStatusLabel = (status) =>
                 <div class="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
                     <h3 class="text-lg font-medium text-gray-900 dark:text-gray-100">{{ t.cancellations }}</h3>
                 </div>
-                <table v-if="order.cancellations && order.cancellations.length" class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+                <div v-if="order.cancellations && order.cancellations.length" class="overflow-x-auto">
+                <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
                     <thead class="bg-gray-50 dark:bg-gray-700">
                         <tr>
                             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase">{{ t.when }}</th>
@@ -157,6 +160,7 @@ const cancellationStatusLabel = (status) =>
                         </tr>
                     </tbody>
                 </table>
+                </div>
                 <p v-else class="px-6 py-8 text-sm text-center text-gray-500">{{ t.no_cancellations }}</p>
             </div>
 
@@ -165,7 +169,8 @@ const cancellationStatusLabel = (status) =>
                 <div class="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
                     <h3 class="text-lg font-medium text-gray-900 dark:text-gray-100">{{ t.status_log }}</h3>
                 </div>
-                <table v-if="order.status_logs && order.status_logs.length" class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+                <div v-if="order.status_logs && order.status_logs.length" class="overflow-x-auto">
+                <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
                     <thead class="bg-gray-50 dark:bg-gray-700">
                         <tr>
                             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase">{{ t.when }}</th>
@@ -192,6 +197,7 @@ const cancellationStatusLabel = (status) =>
                         </tr>
                     </tbody>
                 </table>
+                </div>
                 <p v-else class="px-6 py-8 text-sm text-center text-gray-500">{{ t.no_status_log }}</p>
             </div>
         </div>

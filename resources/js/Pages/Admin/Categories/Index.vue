@@ -131,7 +131,7 @@ const {
         </div>
 
         <!-- Categories List -->
-        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm overflow-hidden">
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm overflow-x-auto">
             <table v-if="categories.length" class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
                 <thead class="bg-gray-50 dark:bg-gray-700">
                     <tr>
