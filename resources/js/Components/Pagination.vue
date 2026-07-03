@@ -4,6 +4,8 @@ import { Link } from '@inertiajs/vue3';
 defineProps({
     links: Array,
 });
+
+defineEmits(['start', 'finish']);
 </script>
 
 <template>
@@ -20,6 +22,8 @@ defineProps({
                         : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
                 ]"
                 preserve-scroll
+                @start="$emit('start')"
+                @finish="$emit('finish')"
             />
             <span
                 v-else

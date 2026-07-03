@@ -3,6 +3,7 @@ import { ref, computed } from 'vue';
 import { usePage, router } from '@inertiajs/vue3';
 import AppLayout from '@/Layouts/AppLayout.vue';
 import ProductCard from '@/Components/ProductCard.vue';
+import ProductCardSkeleton from '@/Components/ProductCardSkeleton.vue';
 import SearchBar from '@/Components/SearchBar.vue';
 import CategoryTree from '@/Components/CategoryTree.vue';
 import Pagination from '@/Components/Pagination.vue';
@@ -15,17 +16,26 @@ const props = defineProps({
 
 const page = usePage();
 const lang = computed(() => page.props.lang || {});
+const isLoading = ref(false);
 
 const localMinPrice = ref(props.filters?.min_price ?? '');
 const localMaxPrice = ref(props.filters?.max_price ?? '');
 const hasPriceFilter = computed(() => localMinPrice.value || localMaxPrice.value);
 
+function updateFilters(partial) {
+    router.get(route('products.index'), { ...props.filters, ...partial }, {
+        preserveState: true,
+        only: ['products', 'filters'],
+        onStart: () => { isLoading.value = true; },
+        onFinish: () => { isLoading.value = false; },
+    });
+}
+
 function applyPriceFilter() {
-    router.get(route('products.index'), {
-        ...props.filters,
+    updateFilters({
         min_price: localMinPrice.value || undefined,
         max_price: localMaxPrice.value || undefined,
-    }, { preserveState: true, only: ['products', 'filters'] });
+    });
 }
 
 function clearPriceFilter() {
@@ -106,14 +116,14 @@ function clearPriceFilter() {
                                         ? 'bg-yellow-400 border-yellow-400 text-white'
                                         : 'border-gray-300 text-gray-600 hover:border-yellow-400'
                                 ]"
-                                @click="router.get(route('products.index'), { ...filters, min_rating: filters?.min_rating == star ? undefined : star }, { preserveState: true, only: ['products', 'filters'] })"
+                                @click="updateFilters({ min_rating: filters?.min_rating == star ? undefined : star })"
                             >
                                 {{ star }}★+
                             </button>
                         </div>
 
                         <select
-                            @change="router.get(route('products.index'), { ...filters, sort: $event.target.value }, { preserveState: true, only: ['products', 'filters'] })"
+                            @change="updateFilters({ sort: $event.target.value })"
                             class="text-sm rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 focus:border-indigo-500 focus:ring-indigo-500"
                         >
                             <option value="">{{ lang.sort?.latest }}</option>
@@ -123,7 +133,11 @@ function clearPriceFilter() {
                         </select>
                     </div>
 
-                    <div v-if="products.data.length" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                    <div v-if="isLoading" role="status" aria-busy="true" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                        <span class="sr-only">載入中…</span>
+                        <ProductCardSkeleton v-for="n in 8" :key="n" />
+                    </div>
+                    <div v-else-if="products.data.length" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
                         <ProductCard v-for="product in products.data" :key="product.id" :product="product" />
                     </div>
                     <div v-else class="text-center py-12 text-gray-500">
@@ -131,7 +145,7 @@ function clearPriceFilter() {
                     </div>
 
                     <div class="mt-8">
-                        <Pagination :links="products.links" />
+                        <Pagination :links="products.links" @start="isLoading = true" @finish="isLoading = false" />
                     </div>
                 </div>
             </div>

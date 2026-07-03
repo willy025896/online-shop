@@ -4,12 +4,14 @@ import { Link, router, usePage } from '@inertiajs/vue3';
 import SellerLayout from '@/Layouts/SellerLayout.vue';
 import OrderStatusBadge from '@/Components/OrderStatusBadge.vue';
 import StatCard from '@/Components/Dashboard/StatCard.vue';
+import StatCardSkeleton from '@/Components/Dashboard/StatCardSkeleton.vue';
 import OrderStatusGrid from '@/Components/Dashboard/OrderStatusGrid.vue';
 import PeriodTabs from '@/Components/Dashboard/PeriodTabs.vue';
 import TopProductsTable from '@/Components/Dashboard/TopProductsTable.vue';
 import LowStockAlert from '@/Components/Dashboard/LowStockAlert.vue';
 import WidgetSettings from '@/Components/Dashboard/WidgetSettings.vue';
 import RevenueLineChart from '@/Components/Charts/RevenueLineChart.vue';
+import Skeleton from '@/Components/Skeleton.vue';
 
 const props = defineProps({
     shop: Object,
@@ -25,6 +27,7 @@ const props = defineProps({
 
 const page = usePage();
 const lang = computed(() => page.props.lang || {});
+const isLoading = ref(false);
 
 const localWidgets = ref({ ...props.widgets });
 
@@ -36,6 +39,8 @@ const setPeriod = (p) => {
     router.get(route('seller.dashboard'), { period: p }, {
         preserveState: true,
         only: ['stats', 'chartData', 'topProducts', 'period'],
+        onStart: () => { isLoading.value = true; },
+        onFinish: () => { isLoading.value = false; },
     });
 };
 
@@ -64,7 +69,14 @@ const formatCurrency = (v) => `$${Number(v ?? 0).toFixed(2)}`;
         <PeriodTabs :period="period" :lang="lang" class="mb-6" @change="setPeriod" />
 
         <!-- Stat cards row -->
-        <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+        <div v-if="isLoading" role="status" aria-busy="true" class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+            <span class="sr-only">載入中…</span>
+            <StatCardSkeleton v-if="localWidgets.revenue" with-growth />
+            <StatCardSkeleton />
+            <StatCardSkeleton />
+            <StatCardSkeleton v-if="localWidgets.order_status" />
+        </div>
+        <div v-else class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
             <StatCard
                 v-if="localWidgets.revenue"
                 :label="lang.revenue"
@@ -92,11 +104,13 @@ const formatCurrency = (v) => `$${Number(v ?? 0).toFixed(2)}`;
             <div class="lg:col-span-2">
                 <div v-if="localWidgets.revenue_chart" class="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-5">
                     <p class="text-sm font-semibold text-gray-700 dark:text-gray-200 mb-3">{{ lang.sales_trend }}</p>
-                    <RevenueLineChart :data="chartData" :label="lang.revenue" />
+                    <Skeleton v-if="isLoading" role="status" aria-busy="true" aria-label="載入中" height="16rem" rounded="rounded-md" />
+                    <RevenueLineChart v-else :data="chartData" :label="lang.revenue" />
                 </div>
             </div>
             <div v-if="localWidgets.order_status">
-                <OrderStatusGrid :counts="stats.order_counts" :lang="lang" />
+                <Skeleton v-if="isLoading" role="status" aria-busy="true" aria-label="載入中" height="12rem" rounded="rounded-lg" />
+                <OrderStatusGrid v-else :counts="stats.order_counts" :lang="lang" />
             </div>
         </div>
 
