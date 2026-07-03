@@ -58,6 +58,14 @@ const statusClass = (status) => {
                     <TableSkeletonRows :columns="5" :rows="skeletonRows" />
                 </tbody>
                 <tbody v-else class="divide-y divide-gray-200 dark:divide-gray-700">
+                    <tr v-if="shops.data.length === 0">
+                        <td colspan="5" class="px-6 py-12 text-center">
+                            <svg class="mx-auto h-12 w-12 text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2M5 21H3m16 0h-2M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                            </svg>
+                            <p class="mt-4 text-sm text-gray-500 dark:text-gray-400">{{ lang.shops?.no_shops }}</p>
+                        </td>
+                    </tr>
                     <tr v-for="shop in shops.data" :key="shop.id">
                         <td class="px-6 py-4">
                             <p class="text-sm font-medium text-gray-900 dark:text-gray-100">{{ shop.name }}</p>

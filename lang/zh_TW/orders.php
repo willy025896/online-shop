@@ -3,6 +3,7 @@
 return [
     'title' => '我的訂單',
     'no_orders' => '尚無訂單。',
+    'continue_shopping' => '繼續購物',
     'order_number' => '訂單編號',
     'date' => '日期',
     'status' => '狀態',

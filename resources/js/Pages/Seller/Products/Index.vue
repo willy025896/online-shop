@@ -126,7 +126,13 @@ const {
                 </tbody>
             </table>
             <div v-else class="px-6 py-12 text-center text-gray-500">
-                {{ lang.products?.no_products }} <Link :href="route('seller.products.create')" class="text-indigo-600 hover:underline">{{ lang.products?.create_first }}</Link>.
+                <svg class="mx-auto h-12 w-12 text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+                </svg>
+                <p class="mt-4">
+                    {{ lang.products?.no_products }}
+                    <Link :href="route('seller.products.create')" class="text-indigo-600 hover:underline">{{ lang.products?.create_first }}</Link>.
+                </p>
             </div>
         </div>
 

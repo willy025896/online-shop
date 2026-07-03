@@ -36,6 +36,7 @@ return [
         'customer' => '顧客',
         'seller' => '賣家',
         'admin' => '管理員',
+        'no_users' => '尚無使用者。',
     ],
 
     'shops' => [
@@ -50,6 +51,7 @@ return [
         'approved' => '已核准',
         'pending' => '待審核',
         'suspended' => '已停權',
+        'no_shops' => '尚無店鋪。',
     ],
 
     'categories' => [

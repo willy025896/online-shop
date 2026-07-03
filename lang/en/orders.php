@@ -3,6 +3,7 @@
 return [
     'title' => 'My Orders',
     'no_orders' => 'No orders yet.',
+    'continue_shopping' => 'Continue Shopping',
     'order_number' => 'Order Number',
     'date' => 'Date',
     'status' => 'Status',

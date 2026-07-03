@@ -36,6 +36,7 @@ return [
         'customer' => 'Customer',
         'seller' => 'Seller',
         'admin' => 'Admin',
+        'no_users' => 'No users found.',
     ],
 
     'shops' => [
@@ -50,6 +51,7 @@ return [
         'approved' => 'Approved',
         'pending' => 'Pending',
         'suspended' => 'Suspended',
+        'no_shops' => 'No shops found.',
     ],
 
     'categories' => [
