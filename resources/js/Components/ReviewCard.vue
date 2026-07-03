@@ -34,7 +34,7 @@
                     placeholder="回覆這則評論..."
                     class="w-full border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 rounded-md text-sm px-3 py-2 focus:ring-indigo-500 focus:border-indigo-500 resize-none"
                 />
-                <p v-if="replyForm.errors.reply" class="text-xs text-red-600 mt-1">{{ replyForm.errors.reply }}</p>
+                <p v-if="replyForm.errors.reply" class="text-xs text-red-600 dark:text-red-400 mt-1">{{ replyForm.errors.reply }}</p>
                 <div class="flex justify-end gap-2 mt-2">
                     <button type="button" class="text-sm text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200" @click="replyForm.reset()">取消</button>
                     <button

@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed } from 'vue';
+import { ref, computed, watch } from 'vue';
 import { useForm, router, usePage } from '@inertiajs/vue3';
 import AdminLayout from '@/Layouts/AdminLayout.vue';
 import InputLabel from '@/Components/InputLabel.vue';
@@ -11,6 +11,7 @@ import DangerButton from '@/Components/DangerButton.vue';
 import RowActions from '@/Components/RowActions.vue';
 import ConfirmationModal from '@/Components/ConfirmationModal.vue';
 import { useAsyncActionGroup } from '@/Composables/useAsyncAction';
+import { useToast } from '@/Composables/useToast';
 
 const props = defineProps({
     categories: Array,
@@ -59,16 +60,22 @@ const submit = () => {
 };
 
 const { isProcessing: isDeleting, run } = useAsyncActionGroup();
+const toast = useToast();
 
 const categoryPendingDelete = ref(null);
+const categoryPendingDeleteName = ref('');
 const confirmDeleteCategory = (category) => {
     categoryPendingDelete.value = category;
 };
+watch(categoryPendingDelete, (category) => {
+    if (category) categoryPendingDeleteName.value = category.name;
+});
 
 const deleteCategory = () => {
     const category = categoryPendingDelete.value;
     run(category.id, (finish) => router.delete(route('admin.categories.destroy', category.id), {
         onSuccess: () => { categoryPendingDelete.value = null; },
+        onError: (errors) => toast.error(errors.category),
         onFinish: finish,
     }));
 };
@@ -192,7 +199,7 @@ const deleteCategory = () => {
         <ConfirmationModal :show="categoryPendingDelete !== null" @close="categoryPendingDelete = null">
             <template #title>{{ lang.categories?.action_delete }}</template>
             <template #content>
-                {{ lang.categories?.delete_confirm?.replace(':name', categoryPendingDelete?.name) }}
+                {{ (lang.categories?.delete_confirm || 'Delete ":name"?').replace(':name', categoryPendingDeleteName) }}
             </template>
             <template #footer>
                 <SecondaryButton @click="categoryPendingDelete = null">{{ lang.categories?.cancel }}</SecondaryButton>

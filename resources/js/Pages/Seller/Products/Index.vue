@@ -1,5 +1,5 @@
 <script setup>
-import { computed, ref } from 'vue';
+import { computed, ref, watch } from 'vue';
 import { Link, router, usePage } from '@inertiajs/vue3';
 import SellerLayout from '@/Layouts/SellerLayout.vue';
 import Pagination from '@/Components/Pagination.vue';
@@ -29,9 +29,13 @@ const toggleLowStock = () => {
 const { isProcessing: isDeleting, run } = useAsyncActionGroup();
 
 const productPendingDelete = ref(null);
+const productPendingDeleteName = ref('');
 const confirmDeleteProduct = (product) => {
     productPendingDelete.value = product;
 };
+watch(productPendingDelete, (product) => {
+    if (product) productPendingDeleteName.value = product.name;
+});
 
 const deleteProduct = () => {
     const product = productPendingDelete.value;
@@ -131,7 +135,7 @@ const deleteProduct = () => {
         <ConfirmationModal :show="productPendingDelete !== null" @close="productPendingDelete = null">
             <template #title>{{ lang.products?.action_delete }}</template>
             <template #content>
-                {{ (lang.products?.delete_confirm || 'Are you sure you want to delete ":name"?').replace(':name', productPendingDelete?.name) }}
+                {{ (lang.products?.delete_confirm || 'Are you sure you want to delete ":name"?').replace(':name', productPendingDeleteName) }}
             </template>
             <template #footer>
                 <SecondaryButton @click="productPendingDelete = null">{{ lang.products?.cancel }}</SecondaryButton>

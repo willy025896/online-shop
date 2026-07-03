@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Category;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
+use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
 
 class CategoryController extends Controller
@@ -66,7 +67,9 @@ class CategoryController extends Controller
     public function destroy(Category $category)
     {
         if ($category->children()->count() > 0) {
-            return back()->withErrors(['category' => 'Cannot delete category with subcategories.']);
+            throw ValidationException::withMessages([
+                'category' => 'Cannot delete category with subcategories.',
+            ]);
         }
 
         $category->delete();

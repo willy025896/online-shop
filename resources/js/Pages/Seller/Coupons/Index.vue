@@ -1,5 +1,5 @@
 <script setup>
-import { computed, ref } from 'vue';
+import { computed, ref, watch } from 'vue';
 import { Link, router, usePage } from '@inertiajs/vue3';
 import SellerLayout from '@/Layouts/SellerLayout.vue';
 import Pagination from '@/Components/Pagination.vue';
@@ -25,9 +25,13 @@ const usageText = (coupon) =>
 const { isProcessing: isDeleting, run } = useAsyncActionGroup();
 
 const couponPendingDelete = ref(null);
+const couponPendingDeleteCode = ref('');
 const confirmDeleteCoupon = (coupon) => {
     couponPendingDelete.value = coupon;
 };
+watch(couponPendingDelete, (coupon) => {
+    if (coupon) couponPendingDeleteCode.value = coupon.code;
+});
 
 const deleteCoupon = () => {
     const coupon = couponPendingDelete.value;
@@ -94,7 +98,7 @@ const deleteCoupon = () => {
         <ConfirmationModal :show="couponPendingDelete !== null" @close="couponPendingDelete = null">
             <template #title>{{ c.action_delete }}</template>
             <template #content>
-                {{ (c.delete_confirm || 'Delete ":code"?').replace(':code', couponPendingDelete?.code) }}
+                {{ (c.delete_confirm || 'Delete ":code"?').replace(':code', couponPendingDeleteCode) }}
             </template>
             <template #footer>
                 <SecondaryButton @click="couponPendingDelete = null">{{ c.cancel }}</SecondaryButton>
