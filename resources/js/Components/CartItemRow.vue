@@ -4,6 +4,7 @@ import { router } from '@inertiajs/vue3';
 import Spinner from '@/Components/Spinner.vue';
 import ImageWithFallback from '@/Components/ImageWithFallback.vue';
 import { useAsyncAction } from '@/Composables/useAsyncAction';
+import { useToast } from '@/Composables/useToast';
 
 const props = defineProps({
     item: Object,
@@ -13,6 +14,7 @@ const props = defineProps({
 const emit = defineEmits(['toggle']);
 
 const quantity = ref(props.item.quantity);
+const toast = useToast();
 const { processing: updatingQuantity, run: runUpdate } = useAsyncAction();
 const { processing: removing, run: runRemove } = useAsyncAction();
 
@@ -25,6 +27,7 @@ const updateQuantity = () => {
         quantity: quantity.value,
     }, {
         preserveScroll: true,
+        onError: (errors) => toast.error(errors.quantity),
         onFinish: finish,
     }));
 };

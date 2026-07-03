@@ -3,6 +3,7 @@ import { computed } from 'vue';
 import { router, Link, usePage } from '@inertiajs/vue3';
 import Spinner from '@/Components/Spinner.vue';
 import { useAsyncAction } from '@/Composables/useAsyncAction';
+import { useToast } from '@/Composables/useToast';
 
 const props = defineProps({
     productId: {
@@ -22,6 +23,7 @@ const isFavorited = computed(() =>
 );
 
 const { processing, run } = useAsyncAction();
+const toast = useToast();
 
 const toggle = (e) => {
     e.preventDefault();
@@ -33,6 +35,7 @@ const toggle = (e) => {
         {
             preserveScroll: true,
             only: ['wishlistProductIds', 'flash'],
+            onError: (errors) => toast.error(errors.product_id),
             onFinish: finish,
         }
     ));

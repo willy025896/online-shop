@@ -12,6 +12,7 @@ import LowStockAlert from '@/Components/Dashboard/LowStockAlert.vue';
 import WidgetSettings from '@/Components/Dashboard/WidgetSettings.vue';
 import RevenueLineChart from '@/Components/Charts/RevenueLineChart.vue';
 import Skeleton from '@/Components/Skeleton.vue';
+import { useToast } from '@/Composables/useToast';
 
 const props = defineProps({
     shop: Object,
@@ -28,6 +29,7 @@ const props = defineProps({
 const page = usePage();
 const lang = computed(() => page.props.lang || {});
 const isLoading = ref(false);
+const toast = useToast();
 
 const localWidgets = ref({ ...props.widgets });
 
@@ -45,10 +47,17 @@ const setPeriod = (p) => {
 };
 
 const savePreferences = (updated) => {
+    const previous = { ...localWidgets.value };
     localWidgets.value = updated;
     router.patch(route('seller.preferences.update'), {
         dashboard_widgets: updated,
-    }, { preserveScroll: true });
+    }, {
+        preserveScroll: true,
+        onError: (errors) => {
+            localWidgets.value = previous;
+            toast.error(errors.dashboard_widgets);
+        },
+    });
 };
 
 const formatCurrency = (v) => `$${Number(v ?? 0).toFixed(2)}`;

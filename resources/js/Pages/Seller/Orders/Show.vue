@@ -12,6 +12,7 @@ import Spinner from '@/Components/Spinner.vue';
 import { Link } from '@inertiajs/vue3';
 import { useReviewCountdown } from '@/Composables/useReviewCountdown';
 import { useAsyncAction } from '@/Composables/useAsyncAction';
+import { useToast } from '@/Composables/useToast';
 
 const props = defineProps({
     order: Object,
@@ -32,9 +33,12 @@ const isCancelled = computed(() => props.order.status === 'cancelled');
 const requestPending = computed(() => cancellation.value?.status === 'requested');
 const canSellerCancel = computed(() => props.canSellerCancel);
 
+const toast = useToast();
+
 const { processing: updatingStatus, run: runUpdateStatus } = useAsyncAction();
 const updateStatus = (status) => {
     runUpdateStatus((finish) => router.patch(route('seller.orders.status', props.order.id), { status }, {
+        onError: (errors) => toast.error(errors.status),
         onFinish: finish,
     }));
 };

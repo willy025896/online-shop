@@ -5,6 +5,7 @@ import AppLayout from '@/Layouts/AppLayout.vue';
 import Spinner from '@/Components/Spinner.vue';
 import ImageWithFallback from '@/Components/ImageWithFallback.vue';
 import { useAsyncActionGroup } from '@/Composables/useAsyncAction';
+import { useToast } from '@/Composables/useToast';
 
 const props = defineProps({
     products: Array,
@@ -13,6 +14,7 @@ const props = defineProps({
 const page = usePage();
 const lang = computed(() => page.props.lang || {});
 
+const toast = useToast();
 const { isProcessing: isRemoving, run: runRemove } = useAsyncActionGroup();
 const { isProcessing: isAdding, run: runAdd } = useAsyncActionGroup();
 
@@ -27,7 +29,11 @@ const addToCart = (productId) => {
     runAdd(productId, (finish) => router.post(
         route('cart.store'),
         { product_id: productId, quantity: 1 },
-        { preserveScroll: true, onFinish: finish }
+        {
+            preserveScroll: true,
+            onError: (errors) => toast.error(errors.product),
+            onFinish: finish,
+        }
     ));
 };
 </script>

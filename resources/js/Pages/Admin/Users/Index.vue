@@ -6,6 +6,7 @@ import Pagination from '@/Components/Pagination.vue';
 import Spinner from '@/Components/Spinner.vue';
 import TableSkeletonRows from '@/Components/TableSkeletonRows.vue';
 import { useAsyncActionGroup } from '@/Composables/useAsyncAction';
+import { useToast } from '@/Composables/useToast';
 
 const props = defineProps({
     users: Object,
@@ -15,11 +16,13 @@ const page = usePage();
 const lang = computed(() => page.props.lang || {});
 const isLoading = ref(false);
 const skeletonRows = computed(() => props.users.data.length || props.users.per_page || 5);
+const toast = useToast();
 
 const { isProcessing: isUpdating, run } = useAsyncActionGroup();
 
 const updateRole = (user, role) => {
     run(user.id, (finish) => router.patch(route('admin.users.role', user.id), { role }, {
+        onError: (errors) => toast.error(errors.role),
         onFinish: finish,
     }));
 };

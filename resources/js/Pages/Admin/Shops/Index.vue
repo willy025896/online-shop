@@ -6,6 +6,7 @@ import Pagination from '@/Components/Pagination.vue';
 import RowActions from '@/Components/RowActions.vue';
 import TableSkeletonRows from '@/Components/TableSkeletonRows.vue';
 import { useAsyncActionGroup } from '@/Composables/useAsyncAction';
+import { useToast } from '@/Composables/useToast';
 
 const props = defineProps({
     shops: Object,
@@ -15,11 +16,13 @@ const page = usePage();
 const lang = computed(() => page.props.lang || {});
 const isLoading = ref(false);
 const skeletonRows = computed(() => props.shops.data.length || props.shops.per_page || 5);
+const toast = useToast();
 
 const { isProcessing: isUpdating, run } = useAsyncActionGroup();
 
 const updateStatus = (shop, status) => {
     run(shop.id, (finish) => router.patch(route('admin.shops.status', shop.id), { status }, {
+        onError: (errors) => toast.error(errors.status),
         onFinish: finish,
     }));
 };
