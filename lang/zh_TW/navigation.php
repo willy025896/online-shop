@@ -35,4 +35,6 @@ return [
     'admin_categories' => '分類管理',
     'admin_products' => '商品管理',
     'admin_orders' => '訂單管理',
+    'admin_coupons' => '平台折扣碼',
+    'admin_audit_logs' => '操作稽核紀錄',
 ];

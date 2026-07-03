@@ -5,12 +5,15 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Shop;
 use App\Notifications\ShopStatusChangedNotification;
+use App\Services\AdminAuditLogger;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 
 class ShopController extends Controller
 {
+    public function __construct(private AdminAuditLogger $auditLogger) {}
+
     public function index()
     {
         $shops = Shop::with('user')
@@ -36,6 +39,11 @@ class ShopController extends Controller
         ]);
 
         if ($previousStatus !== $shop->status) {
+            $this->auditLogger->log($request->user(), 'shop.status_updated', $shop, [
+                'from' => $previousStatus,
+                'to' => $shop->status,
+            ]);
+
             $shop->loadMissing('user');
             $shop->user?->notify(new ShopStatusChangedNotification($shop));
         }

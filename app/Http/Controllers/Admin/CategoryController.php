@@ -4,13 +4,17 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Category;
+use App\Services\AdminAuditLogger;
 use Illuminate\Http\Request;
+use Illuminate\Support\Arr;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
 
 class CategoryController extends Controller
 {
+    public function __construct(private AdminAuditLogger $auditLogger) {}
+
     public function index()
     {
         $categories = Category::with('children', 'parent')
@@ -41,7 +45,11 @@ class CategoryController extends Controller
             $validated['slug'] .= '-'.Str::random(4);
         }
 
-        Category::create($validated);
+        $category = Category::create($validated);
+
+        $this->auditLogger->log($request->user(), 'category.created', $category, [
+            'name' => $category->name,
+        ]);
 
         return back()->with('success', 'Category created.');
     }
@@ -61,10 +69,12 @@ class CategoryController extends Controller
 
         $category->update($validated);
 
+        $this->auditLogger->log($request->user(), 'category.updated', $category, Arr::except($category->getChanges(), 'updated_at'));
+
         return back()->with('success', 'Category updated.');
     }
 
-    public function destroy(Category $category)
+    public function destroy(Request $request, Category $category)
     {
         if ($category->children()->count() > 0) {
             throw ValidationException::withMessages([
@@ -72,7 +82,12 @@ class CategoryController extends Controller
             ]);
         }
 
+        $name = $category->name;
         $category->delete();
+
+        $this->auditLogger->log($request->user(), 'category.deleted', $category, [
+            'name' => $name,
+        ]);
 
         return back()->with('success', 'Category deleted.');
     }

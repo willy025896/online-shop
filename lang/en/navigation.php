@@ -35,4 +35,6 @@ return [
     'admin_categories' => 'Categories',
     'admin_products' => 'Products',
     'admin_orders' => 'Orders',
+    'admin_coupons' => 'Coupons',
+    'admin_audit_logs' => 'Audit Logs',
 ];

@@ -93,6 +93,9 @@ Route::middleware([
 ])->prefix('seller')->name('seller.')->group(function () {
     Route::get('/dashboard', [App\Http\Controllers\Seller\DashboardController::class, 'index'])->name('dashboard');
 
+    Route::get('/products/export', [App\Http\Controllers\Seller\ProductController::class, 'export'])->name('products.export');
+    Route::get('/products/import', [App\Http\Controllers\Seller\ProductController::class, 'importForm'])->name('products.import.form');
+    Route::post('/products/import', [App\Http\Controllers\Seller\ProductController::class, 'import'])->name('products.import');
     Route::resource('products', App\Http\Controllers\Seller\ProductController::class)->except(['show']);
     Route::post('/products/{product}/images', [App\Http\Controllers\Seller\ProductImageController::class, 'store'])->name('products.images.store');
     Route::delete('/products/images/{image}', [App\Http\Controllers\Seller\ProductImageController::class, 'destroy'])->name('products.images.destroy');
@@ -157,4 +160,9 @@ Route::middleware([
     Route::get('/orders', [App\Http\Controllers\Admin\OrderController::class, 'index'])->name('orders.index');
     Route::get('/orders/{order}', [App\Http\Controllers\Admin\OrderController::class, 'show'])->name('orders.show');
     Route::get('/products', [App\Http\Controllers\Admin\ProductController::class, 'index'])->name('products.index');
+
+    // Platform-wide coupons (shop_id null)
+    Route::resource('coupons', App\Http\Controllers\Admin\CouponController::class)->except(['show']);
+
+    Route::get('/audit-logs', [App\Http\Controllers\Admin\AuditLogController::class, 'index'])->name('audit-logs.index');
 });

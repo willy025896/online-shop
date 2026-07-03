@@ -82,6 +82,17 @@ return [
         'action_delete' => '刪除',
         'cancel' => '取消',
         'confirm' => '確認',
+        'export' => '匯出 CSV',
+        'import' => '匯入 CSV',
+        'import_title' => '匯入商品',
+        'import_file' => 'CSV 檔案',
+        'import_submit' => '匯入',
+        'import_result' => '匯入結果',
+        'created' => '新增',
+        'updated' => '更新',
+        'failed' => '失敗',
+        'row' => '列',
+        'reason' => '原因',
     ],
 
     'coupons' => [

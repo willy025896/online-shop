@@ -82,6 +82,17 @@ return [
         'action_delete' => 'Delete',
         'cancel' => 'Cancel',
         'confirm' => 'Confirm',
+        'export' => 'Export CSV',
+        'import' => 'Import CSV',
+        'import_title' => 'Import Products',
+        'import_file' => 'CSV File',
+        'import_submit' => 'Import',
+        'import_result' => 'Import Result',
+        'created' => 'Created',
+        'updated' => 'Updated',
+        'failed' => 'Failed',
+        'row' => 'Row',
+        'reason' => 'Reason',
     ],
 
     'coupons' => [

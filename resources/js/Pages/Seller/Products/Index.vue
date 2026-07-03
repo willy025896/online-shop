@@ -62,6 +62,12 @@ const {
                     >
                         {{ lang.products?.low_stock_filter }}
                     </button>
+                    <a :href="route('seller.products.export')" class="inline-flex items-center px-3 py-2 text-sm font-medium rounded-md border bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700">
+                        {{ lang.products?.export }}
+                    </a>
+                    <Link :href="route('seller.products.import.form')" class="inline-flex items-center px-3 py-2 text-sm font-medium rounded-md border bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700">
+                        {{ lang.products?.import }}
+                    </Link>
                     <Link :href="route('seller.products.create')" class="inline-flex items-center px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-md hover:bg-indigo-700">
                         {{ lang.products?.add }}
                     </Link>
