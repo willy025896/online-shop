@@ -43,7 +43,7 @@ const addToCart = () => {
     <AppLayout :title="product.name">
         <div class="max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
             <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                <ProductImageGallery :images="product.images" />
+                <ProductImageGallery :images="product.images" :product-name="product.name" />
 
                 <div>
                     <Link v-if="product.category" :href="route('categories.show', product.category.slug)" class="text-sm text-indigo-600 hover:text-indigo-800">

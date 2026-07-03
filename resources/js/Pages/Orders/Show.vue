@@ -134,7 +134,7 @@ const askSeller = (orderId) => {
                     <div class="divide-y divide-gray-200 dark:divide-gray-700">
                         <div v-for="item in order.items" :key="item.id" class="flex items-center gap-4 py-3">
                             <div class="h-16 w-16 bg-gray-200 dark:bg-gray-700 rounded-md overflow-hidden flex-shrink-0">
-                                <img v-if="item.product_image" :src="`/storage/${item.product_image}`" class="w-full h-full object-cover" />
+                                <img v-if="item.product_image" :src="`/storage/${item.product_image}`" :alt="item.product_name" class="w-full h-full object-cover" />
                             </div>
                             <div class="flex-1">
                                 <p class="text-sm font-medium text-gray-900 dark:text-gray-100">{{ item.product_name }}</p>

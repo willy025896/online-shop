@@ -59,6 +59,7 @@ function submit(entry) {
                                 <img
                                     v-if="entry.item.product?.primary_image"
                                     :src="`/storage/${entry.item.product.primary_image.path}`"
+                                    :alt="entry.item.product_name"
                                     class="w-full h-full object-cover"
                                 />
                             </div>
