@@ -125,6 +125,14 @@ Status strings and role values are defined as public constants on their respecti
 
 Usage: `Shop::STATUS_APPROVED`, `User::ROLE_SELLER`, etc.
 
+### Loading States (Skeleton)
+
+All list/dashboard pages that do an Inertia partial reload (filter change, pagination, period switch) show a skeleton placeholder instead of a blank/frozen screen during the request. Shared components: `Skeleton.vue` (base pulsing block), `ProductCardSkeleton.vue`, `StatCardSkeleton.vue`, `TableSkeletonRows.vue` (row count driven by the actual per-page item count, not a hard-coded number).
+
+Key design point — **per-request `onStart`/`onFinish`, never a global listener**: each page tracks its own `isLoading` ref, toggled by the `onStart`/`onFinish` callbacks of the specific `router.get(...)` call (or `@start`/`@finish` on `<Pagination>` / `<Link>`) that triggers that page's reload. An earlier version used a global `router.on('start'/'finish', ...)` listener, which fired on *any* Inertia request on the page — including unrelated ones like toggling a wishlist heart, marking a notification read, or saving a dashboard widget preference — incorrectly replacing the whole page with skeletons. When adding skeleton loading to a new list page, always scope the loading flag to that page's own reload trigger.
+
+All skeleton components carry `aria-hidden="true"` (or `role="status" aria-busy="true"` on the wrapping container) so screen readers don't announce placeholder content.
+
 ### Wishlist (收藏 / 願望清單)
 
 `WishlistService` (`app/Services/WishlistService.php`) is the single entry point for wishlist mutations. All operations are scoped to `Auth::id()`.
