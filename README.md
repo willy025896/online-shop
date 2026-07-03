@@ -150,7 +150,6 @@ online-shop/
 ## TODO
 
 - [ ] **Skeleton loading 推廣** - 已套用於 `Products/Index`、`Seller/Dashboard`、`Seller/Orders/Index`、`Shop/Show`、`Admin/Dashboard`；其餘清單頁尚未套用：`Seller/Products`、`Seller/Coupons`、`Admin/Shops`、`Admin/Categories`、`Admin/Users`、`Admin/Products`、`Admin/Orders`
-- [ ] **聊天圖片 lazy load** - `Messages/ConversationList`、`Messages/MessageBubble` 的圖片列表尚未評估是否需要 `loading="lazy"`
 
 ## License
 

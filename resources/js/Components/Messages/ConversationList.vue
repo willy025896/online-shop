@@ -50,6 +50,7 @@ const formatTime = (iso) => {
             <img
                 :src="conv.other_user.profile_photo_url"
                 :alt="conv.other_user.name"
+                loading="lazy"
                 class="w-12 h-12 rounded-full object-cover flex-shrink-0"
             />
             <div class="min-w-0 flex-1">

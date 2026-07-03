@@ -22,6 +22,7 @@ const time = computed(() => {
         <img
             :src="message.sender.profile_photo_url"
             :alt="message.sender.name"
+            loading="lazy"
             class="w-8 h-8 rounded-full object-cover flex-shrink-0"
         />
         <div :class="['max-w-[70%] flex flex-col', isSelf ? 'items-end' : 'items-start']">
@@ -38,6 +39,7 @@ const time = computed(() => {
                     :src="`/storage/${message.image_path}`"
                     :alt="lang.image_label || 'Image'"
                     icon-class="h-8 w-8"
+                    loading="lazy"
                     class="rounded-lg max-w-full max-h-64 object-cover mb-1"
                     @click.stop
                 />
