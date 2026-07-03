@@ -52,7 +52,8 @@ const deleteImage = (imageId) => {
                 <ImageWithFallback :src="`/storage/${image.path}`" :alt="`${product?.name} ${index + 1}`" icon-class="h-8 w-8" class="w-full h-full object-cover" />
                 <button
                     @click="deleteImage(image.id)"
-                    class="absolute top-1 right-1 bg-red-500 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition"
+                    aria-label="Delete image"
+                    class="absolute top-1 right-1 bg-red-500 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 focus:opacity-100 focus-visible:opacity-100 transition"
                 >
                     <svg class="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />

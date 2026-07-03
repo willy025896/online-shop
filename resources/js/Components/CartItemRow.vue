@@ -75,7 +75,12 @@ const removeItem = () => {
         <div class="text-sm font-medium text-gray-900 dark:text-gray-100 w-20 text-right">
             ${{ (item.quantity * item.unit_price).toFixed(2) }}
         </div>
-        <button @click="removeItem" :disabled="removing" class="text-gray-400 hover:text-red-500 disabled:opacity-50">
+        <button
+            @click="removeItem"
+            :disabled="removing"
+            aria-label="Remove item"
+            class="text-gray-400 hover:text-red-500 disabled:opacity-50"
+        >
             <Spinner v-if="removing" class="h-5 w-5" />
             <svg v-else class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
