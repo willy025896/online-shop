@@ -2,6 +2,7 @@
 import { ref } from 'vue';
 import { router } from '@inertiajs/vue3';
 import { useToast } from '@/Composables/useToast';
+import ImageWithFallback from '@/Components/ImageWithFallback.vue';
 
 const props = defineProps({
     product: Object,
@@ -48,7 +49,7 @@ const deleteImage = (imageId) => {
     <div>
         <div class="grid grid-cols-5 gap-3 mb-4">
             <div v-for="(image, index) in images" :key="image.id" class="relative aspect-square rounded-lg overflow-hidden group">
-                <img :src="`/storage/${image.path}`" :alt="`${product?.name} ${index + 1}`" class="w-full h-full object-cover" />
+                <ImageWithFallback :src="`/storage/${image.path}`" :alt="`${product?.name} ${index + 1}`" icon-class="h-8 w-8" class="w-full h-full object-cover" />
                 <button
                     @click="deleteImage(image.id)"
                     class="absolute top-1 right-1 bg-red-500 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition"

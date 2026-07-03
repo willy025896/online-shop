@@ -3,6 +3,7 @@ import { computed } from 'vue';
 import { Link, usePage } from '@inertiajs/vue3';
 import AppLayout from '@/Layouts/AppLayout.vue';
 import Pagination from '@/Components/Pagination.vue';
+import ImageWithFallback from '@/Components/ImageWithFallback.vue';
 
 defineProps({
     shops: Object,
@@ -26,10 +27,11 @@ const lang = computed(() => page.props.lang || {});
                 >
                     <div class="flex items-center gap-4">
                         <div class="h-16 w-16 rounded-full bg-gray-200 dark:bg-gray-700 overflow-hidden flex-shrink-0">
-                            <img v-if="shop.logo_path" :src="`/storage/${shop.logo_path}`" :alt="shop.name" loading="lazy" class="w-full h-full object-cover" />
-                            <div v-else class="w-full h-full flex items-center justify-center text-2xl font-bold text-gray-400">
-                                {{ shop.name[0] }}
-                            </div>
+                            <ImageWithFallback :src="shop.logo_path ? `/storage/${shop.logo_path}` : null" :alt="shop.name" loading="lazy" class="w-full h-full object-cover">
+                                <div class="w-full h-full flex items-center justify-center text-2xl font-bold text-gray-400">
+                                    {{ shop.name[0] }}
+                                </div>
+                            </ImageWithFallback>
                         </div>
                         <div>
                             <h3 class="font-medium text-gray-900 dark:text-gray-100">{{ shop.name }}</h3>

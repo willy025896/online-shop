@@ -1,6 +1,7 @@
 <script setup>
 import { computed } from 'vue';
 import { usePage } from '@inertiajs/vue3';
+import ImageWithFallback from '@/Components/ImageWithFallback.vue';
 
 const props = defineProps({
     message: Object,
@@ -32,10 +33,11 @@ const time = computed(() => {
                         : 'bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-gray-100 rounded-bl-sm',
                 ]"
             >
-                <img
+                <ImageWithFallback
                     v-if="message.image_path"
                     :src="`/storage/${message.image_path}`"
                     :alt="lang.image_label || 'Image'"
+                    icon-class="h-8 w-8"
                     class="rounded-lg max-w-full max-h-64 object-cover mb-1"
                     @click.stop
                 />

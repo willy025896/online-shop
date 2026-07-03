@@ -4,6 +4,7 @@ import { useForm, usePage } from '@inertiajs/vue3'
 import AppLayout from '@/Layouts/AppLayout.vue'
 import StarRating from '@/Components/StarRating.vue'
 import InputError from '@/Components/InputError.vue'
+import ImageWithFallback from '@/Components/ImageWithFallback.vue'
 
 const props = defineProps({
     order: Object,
@@ -56,10 +57,10 @@ function submit(entry) {
                         <!-- Product info -->
                         <div class="flex items-center gap-3 mb-4">
                             <div class="w-14 h-14 bg-gray-100 dark:bg-gray-700 rounded-md overflow-hidden flex-shrink-0">
-                                <img
-                                    v-if="entry.item.product?.primary_image"
-                                    :src="`/storage/${entry.item.product.primary_image.path}`"
+                                <ImageWithFallback
+                                    :src="entry.item.product?.primary_image ? `/storage/${entry.item.product.primary_image.path}` : null"
                                     :alt="entry.item.product_name"
+                                    icon-class="h-6 w-6"
                                     class="w-full h-full object-cover"
                                 />
                             </div>

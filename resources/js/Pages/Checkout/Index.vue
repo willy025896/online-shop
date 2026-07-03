@@ -4,6 +4,7 @@ import { useForm, usePage } from '@inertiajs/vue3';
 import AppLayout from '@/Layouts/AppLayout.vue';
 import CartSummary from '@/Components/CartSummary.vue';
 import Spinner from '@/Components/Spinner.vue';
+import ImageWithFallback from '@/Components/ImageWithFallback.vue';
 import { useAsyncActionGroup } from '@/Composables/useAsyncAction';
 
 const props = defineProps({
@@ -135,7 +136,7 @@ const submit = () => {
                             <div class="divide-y divide-gray-200 dark:divide-gray-700">
                                 <div v-for="item in cart.items" :key="item.id" class="flex items-center gap-4 py-3">
                                     <div class="h-16 w-16 bg-gray-200 dark:bg-gray-700 rounded-md overflow-hidden flex-shrink-0">
-                                        <img v-if="item.product?.primary_image" :src="`/storage/${item.product.primary_image.path}`" :alt="item.product?.name" loading="lazy" class="w-full h-full object-cover" />
+                                        <ImageWithFallback :src="item.product?.primary_image ? `/storage/${item.product.primary_image.path}` : null" :alt="item.product?.name" icon-class="h-6 w-6" loading="lazy" class="w-full h-full object-cover" />
                                     </div>
                                     <div class="flex-1">
                                         <p class="text-sm font-medium text-gray-900 dark:text-gray-100">{{ item.product?.name }}</p>

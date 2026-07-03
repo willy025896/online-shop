@@ -3,6 +3,7 @@ import { computed } from 'vue';
 import { usePage } from '@inertiajs/vue3';
 import AppLayout from '@/Layouts/AppLayout.vue';
 import ProductCard from '@/Components/ProductCard.vue';
+import ImageWithFallback from '@/Components/ImageWithFallback.vue';
 import Pagination from '@/Components/Pagination.vue';
 import StarRating from '@/Components/StarRating.vue';
 import { router } from '@inertiajs/vue3';
@@ -63,10 +64,11 @@ watch([selectedCategory, sort], applyFilters);
             <!-- Shop header -->
             <div class="flex items-center gap-6 mb-8">
                 <div class="h-20 w-20 rounded-full bg-gray-200 dark:bg-gray-700 overflow-hidden flex-shrink-0">
-                    <img v-if="shop.logo_path" :src="`/storage/${shop.logo_path}`" :alt="shop.name" class="w-full h-full object-cover" />
-                    <div v-else class="w-full h-full flex items-center justify-center text-3xl font-bold text-gray-400">
-                        {{ shop.name[0] }}
-                    </div>
+                    <ImageWithFallback :src="shop.logo_path ? `/storage/${shop.logo_path}` : null" :alt="shop.name" class="w-full h-full object-cover">
+                        <div class="w-full h-full flex items-center justify-center text-3xl font-bold text-gray-400">
+                            {{ shop.name[0] }}
+                        </div>
+                    </ImageWithFallback>
                 </div>
                 <div>
                     <h1 class="text-2xl font-bold text-gray-900 dark:text-gray-100">{{ shop.name }}</h1>
