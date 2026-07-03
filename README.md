@@ -153,12 +153,6 @@ online-shop/
 
 詳細實作細節（服務層設計、資料表結構、ADR 決策）請見 `CLAUDE.md`。
 
-## TODO
-
-- [ ] **空狀態不一致** - `Admin/Users/Index.vue`、`Admin/Shops/Index.vue` 資料為 0 筆時沒有空狀態分支，只剩空表頭；其餘清單頁多半只有純文字，缺圖示／CTA（`Cart/Index.vue`、`Wishlist/Index.vue` 是完整範例）
-- [ ] **手機版聊天室無法返回列表** - `Messages/Show.vue` 用 `hidden md:block` 隱藏對話清單，但 `MessageThread.vue` 標頭沒有返回按鈕
-- [ ] **icon-only 按鈕缺 `aria-label`** - 通知鈴鐺、購物車刪除、圖片上傳刪除鍵（且僅 hover 顯示，觸控裝置難按）、訊息送出／移除圖片、`WidgetSettings.vue` 齒輪 FAB（該按鈕還缺可見 focus 樣式）
-
 ## License
 
 MIT
