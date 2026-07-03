@@ -21,4 +21,5 @@ return [
     'max_price' => '最高',
     'apply' => '套用',
     'clear' => '清除',
+    'loading' => '載入中…',
 ];

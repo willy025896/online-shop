@@ -7,6 +7,8 @@ const props = defineProps({
     message: Object,
 });
 
+defineEmits(['image-loaded']);
+
 const page = usePage();
 const lang = computed(() => page.props.lang || {});
 const isSelf = computed(() => props.message.sender_id === page.props.auth.user.id);
@@ -42,6 +44,7 @@ const time = computed(() => {
                     loading="lazy"
                     class="rounded-lg max-w-full max-h-64 object-cover mb-1"
                     @click.stop
+                    @load="$emit('image-loaded')"
                 />
                 <p v-if="message.body" class="whitespace-pre-wrap text-sm">{{ message.body }}</p>
             </div>

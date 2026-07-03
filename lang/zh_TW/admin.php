@@ -25,6 +25,7 @@ return [
     'shop_name' => '店鋪',
     'orders_col' => '訂單數',
     'revenue_col' => '營收',
+    'loading' => '載入中…',
 
     'users' => [
         'title' => '使用者管理',

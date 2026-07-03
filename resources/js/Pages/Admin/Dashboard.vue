@@ -8,6 +8,7 @@ import OrderStatusGrid from '@/Components/Dashboard/OrderStatusGrid.vue';
 import PeriodTabs from '@/Components/Dashboard/PeriodTabs.vue';
 import RevenueLineChart from '@/Components/Charts/RevenueLineChart.vue';
 import Skeleton from '@/Components/Skeleton.vue';
+import TableSkeletonRows from '@/Components/TableSkeletonRows.vue';
 
 defineProps({
     period: String,
@@ -56,7 +57,7 @@ const formatCurrency = (v) => `$${Number(v ?? 0).toFixed(2)}`;
         </div>
 
         <div v-if="isLoading" role="status" aria-busy="true" class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-            <span class="sr-only">載入中…</span>
+            <span class="sr-only">{{ lang.loading }}</span>
             <StatCardSkeleton with-growth />
             <StatCardSkeleton />
         </div>
@@ -73,14 +74,20 @@ const formatCurrency = (v) => `$${Number(v ?? 0).toFixed(2)}`;
         <!-- Chart + status grid -->
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
             <div class="lg:col-span-2">
-                <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-5">
+                <div class="relative bg-white dark:bg-gray-800 rounded-lg shadow-sm p-5">
                     <p class="text-sm font-semibold text-gray-700 dark:text-gray-200 mb-3">{{ lang.sales_trend }}</p>
-                    <Skeleton v-if="isLoading" role="status" aria-busy="true" aria-label="載入中" height="16rem" rounded="rounded-md" />
-                    <RevenueLineChart v-else :data="chartData" :label="lang.revenue" />
+                    <div v-if="isLoading" role="status" aria-busy="true" class="absolute inset-0 rounded-lg overflow-hidden bg-white dark:bg-gray-800">
+                        <span class="sr-only">{{ lang.loading }}</span>
+                        <Skeleton height="100%" width="100%" rounded="rounded-lg" />
+                    </div>
+                    <RevenueLineChart :data="chartData" :label="lang.revenue" />
                 </div>
             </div>
             <div>
-                <Skeleton v-if="isLoading" role="status" aria-busy="true" aria-label="載入中" height="12rem" rounded="rounded-lg" />
+                <div v-if="isLoading" role="status" aria-busy="true">
+                    <span class="sr-only">{{ lang.loading }}</span>
+                    <Skeleton height="12rem" rounded="rounded-lg" />
+                </div>
                 <OrderStatusGrid v-else :counts="stats.order_counts" :lang="lang" />
             </div>
         </div>
@@ -88,7 +95,15 @@ const formatCurrency = (v) => `$${Number(v ?? 0).toFixed(2)}`;
         <!-- Top shops -->
         <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-5">
             <p class="text-sm font-semibold text-gray-700 dark:text-gray-200 mb-3">{{ lang.top_shops }}</p>
-            <div v-if="topShops.length === 0" class="text-sm text-gray-500 dark:text-gray-400 py-4 text-center">
+            <div v-if="isLoading" role="status" aria-busy="true">
+                <span class="sr-only">{{ lang.loading }}</span>
+                <table class="w-full text-sm">
+                    <tbody class="divide-y divide-gray-50 dark:divide-gray-700">
+                        <TableSkeletonRows :columns="4" :rows="5" />
+                    </tbody>
+                </table>
+            </div>
+            <div v-else-if="topShops.length === 0" class="text-sm text-gray-500 dark:text-gray-400 py-4 text-center">
                 {{ lang.top_shops_empty }}
             </div>
             <table v-else class="w-full text-sm">

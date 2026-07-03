@@ -20,6 +20,16 @@ const scrollToBottom = () => {
     });
 };
 
+const isNearBottom = () => {
+    if (!scrollContainer.value) return true;
+    const { scrollTop, scrollHeight, clientHeight } = scrollContainer.value;
+    return scrollHeight - (scrollTop + clientHeight) < 100;
+};
+
+const handleImageLoaded = () => {
+    if (isNearBottom()) scrollToBottom();
+};
+
 watch(() => props.conversation.id, () => {
     messages.value = [...props.conversation.messages];
     scrollToBottom();
@@ -89,6 +99,7 @@ onUnmounted(() => {
                 v-for="message in messages"
                 :key="message.id"
                 :message="message"
+                @image-loaded="handleImageLoaded"
             />
         </div>
 

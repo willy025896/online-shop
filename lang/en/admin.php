@@ -25,6 +25,7 @@ return [
     'shop_name' => 'Shop',
     'orders_col' => 'Orders',
     'revenue_col' => 'Revenue',
+    'loading' => 'Loading…',
 
     'users' => [
         'title' => 'Users',

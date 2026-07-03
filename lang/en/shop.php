@@ -21,4 +21,5 @@ return [
     'max_price' => 'Max',
     'apply' => 'Apply',
     'clear' => 'Clear',
+    'loading' => 'Loading…',
 ];

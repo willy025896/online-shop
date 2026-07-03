@@ -27,6 +27,7 @@ const localMinPrice = ref(props.filters?.min_price ?? '');
 const localMaxPrice = ref(props.filters?.max_price ?? '');
 const hasPriceFilter = computed(() => localMinPrice.value || localMaxPrice.value);
 const isLoading = ref(false);
+const skeletonCount = computed(() => props.products.data.length || props.products.per_page || 8);
 
 let searchTimer = null;
 
@@ -173,8 +174,8 @@ watch([selectedCategory, sort], applyFilters);
 
             <!-- Product grid -->
             <div v-if="isLoading" role="status" aria-busy="true" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-                <span class="sr-only">載入中…</span>
-                <ProductCardSkeleton v-for="n in 8" :key="n" />
+                <span class="sr-only">{{ lang.loading }}</span>
+                <ProductCardSkeleton v-for="n in skeletonCount" :key="n" />
             </div>
             <div v-else-if="products.data.length" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
                 <ProductCard v-for="product in products.data" :key="product.id" :product="product" />
