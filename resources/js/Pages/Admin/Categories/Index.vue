@@ -21,7 +21,10 @@ const props = defineProps({
 const page = usePage();
 const lang = computed(() => page.props.lang || {});
 const isLoading = ref(false);
-const skeletonRows = computed(() => props.categories.length || 5);
+const skeletonRows = computed(() => {
+    const total = props.categories.reduce((sum, c) => sum + 1 + (c.children?.length || 0), 0);
+    return total || 5;
+});
 
 const showForm = ref(false);
 const editing = ref(null);
