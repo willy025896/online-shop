@@ -29,28 +29,28 @@ function applyFilters() {
 <template>
     <SellerLayout title="商品評論">
         <template #header>
-            <h2 class="text-xl font-semibold text-gray-800">商品評論</h2>
+            <h2 class="text-xl font-semibold text-gray-800 dark:text-gray-200">商品評論</h2>
         </template>
 
         <div class="max-w-4xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
             <!-- Shop aggregate rating -->
-            <div class="bg-white border border-gray-200 rounded-lg p-5 mb-6 flex items-center gap-6">
+            <div class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-5 mb-6 flex items-center gap-6">
                 <div class="text-center">
-                    <div class="text-4xl font-bold text-gray-900">
+                    <div class="text-4xl font-bold text-gray-900 dark:text-gray-100">
                         {{ shopRating.count > 0 ? shopRating.average.toFixed(1) : '—' }}
                     </div>
                     <StarRating :model-value="Math.round(shopRating.average)" :readonly="true" size="md" />
-                    <div class="text-sm text-gray-500 mt-1">{{ shopRating.count }} 則評論</div>
+                    <div class="text-sm text-gray-500 dark:text-gray-400 mt-1">{{ shopRating.count }} 則評論</div>
                 </div>
-                <div class="h-12 w-px bg-gray-200"></div>
-                <div class="text-sm text-gray-600">賣場整體評分</div>
+                <div class="h-12 w-px bg-gray-200 dark:bg-gray-700"></div>
+                <div class="text-sm text-gray-600 dark:text-gray-400">賣場整體評分</div>
             </div>
 
             <!-- Filters -->
             <div class="flex flex-wrap gap-3 mb-6">
                 <select
                     v-model="filterRating"
-                    class="border border-gray-300 rounded-md text-sm px-3 py-1.5"
+                    class="border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-300 rounded-md text-sm px-3 py-1.5"
                     @change="applyFilters"
                 >
                     <option value="">全部星等</option>
@@ -58,7 +58,7 @@ function applyFilters() {
                 </select>
                 <select
                     v-model="filterReplied"
-                    class="border border-gray-300 rounded-md text-sm px-3 py-1.5"
+                    class="border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-300 rounded-md text-sm px-3 py-1.5"
                     @change="applyFilters"
                 >
                     <option value="">全部</option>
@@ -68,14 +68,14 @@ function applyFilters() {
             </div>
 
             <!-- Reviews list -->
-            <div v-if="reviews.data.length === 0" class="text-center py-12 text-gray-400">
+            <div v-if="reviews.data.length === 0" class="text-center py-12 text-gray-400 dark:text-gray-500">
                 目前沒有符合條件的評論。
             </div>
 
             <div v-else class="space-y-4">
                 <div v-for="review in reviews.data" :key="review.id">
                     <!-- Product name -->
-                    <div class="text-xs text-gray-400 mb-1">{{ review.product?.name }}</div>
+                    <div class="text-xs text-gray-400 dark:text-gray-500 mb-1">{{ review.product?.name }}</div>
                     <ReviewCard
                         :review="review"
                         :show-reply-form="!review.seller_reply"
