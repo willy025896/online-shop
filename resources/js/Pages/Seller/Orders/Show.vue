@@ -197,6 +197,7 @@ const nextStatuses = props.nextStatuses;
                 <div class="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
                     <h3 class="text-lg font-medium text-gray-900 dark:text-gray-100">{{ t.order_items }}</h3>
                 </div>
+                <div class="overflow-x-auto">
                 <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
                     <thead class="bg-gray-50 dark:bg-gray-700">
                         <tr>
@@ -215,6 +216,7 @@ const nextStatuses = props.nextStatuses;
                         </tr>
                     </tbody>
                 </table>
+                </div>
                 <div class="px-6 py-4 border-t border-gray-200 dark:border-gray-700 text-right space-y-1">
                     <p class="text-sm text-gray-500">{{ t.subtotal }}: ${{ Number(order.subtotal).toFixed(2) }}</p>
                     <p v-if="Number(order.discount) > 0" class="text-sm text-green-600">{{ t.discount }}<span v-if="order.coupon_code"> ({{ order.coupon_code }})</span>: -${{ Number(order.discount).toFixed(2) }}</p>
