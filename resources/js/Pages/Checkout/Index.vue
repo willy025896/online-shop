@@ -109,23 +109,23 @@ const submit = () => {
 
                             <div class="space-y-4">
                                 <div>
-                                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{{ lang.name }}</label>
-                                    <input v-model="form.shipping_name" type="text" class="w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700" />
+                                    <label for="shipping_name" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{{ lang.name }}</label>
+                                    <input id="shipping_name" v-model="form.shipping_name" type="text" class="w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700" />
                                     <p v-if="form.errors.shipping_name" class="mt-1 text-sm text-red-500">{{ form.errors.shipping_name }}</p>
                                 </div>
                                 <div>
-                                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{{ lang.phone }}</label>
-                                    <input v-model="form.shipping_phone" type="text" class="w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700" />
+                                    <label for="shipping_phone" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{{ lang.phone }}</label>
+                                    <input id="shipping_phone" v-model="form.shipping_phone" type="text" class="w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700" />
                                     <p v-if="form.errors.shipping_phone" class="mt-1 text-sm text-red-500">{{ form.errors.shipping_phone }}</p>
                                 </div>
                                 <div>
-                                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{{ lang.address }}</label>
-                                    <textarea v-model="form.shipping_address" rows="3" class="w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700"></textarea>
+                                    <label for="shipping_address" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{{ lang.address }}</label>
+                                    <textarea id="shipping_address" v-model="form.shipping_address" rows="3" class="w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700"></textarea>
                                     <p v-if="form.errors.shipping_address" class="mt-1 text-sm text-red-500">{{ form.errors.shipping_address }}</p>
                                 </div>
                                 <div>
-                                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{{ lang.notes_optional }}</label>
-                                    <textarea v-model="form.notes" rows="2" class="w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700"></textarea>
+                                    <label for="notes" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{{ lang.notes_optional }}</label>
+                                    <textarea id="notes" v-model="form.notes" rows="2" class="w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700"></textarea>
                                 </div>
                             </div>
                         </div>
