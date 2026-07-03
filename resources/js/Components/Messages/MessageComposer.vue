@@ -52,6 +52,7 @@ const submit = () => {
             <button
                 type="button"
                 @click="removeImage"
+                aria-label="Remove image"
                 class="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-gray-700 text-white text-xs flex items-center justify-center"
             >×</button>
         </div>
@@ -72,6 +73,7 @@ const submit = () => {
             <button
                 type="submit"
                 :disabled="form.processing || (!form.body.trim() && !form.image)"
+                aria-label="Send message"
                 class="bg-indigo-600 hover:bg-indigo-700 disabled:bg-gray-400 text-white rounded-full p-2 transition"
             >
                 <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
