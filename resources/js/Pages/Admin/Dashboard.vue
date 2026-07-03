@@ -1,11 +1,13 @@
 <script setup>
-import { computed } from 'vue';
+import { computed, ref } from 'vue';
 import { router, usePage } from '@inertiajs/vue3';
 import AdminLayout from '@/Layouts/AdminLayout.vue';
 import StatCard from '@/Components/Dashboard/StatCard.vue';
+import StatCardSkeleton from '@/Components/Dashboard/StatCardSkeleton.vue';
 import OrderStatusGrid from '@/Components/Dashboard/OrderStatusGrid.vue';
 import PeriodTabs from '@/Components/Dashboard/PeriodTabs.vue';
 import RevenueLineChart from '@/Components/Charts/RevenueLineChart.vue';
+import Skeleton from '@/Components/Skeleton.vue';
 
 defineProps({
     period: String,
@@ -16,12 +18,15 @@ defineProps({
 
 const page = usePage();
 const lang = computed(() => page.props.lang || {});
+const isLoading = ref(false);
 
 const setPeriod = (p) => {
     router.get(route('admin.dashboard'), { period: p }, {
         preserveState: true,
         preserveScroll: true,
         only: ['stats', 'chartData', 'topShops', 'period'],
+        onStart: () => { isLoading.value = true; },
+        onFinish: () => { isLoading.value = false; },
     });
 };
 
@@ -50,7 +55,12 @@ const formatCurrency = (v) => `$${Number(v ?? 0).toFixed(2)}`;
             <PeriodTabs :period="period" :lang="lang" @change="setPeriod" />
         </div>
 
-        <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+        <div v-if="isLoading" role="status" aria-busy="true" class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+            <span class="sr-only">載入中…</span>
+            <StatCardSkeleton with-growth />
+            <StatCardSkeleton />
+        </div>
+        <div v-else class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
             <StatCard
                 :label="lang.revenue"
                 :value="formatCurrency(stats.revenue)"
@@ -65,11 +75,13 @@ const formatCurrency = (v) => `$${Number(v ?? 0).toFixed(2)}`;
             <div class="lg:col-span-2">
                 <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-5">
                     <p class="text-sm font-semibold text-gray-700 dark:text-gray-200 mb-3">{{ lang.sales_trend }}</p>
-                    <RevenueLineChart :data="chartData" :label="lang.revenue" />
+                    <Skeleton v-if="isLoading" role="status" aria-busy="true" aria-label="載入中" height="16rem" rounded="rounded-md" />
+                    <RevenueLineChart v-else :data="chartData" :label="lang.revenue" />
                 </div>
             </div>
             <div>
-                <OrderStatusGrid :counts="stats.order_counts" :lang="lang" />
+                <Skeleton v-if="isLoading" role="status" aria-busy="true" aria-label="載入中" height="12rem" rounded="rounded-lg" />
+                <OrderStatusGrid v-else :counts="stats.order_counts" :lang="lang" />
             </div>
         </div>
 
