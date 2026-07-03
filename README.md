@@ -78,7 +78,13 @@ npm run build
 
 ## Testing
 
+Tests use `RefreshDatabase`, which migrates and truncates whatever database `APP_ENV=testing` resolves to. Create a dedicated test database and a `.env.testing` pointing at it — **do not** let tests fall back to your `.env`'s dev database, or every run wipes it.
+
 ```bash
+# One-time setup: create a test DB and copy .env, then point DB_DATABASE at the test DB
+cp .env .env.testing
+# edit .env.testing: set APP_ENV=testing and DB_DATABASE to your test database (e.g. online_shop_test)
+
 # Run all tests
 php artisan test
 
