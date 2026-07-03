@@ -153,10 +153,6 @@ online-shop/
 
 詳細實作細節（服務層設計、資料表結構、ADR 決策）請見 `CLAUDE.md`。
 
-## TODO
-
-- [ ] **Skeleton loading 推廣** - 已套用於 `Products/Index`、`Seller/Dashboard`、`Seller/Orders/Index`、`Shop/Show`、`Admin/Dashboard`；其餘清單頁尚未套用：`Seller/Products`、`Seller/Coupons`、`Admin/Shops`、`Admin/Categories`、`Admin/Users`、`Admin/Products`、`Admin/Orders`
-
 ## License
 
 MIT
