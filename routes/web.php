@@ -10,12 +10,20 @@ use App\Http\Controllers\OrderController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\SearchController;
 use App\Http\Controllers\ShopController;
+use App\Http\Controllers\SitemapController;
 use App\Http\Controllers\WishlistController;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
 // Locale switcher
 Route::post('/locale', [LocaleController::class, 'store'])->name('locale.store');
+
+// SEO
+Route::get('/sitemap.xml', [SitemapController::class, 'index'])->name('sitemap');
+Route::get('/robots.txt', function () {
+    return response("User-agent: *\nAllow: /\n\nSitemap: ".route('sitemap')."\n")
+        ->header('Content-Type', 'text/plain');
+})->name('robots');
 
 // Public routes
 Route::get('/', [ProductController::class, 'index'])->name('home');

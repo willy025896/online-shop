@@ -6,6 +6,26 @@
 
         <title inertia>{{ config('app.name', 'Laravel') }}</title>
 
+        @php
+            $seo = $page['props']['seo'] ?? [];
+            $seoTitle = $seo['title'] ?? config('app.name', 'Laravel');
+            $seoDescription = $seo['description'] ?? '多角色電商平台，串連買家、賣家與豐富商品。';
+            $seoUrl = $seo['url'] ?? url()->current();
+            $seoImage = $seo['image'] ?? null;
+        @endphp
+        <meta name="description" content="{{ $seoDescription }}">
+        <meta property="og:type" content="website">
+        <meta property="og:site_name" content="{{ config('app.name', 'Laravel') }}">
+        <meta property="og:title" content="{{ $seoTitle }}">
+        <meta property="og:description" content="{{ $seoDescription }}">
+        <meta property="og:url" content="{{ $seoUrl }}">
+        @if ($seoImage)
+            <meta property="og:image" content="{{ $seoImage }}">
+        @endif
+        <meta name="twitter:card" content="{{ $seoImage ? 'summary_large_image' : 'summary' }}">
+        <meta name="twitter:title" content="{{ $seoTitle }}">
+        <meta name="twitter:description" content="{{ $seoDescription }}">
+
         <!-- Dark mode: set before first paint to avoid a light->dark flash.
              Must run before the Vue bundle loads, so it duplicates the storage key
              and resolution logic from resources/js/Composables/useDarkMode.js — keep both in sync. -->

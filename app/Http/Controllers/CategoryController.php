@@ -24,6 +24,11 @@ class CategoryController extends Controller
         return Inertia::render('Categories/Show', [
             'category' => $category->load('children', 'parent'),
             'products' => $products,
+            'seo' => [
+                'title' => $category->name,
+                'description' => "探索「{$category->name}」分類下的所有商品。",
+                'url' => route('categories.show', $category->slug),
+            ],
         ]);
     }
 }

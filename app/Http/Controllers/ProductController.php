@@ -8,6 +8,7 @@ use App\Models\SearchQuery;
 use App\Services\RecommendationService;
 use Illuminate\Http\Request;
 use Illuminate\Pagination\LengthAwarePaginator;
+use Illuminate\Support\Str;
 use Inertia\Inertia;
 
 class ProductController extends Controller
@@ -93,6 +94,12 @@ class ProductController extends Controller
             'relatedProducts' => $relatedProducts,
             'reviews' => $reviews,
             'ratingDistribution' => $ratingDistribution,
+            'seo' => $isAvailable ? [
+                'title' => $product->name,
+                'description' => Str::limit(strip_tags($product->description ?? ''), 155),
+                'image' => $product->images->first() ? asset('storage/'.$product->images->first()->path) : null,
+                'url' => route('products.show', $product->slug),
+            ] : null,
         ]);
     }
 }

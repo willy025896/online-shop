@@ -6,6 +6,7 @@ use App\Models\Category;
 use App\Models\Product;
 use App\Models\Shop;
 use Illuminate\Http\Request;
+use Illuminate\Support\Str;
 use Inertia\Inertia;
 
 class ShopController extends Controller
@@ -57,6 +58,12 @@ class ShopController extends Controller
                 Product::where('shop_id', $shop->id)->where('status', Product::STATUS_ACTIVE)->select('category_id')
             )->active()->orderBy('sort_order')->get(['id', 'name']),
             'filters' => $request->only(['search', 'category', 'sort', 'min_price', 'max_price']),
+            'seo' => [
+                'title' => $shop->name,
+                'description' => Str::limit(strip_tags($shop->description ?? ''), 155),
+                'image' => $shop->logo_path ? asset('storage/'.$shop->logo_path) : null,
+                'url' => route('shops.show', $shop->slug),
+            ],
         ]);
     }
 }
