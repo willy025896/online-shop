@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Category;
 use App\Models\Product;
+use App\Models\SearchQuery;
 use App\Services\RecommendationService;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -16,6 +17,7 @@ class ProductController extends Controller
             ->with(['shop', 'primaryImage', 'category']);
 
         if ($search = $request->input('search')) {
+            SearchQuery::record($search);
             $query->whereFullText(['name', 'description'], $search);
         }
 

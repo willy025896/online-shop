@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\CartController;
+use App\Http\Controllers\SearchController;
 use App\Http\Controllers\WishlistController;
 use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\CheckoutController;
@@ -19,6 +20,7 @@ Route::post('/locale', [LocaleController::class, 'store'])->name('locale.store')
 // Public routes
 Route::get('/', [ProductController::class, 'index'])->name('home');
 Route::get('/products', [ProductController::class, 'index'])->name('products.index');
+Route::get('/search/suggestions', [SearchController::class, 'suggestions'])->name('search.suggestions');
 Route::get('/products/{product:slug}', [ProductController::class, 'show'])->name('products.show');
 Route::get('/shop', [ShopController::class, 'index'])->name('shops.index');
 Route::get('/shop/{shop:slug}', [ShopController::class, 'show'])->name('shops.show');
