@@ -93,6 +93,26 @@ return [
         'failed' => '失敗',
         'row' => '列',
         'reason' => '原因',
+
+        'variants' => [
+            'title' => '規格與變體',
+            'hint' => '若商品有尺寸、顏色等不同規格，可在此分別設定各規格的價格與庫存。未設定變體時，商品沿用上方的價格/庫存。',
+            'add_option' => '新增規格',
+            'option_name' => '規格名稱（例如：尺寸）',
+            'remove_option' => '刪除規格',
+            'add_value' => '新增值',
+            'value_placeholder' => '值（例如：M）',
+            'generate' => '自動產生所有組合',
+            'no_variants' => '尚未設定任何變體。',
+            'sku' => 'SKU',
+            'price' => '價格',
+            'compare_price' => '原價',
+            'stock' => '庫存',
+            'remove_variant' => '刪除',
+            'save' => '儲存規格',
+            'combination_exists' => '此規格組合已存在',
+            'select_options_first' => '請先新增規格與值',
+        ],
     ],
 
     'coupons' => [

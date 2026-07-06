@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\HasStock;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -10,7 +11,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Product extends Model
 {
-    use HasFactory, SoftDeletes;
+    use HasFactory, HasStock, SoftDeletes;
 
     public const STATUS_DRAFT = 'draft';
 
@@ -111,6 +112,21 @@ class Product extends Model
         return $this->hasMany(WishlistItem::class);
     }
 
+    public function options(): HasMany
+    {
+        return $this->hasMany(ProductOption::class)->orderBy('sort_order');
+    }
+
+    public function variants(): HasMany
+    {
+        return $this->hasMany(ProductVariant::class);
+    }
+
+    public function hasVariants(): bool
+    {
+        return $this->variants()->exists();
+    }
+
     public function averageRating(): float
     {
         if ($this->reviews_count === 0) {
@@ -118,10 +134,5 @@ class Product extends Model
         }
 
         return round($this->rating_sum / $this->reviews_count, 1);
-    }
-
-    public function inStock(): bool
-    {
-        return $this->stock > 0;
     }
 }

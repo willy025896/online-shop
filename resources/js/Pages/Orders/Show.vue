@@ -139,6 +139,7 @@ const askSeller = (orderId) => {
                             </div>
                             <div class="flex-1">
                                 <p class="text-sm font-medium text-gray-900 dark:text-gray-100">{{ item.product_name }}</p>
+                                <p v-if="item.variant_label" class="text-xs text-gray-500">{{ item.variant_label }}</p>
                                 <p class="text-xs text-gray-500">${{ item.unit_price }} x {{ item.quantity }}</p>
                             </div>
                             <p class="text-sm font-medium text-gray-900 dark:text-gray-100">${{ Number(item.subtotal).toFixed(2) }}</p>

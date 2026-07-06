@@ -1,5 +1,5 @@
 <script setup>
-import { ref, watch } from 'vue';
+import { computed, ref, watch } from 'vue';
 import { router } from '@inertiajs/vue3';
 import Spinner from '@/Components/Spinner.vue';
 import ImageWithFallback from '@/Components/ImageWithFallback.vue';
@@ -12,6 +12,11 @@ const props = defineProps({
 });
 
 const emit = defineEmits(['toggle']);
+
+const variantLabel = computed(() => {
+    if (!props.item.variant?.option_values?.length) return null;
+    return props.item.variant.option_values.map((ov) => `${ov.option.name}: ${ov.value}`).join(' / ');
+});
 
 const quantity = ref(props.item.quantity);
 const toast = useToast();
@@ -59,6 +64,7 @@ const removeItem = () => {
         </div>
         <div class="flex-1 min-w-0">
             <h4 class="text-sm font-medium text-gray-900 dark:text-gray-100 truncate">{{ item.product?.name }}</h4>
+            <p v-if="variantLabel" class="text-xs text-gray-500 dark:text-gray-400 truncate">{{ variantLabel }}</p>
             <p class="text-sm font-semibold text-red-600 mt-1">${{ item.unit_price }}</p>
         </div>
         <div class="flex items-center gap-2">

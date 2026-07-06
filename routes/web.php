@@ -1,8 +1,6 @@
 <?php
 
 use App\Http\Controllers\CartController;
-use App\Http\Controllers\SearchController;
-use App\Http\Controllers\WishlistController;
 use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\CheckoutController;
 use App\Http\Controllers\ConversationController;
@@ -10,7 +8,9 @@ use App\Http\Controllers\LocaleController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\OrderController;
 use App\Http\Controllers\ProductController;
+use App\Http\Controllers\SearchController;
 use App\Http\Controllers\ShopController;
+use App\Http\Controllers\WishlistController;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
@@ -102,6 +102,7 @@ Route::middleware([
     Route::resource('products', App\Http\Controllers\Seller\ProductController::class)->except(['show']);
     Route::post('/products/{product}/images', [App\Http\Controllers\Seller\ProductImageController::class, 'store'])->name('products.images.store');
     Route::delete('/products/images/{image}', [App\Http\Controllers\Seller\ProductImageController::class, 'destroy'])->name('products.images.destroy');
+    Route::patch('/products/{product}/variants', [App\Http\Controllers\Seller\ProductVariantController::class, 'update'])->name('products.variants.update');
 
     Route::get('/orders', [App\Http\Controllers\Seller\OrderController::class, 'index'])->name('orders.index');
     Route::get('/orders/{order}', [App\Http\Controllers\Seller\OrderController::class, 'show'])->name('orders.show');

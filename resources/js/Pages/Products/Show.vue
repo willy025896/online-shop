@@ -1,8 +1,9 @@
 <script setup>
-import { ref, computed } from 'vue';
+import { ref, computed, watch } from 'vue';
 import { router, Link, usePage } from '@inertiajs/vue3';
 import { useAsyncAction } from '@/Composables/useAsyncAction';
 import { useToast } from '@/Composables/useToast';
+import { combinationKey } from '@/Utils/variantCombination';
 import AppLayout from '@/Layouts/AppLayout.vue';
 import ProductImageGallery from '@/Components/ProductImageGallery.vue';
 import ProductCard from '@/Components/ProductCard.vue';
@@ -31,13 +32,48 @@ const toast = useToast();
 
 const isOwnProduct = computed(() => page.props.auth?.user?.id === props.product.shop?.user_id);
 
+const hasVariants = computed(() => (props.product.variants || []).length > 0);
+const selected = ref({});
+
+const selectedVariant = computed(() => {
+    if (!hasVariants.value) return null;
+
+    const optionIds = (props.product.options || []).map((o) => o.id);
+    if (optionIds.some((id) => !selected.value[id])) return null;
+
+    const selectedKey = combinationKey(optionIds.map((id) => selected.value[id]));
+
+    return (props.product.variants || []).find((variant) => (
+        combinationKey(variant.option_values.map((ov) => ov.id)) === selectedKey
+    )) || null;
+});
+
+// The "current" price/stock source: the product itself for a variant-less
+// product, or the selected variant (null until every option is chosen) once
+// the product has variants — every displayed field reads off this one place.
+const activeSource = computed(() => hasVariants.value ? selectedVariant.value : props.product);
+
+const displayPrice = computed(() => activeSource.value?.price);
+const displayComparePrice = computed(() => activeSource.value?.compare_price);
+const displayStock = computed(() => activeSource.value?.stock ?? 0);
+const canAddToCart = computed(() => activeSource.value !== null);
+
+// Clamp the selected quantity whenever the available stock shrinks (e.g. the
+// buyer switches to a variant with less stock than the previous selection).
+watch(displayStock, (stock) => {
+    if (quantity.value > stock) {
+        quantity.value = Math.max(stock, 1);
+    }
+});
+
 const addToCart = () => {
     run((finish) => router.post(route('cart.store'), {
         product_id: props.product.id,
+        variant_id: selectedVariant.value?.id,
         quantity: quantity.value,
     }, {
         preserveScroll: true,
-        onError: (errors) => toast.error(errors.product),
+        onError: (errors) => toast.error(errors.variant_id || errors.product),
         onFinish: finish,
     }));
 };
@@ -70,8 +106,8 @@ const askSeller = () => {
                     </div>
 
                     <div class="mt-4 flex items-center gap-3">
-                        <span class="text-3xl font-bold text-red-600">${{ product.price }}</span>
-                        <span v-if="product.compare_price" class="text-lg text-gray-400 line-through">${{ product.compare_price }}</span>
+                        <span v-if="displayPrice != null" class="text-3xl font-bold text-red-600">${{ displayPrice }}</span>
+                        <span v-if="displayComparePrice" class="text-lg text-gray-400 line-through">${{ displayComparePrice }}</span>
                     </div>
 
                     <div class="mt-4 flex items-center gap-3">
@@ -94,11 +130,40 @@ const askSeller = () => {
                     <div class="mt-6" v-if="!isAvailable">
                         <p class="text-red-500 font-medium">{{ lang.unavailable || 'This product is no longer available' }}</p>
                     </div>
-                    <div class="mt-6" v-else-if="product.stock > 0">
-                        <p class="text-sm text-green-600 mb-3">{{ (lang.in_stock_count || ':count available').replace(':count', product.stock) }}</p>
-                        <div class="flex items-center gap-4">
+                    <div class="mt-6" v-else>
+                        <div v-if="hasVariants" class="mb-4 space-y-3">
+                            <div v-for="option in product.options" :key="option.id">
+                                <p class="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{{ option.name }}</p>
+                                <div class="flex flex-wrap gap-2">
+                                    <button
+                                        v-for="value in option.values"
+                                        :key="value.id"
+                                        type="button"
+                                        @click="selected[option.id] = value.id"
+                                        :class="[
+                                            'px-3 py-1.5 rounded-md border text-sm transition',
+                                            selected[option.id] === value.id
+                                                ? 'border-indigo-600 bg-indigo-50 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-300'
+                                                : 'border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:border-gray-400',
+                                        ]"
+                                    >
+                                        {{ value.value }}
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <p v-if="hasVariants && !selectedVariant" class="text-sm text-gray-500 mb-3">
+                            {{ lang.select_variant || 'Please select options above' }}
+                        </p>
+                        <p v-else-if="displayStock > 0" class="text-sm text-green-600 mb-3">
+                            {{ (lang.in_stock_count || ':count available').replace(':count', displayStock) }}
+                        </p>
+                        <p v-else class="text-red-500 font-medium mb-3">{{ lang.out_of_stock }}</p>
+
+                        <div v-if="canAddToCart && displayStock > 0" class="flex items-center gap-4">
                             <select v-model="quantity" class="rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700">
-                                <option v-for="n in Math.min(product.stock, 10)" :key="n" :value="n">{{ n }}</option>
+                                <option v-for="n in Math.min(displayStock, 10)" :key="n" :value="n">{{ n }}</option>
                             </select>
                             <button
                                 @click="addToCart"
@@ -110,9 +175,6 @@ const askSeller = () => {
                             </button>
                             <FavoriteButton :product-id="product.id" size="md" />
                         </div>
-                    </div>
-                    <div v-else class="mt-6">
-                        <p class="text-red-500 font-medium">{{ lang.out_of_stock }}</p>
                     </div>
 
                     <div v-if="product.description" class="mt-8 prose dark:prose-invert max-w-none">

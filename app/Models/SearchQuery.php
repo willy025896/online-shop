@@ -43,6 +43,7 @@ class SearchQuery extends Model
     {
         $query = trim((string) $query);
         $query = preg_replace('/\s+/u', ' ', $query);
+
         return Str::of($query)->lower()->limit(255, '')->__toString();
     }
 }

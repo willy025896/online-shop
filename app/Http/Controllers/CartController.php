@@ -32,16 +32,28 @@ class CartController extends Controller
     {
         $request->validate([
             'product_id' => 'required|exists:products,id',
+            'variant_id' => 'nullable|exists:product_variants,id',
             'quantity' => 'integer|min:1|max:99',
         ]);
 
         $product = Product::active()->findOrFail($request->product_id);
 
-        if (! $product->inStock()) {
+        $variant = null;
+        if ($request->filled('variant_id')) {
+            $variant = $product->variants()->find($request->variant_id);
+
+            if (! $variant) {
+                return back()->withErrors(['variant_id' => 'This variant is no longer available.']);
+            }
+        } elseif ($product->hasVariants()) {
+            return back()->withErrors(['variant_id' => 'Please select a variant.']);
+        }
+
+        if (! ($variant ?? $product)->inStock()) {
             return back()->withErrors(['product' => 'This product is out of stock.']);
         }
 
-        $this->cartService->addItem($product, $request->input('quantity', 1));
+        $this->cartService->addItem($product, $request->input('quantity', 1), $variant);
 
         return back()->with('success', 'Item added to cart.');
     }

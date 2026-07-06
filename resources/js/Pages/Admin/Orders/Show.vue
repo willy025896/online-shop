@@ -116,7 +116,10 @@ const cancellationStatusLabel = (status) =>
                     </thead>
                     <tbody class="divide-y divide-gray-200 dark:divide-gray-700">
                         <tr v-for="item in order.items" :key="item.id">
-                            <td class="px-6 py-4 text-sm text-gray-900 dark:text-gray-100">{{ item.product?.name || item.product_name }}</td>
+                            <td class="px-6 py-4 text-sm text-gray-900 dark:text-gray-100">
+                                {{ item.product?.name || item.product_name }}
+                                <span v-if="item.variant_label" class="block text-xs text-gray-500">{{ item.variant_label }}</span>
+                            </td>
                             <td class="px-6 py-4 text-sm text-gray-500">${{ formatMoney(item.unit_price) }}</td>
                             <td class="px-6 py-4 text-sm text-gray-500">{{ item.quantity }}</td>
                             <td class="px-6 py-4 text-sm text-right text-gray-900 dark:text-gray-100">${{ formatMoney(item.subtotal) }}</td>

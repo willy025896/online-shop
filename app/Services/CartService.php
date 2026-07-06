@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Models\Cart;
 use App\Models\CartItem;
 use App\Models\Product;
+use App\Models\ProductVariant;
 use Illuminate\Support\Facades\Auth;
 
 class CartService
@@ -24,29 +25,44 @@ class CartService
         return Cart::firstOrCreate(['session_id' => $sessionId]);
     }
 
-    public function addItem(Product $product, int $quantity = 1): CartItem
+    public function addItem(Product $product, int $quantity = 1, ?ProductVariant $variant = null): CartItem
     {
         $cart = $this->getOrCreateCart();
+        $unitPrice = $variant?->price ?? $product->price;
 
-        $item = CartItem::where('cart_id', $cart->id)
-            ->where('product_id', $product->id)
-            ->first();
+        $item = $this->matchVariant(
+            CartItem::where('cart_id', $cart->id)->where('product_id', $product->id),
+            $variant?->id,
+        )->first();
 
         if ($item) {
             $item->update([
                 'quantity' => $item->quantity + $quantity,
-                'unit_price' => $product->price,
+                'unit_price' => $unitPrice,
             ]);
         } else {
             $item = CartItem::create([
                 'cart_id' => $cart->id,
                 'product_id' => $product->id,
+                'product_variant_id' => $variant?->id,
                 'quantity' => $quantity,
-                'unit_price' => $product->price,
+                'unit_price' => $unitPrice,
             ]);
         }
 
         return $item->fresh();
+    }
+
+    /**
+     * Scope a cart-items query to rows matching the given variant (or, when
+     * null, rows with no variant at all) — a plain `where('product_variant_id', null)`
+     * would compile to `= NULL`, which never matches, so the null case needs `whereNull`.
+     */
+    private function matchVariant($query, ?int $variantId)
+    {
+        return $variantId
+            ? $query->where('product_variant_id', $variantId)
+            : $query->whereNull('product_variant_id');
     }
 
     public function updateItem(CartItem $item, int $quantity): CartItem
@@ -64,7 +80,7 @@ class CartService
     public function getCartWithItems(): ?Cart
     {
         $cart = $this->getOrCreateCart();
-        $cart->load('items.product.images', 'items.product.shop');
+        $cart->load('items.product.images', 'items.product.shop', 'items.variant.optionValues.option');
 
         return $cart;
     }
@@ -96,9 +112,10 @@ class CartService
         $userCart = Cart::firstOrCreate(['user_id' => Auth::id()]);
 
         foreach ($guestCart->items as $guestItem) {
-            $existingItem = $userCart->items()
-                ->where('product_id', $guestItem->product_id)
-                ->first();
+            $existingItem = $this->matchVariant(
+                $userCart->items()->where('product_id', $guestItem->product_id),
+                $guestItem->product_variant_id,
+            )->first();
 
             if ($existingItem) {
                 $existingItem->update([

@@ -60,7 +60,7 @@ class ProductController extends Controller
     {
         $this->authorize('update', $product);
 
-        $product->load('images');
+        $product->load('images', 'options.values', 'variants.optionValues.option');
 
         return Inertia::render('Seller/Products/Edit', [
             'product' => $product,

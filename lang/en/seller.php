@@ -93,6 +93,26 @@ return [
         'failed' => 'Failed',
         'row' => 'Row',
         'reason' => 'Reason',
+
+        'variants' => [
+            'title' => 'Variants & Options',
+            'hint' => 'If this product comes in different sizes, colors, etc., set per-variant price and stock here. Without variants, the product uses the price/stock above.',
+            'add_option' => 'Add Option',
+            'option_name' => 'Option name (e.g. Size)',
+            'remove_option' => 'Remove option',
+            'add_value' => 'Add value',
+            'value_placeholder' => 'Value (e.g. M)',
+            'generate' => 'Generate all combinations',
+            'no_variants' => 'No variants yet.',
+            'sku' => 'SKU',
+            'price' => 'Price',
+            'compare_price' => 'Compare Price',
+            'stock' => 'Stock',
+            'remove_variant' => 'Remove',
+            'save' => 'Save Variants',
+            'combination_exists' => 'This combination already exists',
+            'select_options_first' => 'Add options and values first',
+        ],
     ],
 
     'coupons' => [

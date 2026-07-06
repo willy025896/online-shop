@@ -6,6 +6,7 @@ use App\Models\Cart;
 use App\Models\Order;
 use App\Models\OrderCancellation;
 use App\Models\Product;
+use App\Models\ProductVariant;
 use App\Models\User;
 use App\Notifications\OrderCancellationRequestedNotification;
 use App\Notifications\OrderCancellationRespondedNotification;
@@ -76,19 +77,35 @@ class OrderService
                     'notes' => $shippingData['notes'] ?? null,
                 ]);
 
+                // Lock every needed variant in one query instead of one per cart
+                // item — checkout is a hot path and each shop's cart items rarely
+                // span more than a handful of variants.
+                $variantIds = $items->pluck('product_variant_id')->filter()->unique()->values();
+                $lockedVariants = $variantIds->isNotEmpty()
+                    ? ProductVariant::withTrashed()->with('optionValues.option')
+                        ->whereIn('id', $variantIds)->lockForUpdate()->get()->keyBy('id')
+                    : collect();
+
                 foreach ($items as $cartItem) {
                     $product = Product::lockForUpdate()->find($cartItem->product_id);
 
-                    if ($product->stock < $cartItem->quantity) {
+                    $variant = $cartItem->product_variant_id
+                        ? $lockedVariants->get($cartItem->product_variant_id)
+                        : null;
+                    $stockOwner = $variant ?? $product;
+
+                    if ($stockOwner->stock < $cartItem->quantity) {
                         throw new \Exception("Insufficient stock for product: {$product->name}");
                     }
 
-                    $product->decrement('stock', $cartItem->quantity);
+                    $stockOwner->decrement('stock', $cartItem->quantity);
 
                     $order->items()->create([
                         'product_id' => $product->id,
+                        'product_variant_id' => $variant?->id,
                         'product_name' => $product->name,
                         'product_image' => $product->primaryImage?->path,
+                        'variant_label' => $variant?->optionLabel(),
                         'quantity' => $cartItem->quantity,
                         'unit_price' => $cartItem->unit_price,
                         'subtotal' => $cartItem->quantity * $cartItem->unit_price,
@@ -227,8 +244,11 @@ class OrderService
         }
 
         foreach ($order->items as $item) {
-            Product::where('id', $item->product_id)
-                ->increment('stock', $item->quantity);
+            $stockOwnerQuery = $item->product_variant_id
+                ? ProductVariant::withTrashed()->where('id', $item->product_variant_id)
+                : Product::where('id', $item->product_id);
+
+            $stockOwnerQuery->increment('stock', $item->quantity);
         }
 
         // Release any coupon consumed by this order so a cancellation doesn't

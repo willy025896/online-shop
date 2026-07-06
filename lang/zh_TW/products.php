@@ -28,4 +28,5 @@ return [
     'max_price' => '最高',
     'apply' => '套用',
     'clear' => '清除',
+    'select_variant' => '請先選擇上方規格',
 ];

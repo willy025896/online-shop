@@ -7,6 +7,7 @@ import TextInput from '@/Components/TextInput.vue';
 import InputError from '@/Components/InputError.vue';
 import PrimaryButton from '@/Components/PrimaryButton.vue';
 import ImageUploader from '@/Components/ImageUploader.vue';
+import ProductVariantManager from '@/Components/Seller/ProductVariantManager.vue';
 
 const props = defineProps({
     product: Object,
@@ -43,6 +44,12 @@ const submit = () => {
             <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-6">
                 <h3 class="text-lg font-medium text-gray-900 dark:text-gray-100 mb-4">{{ lang.products?.images }}</h3>
                 <ImageUploader :product="product" :images="product.images || []" />
+            </div>
+
+            <!-- Variants -->
+            <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-6">
+                <h3 class="text-lg font-medium text-gray-900 dark:text-gray-100 mb-4">{{ lang.products?.variants?.title }}</h3>
+                <ProductVariantManager :product="product" :lang="lang.products?.variants" />
             </div>
 
             <!-- Product Form -->

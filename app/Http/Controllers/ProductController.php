@@ -54,7 +54,15 @@ class ProductController extends Controller
 
     public function show(Product $product, RecommendationService $recommendations)
     {
-        $product->load(['shop', 'images', 'category']);
+        // variants.optionValues.option is loaded unconditionally (cheap — Eloquent
+        // skips the nested queries entirely when a product has no variant rows);
+        // options.values is only needed once we already know variants exist, so
+        // that check is done in-memory instead of an extra hasVariants() query.
+        $product->load(['shop', 'images', 'category', 'variants.optionValues.option']);
+
+        if ($product->variants->isNotEmpty()) {
+            $product->load('options.values');
+        }
 
         $isAvailable = $product->status === Product::STATUS_ACTIVE;
 

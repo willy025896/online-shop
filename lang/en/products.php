@@ -28,4 +28,5 @@ return [
     'max_price' => 'Max',
     'apply' => 'Apply',
     'clear' => 'Clear',
+    'select_variant' => 'Please select options above',
 ];
