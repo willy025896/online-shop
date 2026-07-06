@@ -4,10 +4,13 @@ use App\Events\MessageSent;
 use App\Models\Conversation;
 use App\Models\Message;
 use App\Models\Order;
+use App\Models\Product;
 use App\Models\Shop;
 use App\Models\User;
+use App\Notifications\NewMessageNotification;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Event;
+use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\Storage;
 
 test('guest cannot access messages page', function () {
@@ -167,4 +170,82 @@ test('unread count only counts opponent messages', function () {
 
     expect($conv->unreadCountFor($buyer))->toBe(2);
     expect($conv->unreadCountFor($seller))->toBe(1);
+});
+
+test('guest asking about a product is redirected to login', function () {
+    $seller = User::factory()->seller()->create();
+    $shop = Shop::factory()->create(['user_id' => $seller->id]);
+    $product = Product::factory()->create(['shop_id' => $shop->id]);
+
+    $this->post(route('products.ask', $product))->assertRedirect('/login');
+});
+
+test('buyer can ask about a product without an order', function () {
+    Event::fake([MessageSent::class]);
+
+    $seller = User::factory()->seller()->create();
+    $shop = Shop::factory()->create(['user_id' => $seller->id]);
+    $buyer = User::factory()->create();
+    $product = Product::factory()->create(['shop_id' => $shop->id]);
+
+    $response = $this->actingAs($buyer)->post(route('products.ask', $product));
+
+    $conversation = Conversation::where('buyer_id', $buyer->id)
+        ->where('seller_user_id', $seller->id)
+        ->whereNull('order_id')
+        ->first();
+
+    expect($conversation)->not->toBeNull();
+    $response->assertRedirect(route('messages.show', $conversation));
+
+    $this->assertDatabaseHas('messages', [
+        'conversation_id' => $conversation->id,
+        'sender_id' => $buyer->id,
+        'product_id' => $product->id,
+        'body' => null,
+    ]);
+});
+
+test('asking about products from the same seller reuses one inquiry conversation', function () {
+    $seller = User::factory()->seller()->create();
+    $shop = Shop::factory()->create(['user_id' => $seller->id]);
+    $buyer = User::factory()->create();
+    $productA = Product::factory()->create(['shop_id' => $shop->id]);
+    $productB = Product::factory()->create(['shop_id' => $shop->id]);
+
+    $this->actingAs($buyer)->post(route('products.ask', $productA));
+    $this->actingAs($buyer)->post(route('products.ask', $productB));
+
+    expect(Conversation::where('buyer_id', $buyer->id)->where('seller_user_id', $seller->id)->whereNull('order_id')->count())->toBe(1);
+
+    $conversation = Conversation::where('buyer_id', $buyer->id)->where('seller_user_id', $seller->id)->whereNull('order_id')->first();
+    expect($conversation->messages()->count())->toBe(2);
+});
+
+test('seller cannot ask about their own product', function () {
+    $seller = User::factory()->seller()->create();
+    $shop = Shop::factory()->create(['user_id' => $seller->id]);
+    $product = Product::factory()->create(['shop_id' => $shop->id]);
+
+    $this->actingAs($seller)
+        ->post(route('products.ask', $product))
+        ->assertStatus(403);
+});
+
+test('sending a message notifies the other participant', function () {
+    Notification::fake();
+
+    $seller = User::factory()->seller()->create();
+    $shop = Shop::factory()->create(['user_id' => $seller->id]);
+    $buyer = User::factory()->create();
+    $order = Order::factory()->create(['user_id' => $buyer->id, 'shop_id' => $shop->id]);
+    $conv = Conversation::factory()->create([
+        'order_id' => $order->id, 'buyer_id' => $buyer->id, 'seller_user_id' => $seller->id,
+    ]);
+
+    $this->actingAs($buyer)->post(route('messages.store', $conv), ['body' => 'Is this still in stock?']);
+
+    Notification::assertSentTo($seller, NewMessageNotification::class, function ($notification) use ($seller, $buyer) {
+        return str_contains($notification->toArray($seller)['title'], $buyer->name);
+    });
 });

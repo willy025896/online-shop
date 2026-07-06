@@ -74,4 +74,11 @@ return [
             'body' => 'Your shop ":name" has been suspended.',
         ],
     ],
+
+    'message' => [
+        'new' => [
+            'title' => ':name sent you a new message',
+            'attachment' => '[Attachment]',
+        ],
+    ],
 ];

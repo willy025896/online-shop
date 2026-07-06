@@ -2,6 +2,7 @@
 import { computed } from 'vue';
 import { usePage } from '@inertiajs/vue3';
 import ImageWithFallback from '@/Components/ImageWithFallback.vue';
+import ProductInquiryCard from './ProductInquiryCard.vue';
 
 const props = defineProps({
     message: Object,
@@ -28,7 +29,9 @@ const time = computed(() => {
             class="w-8 h-8 rounded-full object-cover flex-shrink-0"
         />
         <div :class="['max-w-[70%] flex flex-col', isSelf ? 'items-end' : 'items-start']">
+            <ProductInquiryCard v-if="message.product_id" :product="message.product" class="mb-1" />
             <div
+                v-if="message.body || message.image_path"
                 :class="[
                     'rounded-2xl px-4 py-2 break-words',
                     isSelf

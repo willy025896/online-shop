@@ -25,20 +25,7 @@ class MessageSent implements ShouldBroadcast
     public function broadcastWith(): array
     {
         return [
-            'message' => [
-                'id' => $this->message->id,
-                'conversation_id' => $this->message->conversation_id,
-                'sender_id' => $this->message->sender_id,
-                'body' => $this->message->body,
-                'image_path' => $this->message->image_path,
-                'read_at' => $this->message->read_at,
-                'created_at' => $this->message->created_at,
-                'sender' => [
-                    'id' => $this->message->sender->id,
-                    'name' => $this->message->sender->name,
-                    'profile_photo_url' => $this->message->sender->profile_photo_url,
-                ],
-            ],
+            'message' => $this->message->toChatPayload(),
         ];
     }
 }

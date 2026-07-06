@@ -8,4 +8,7 @@ return [
     'input_placeholder' => 'Type a message...',
     'view_order' => 'View order',
     'image_label' => 'Image',
+    'product_inquiry' => 'Product inquiry',
+    'view_product' => 'View product',
+    'product_unavailable' => 'This product is no longer available',
 ];

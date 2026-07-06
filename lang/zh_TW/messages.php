@@ -8,4 +8,7 @@ return [
     'input_placeholder' => '輸入訊息...',
     'view_order' => '查看訂單',
     'image_label' => '圖片',
+    'product_inquiry' => '商品詢問',
+    'view_product' => '查看商品',
+    'product_unavailable' => '此商品已下架',
 ];

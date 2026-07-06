@@ -245,12 +245,13 @@ Notification classes live in `app/Notifications/`. Each `toArray()` returns a un
 | Seller approves/rejects cancellation | `OrderService::approveCancellation` / `rejectCancellation` | `OrderCancellationRespondedNotification` | Buyer |
 | Seller directly cancels | `OrderService::cancelBySeller` | `OrderCancelledBySellerNotification` | Buyer |
 | Shop `approved`/`suspended` | `Admin\ShopController::updateStatus` | `ShopStatusChangedNotification` | Seller |
+| New chat message (order chat or product Q&A) | `ConversationService::sendMessage` | `NewMessageNotification` | The other participant |
 
 `cancelled` is intentionally **excluded** from `Order::BUYER_NOTIFY_STATUSES` — every cancellation path already fires a path-specific notification, so including it would double-notify the buyer (or self-notify when they cancel their own order). If you add a new cancellation path, dispatch the relevant notification explicitly inside the same `DB::transaction`.
 
 Channel auth is in `routes/channels.php`: `App.Models.User.{id}` accepts only the channel owner. Don't add unscoped channels.
 
-The new-message broadcast (`MessageSent` event, `Conversation` chat) is **separate** from the notification pipeline — chat keeps its own `unreadMessageCount` badge and `private-conversation.{id}` channel; don't merge them.
+The `MessageSent` event (`Conversation` chat) is a **separate broadcast channel** (`private-conversation.{id}`) from the notification pipeline's `App.Models.User.{id}` channel — chat keeps its own `unreadMessageCount` badge and real-time bubble rendering via `MessageSent`; don't merge the two channels. They are not mutually exclusive, though: `ConversationService::sendMessage()` fires **both** — `broadcast(new MessageSent($message))->toOthers()` for the open chat thread, **and** `NewMessageNotification` (database + bell) so the recipient is told about a new message even when they aren't on the Messages page.
 
 All Notification classes share the `BroadcastsAsArray` trait (`app/Notifications/Concerns/BroadcastsAsArray.php`), which implements `toBroadcast()` as `new BroadcastMessage($this->toArray($notifiable))`. This enforces the project-wide convention that broadcast payload = database payload. New Notification classes must `use BroadcastsAsArray, Queueable;` and must NOT add a custom `toBroadcast()`.
 
@@ -262,6 +263,23 @@ All Notification classes share the `BroadcastsAsArray` trait (`app/Notifications
 | Edit/delete during cooling → cooling reset | `ReviewService::resetCoolingIfActive` | `ReviewCoolingResetNotification` | Counterparty |
 | Cooling expires or 14-day timeout → release | `ReviewService::releaseOrder` | `ReviewReleasedNotification` | Buyer + Seller |
 | Seller replies to product review | `ReviewService::addSellerReply` | `SellerReplyNotification` | Buyer |
+
+### Conversations (Chat) & Product Q&A (商品問答)
+
+`ConversationService` (`app/Services/ConversationService.php`) is the single entry point for creating conversations and sending messages; `ConversationController` / `ConversationPolicy` cover authorization (a `Conversation` is only visible to its `buyer_id` / `seller_user_id`).
+
+A `Conversation` is created one of two ways:
+
+- **Order chat** — `getOrCreateForOrder(Order $order)`. `order_id` is set and **unique** (one conversation per order).
+- **Product Q&A (pre-purchase, no order needed)** — `getOrCreateForProduct(Product $product, User $buyer)`. `order_id` is **nullable**; a Q&A conversation has `order_id = null`. One buyer asking one seller about *any* of that seller's products reuses the **same** `order_id IS NULL` conversation (found via `firstOrCreate(['buyer_id', 'seller_user_id', 'order_id' => null])`) — product differences are expressed at the **message** level (see below), not by opening a new conversation per product. See ADR-010.
+
+Key design points:
+
+- **`messages.product_id`** (nullable, `nullOnDelete`) attaches a product "card" to a message — thumbnail + name + price, clickable through to the product page. `ConversationService::sendMessage()` accepts an optional `?Product $product`; a message is valid if it has `body`, `image`, **or** `product` (at least one). Clicking "Ask Seller" on a product page (`POST /products/{product:slug}/ask` → `ConversationController::askAboutProduct`) gets/creates the Q&A conversation and immediately sends a `product`-only message (no body), then redirects to `messages.show`. A seller cannot ask about their own product (`abort_if($product->shop->user_id === auth()->id(), 403)`).
+- **Soft-deleted products render as unavailable, not an error** — `Product` uses `SoftDeletes`, so its global scope makes `Message::product()` resolve to `null` for a since-removed product even though `messages.product_id` is still set. The front-end keys off `message.product_id` (always present) to decide "was this a product card message", and separately checks `message.product` (nullable) to render either the card or a "product no longer available" fallback (`ProductInquiryCard.vue`).
+- **Shop name is sourced from the seller, not the order** — `$conversation->seller->shop->name` (via `Conversation::seller()` → `User::shop()`), not `$conversation->order->shop`, since Q&A conversations have no order. `order` in the front-end payload only carries order-specific fields (`order_number`/`status`/`total`); `OrderCardBanner.vue` takes `shop-name` as a separate prop and only renders `v-if="conversation.order"`.
+- **No DB-level dedup for Q&A conversations** — unlike `order_id` (unique, NOT NULL originally), there's no unique index preventing two `order_id IS NULL` rows for the same buyer/seller pair (MySQL can't express a partial unique index — same limitation noted for coupon codes in ADR-008). `firstOrCreate` covers the normal case; a duplicate under concurrent double-click is a cosmetic risk, not a data-integrity one.
+- **Every message notifies the other participant** — `NewMessageNotification` (see Notifications trigger map above) fires for both order chat and product Q&A, since chat previously had no bell/database notification at all (only the in-thread real-time bubble and the navbar unread badge).
 
 ### Review System (雙向盲評)
 

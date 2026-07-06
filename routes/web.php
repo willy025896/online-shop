@@ -62,6 +62,7 @@ Route::middleware([
     Route::post('/orders/{order}/conversation', [OrderController::class, 'startConversation'])->name('orders.conversation');
 
     // Conversations
+    Route::post('/products/{product:slug}/ask', [ConversationController::class, 'askAboutProduct'])->name('products.ask');
     Route::get('/messages', [ConversationController::class, 'index'])->name('messages.index');
     Route::get('/messages/{conversation}', [ConversationController::class, 'show'])->name('messages.show');
     Route::post('/messages/{conversation}', [ConversationController::class, 'storeMessage'])->name('messages.store');

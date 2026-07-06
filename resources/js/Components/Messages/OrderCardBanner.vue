@@ -5,6 +5,7 @@ import OrderStatusBadge from '@/Components/OrderStatusBadge.vue';
 
 const props = defineProps({
     order: Object,
+    shopName: String,
 });
 
 const page = usePage();
@@ -29,7 +30,7 @@ const orderHref = computed(() =>
                     <OrderStatusBadge :status="order.status" />
                 </div>
                 <p class="text-xs text-gray-600 dark:text-gray-400 truncate">
-                    {{ order.shop_name }} · ${{ Number(order.total).toFixed(2) }}
+                    {{ shopName }} · ${{ Number(order.total).toFixed(2) }}
                 </p>
             </div>
             <Link

@@ -17,4 +17,9 @@ class ConversationFactory extends Factory
             'last_message_at' => null,
         ];
     }
+
+    public function productInquiry(): static
+    {
+        return $this->state(fn () => ['order_id' => null]);
+    }
 }

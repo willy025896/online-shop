@@ -15,6 +15,7 @@ import Spinner from '@/Components/Spinner.vue';
 
 const props = defineProps({
     product: Object,
+    isAvailable: { type: Boolean, default: true },
     relatedProducts: Array,
     reviews: Object,
     ratingDistribution: Object,
@@ -25,7 +26,10 @@ const lang = computed(() => page.props.lang || {});
 
 const quantity = ref(1);
 const { processing: addingToCart, run } = useAsyncAction();
+const { processing: asking, run: runAsk } = useAsyncAction();
 const toast = useToast();
+
+const isOwnProduct = computed(() => page.props.auth?.user?.id === props.product.shop?.user_id);
 
 const addToCart = () => {
     run((finish) => router.post(route('cart.store'), {
@@ -34,6 +38,12 @@ const addToCart = () => {
     }, {
         preserveScroll: true,
         onError: (errors) => toast.error(errors.product),
+        onFinish: finish,
+    }));
+};
+
+const askSeller = () => {
+    runAsk((finish) => router.post(route('products.ask', props.product.slug), {}, {
         onFinish: finish,
     }));
 };
@@ -64,13 +74,27 @@ const addToCart = () => {
                         <span v-if="product.compare_price" class="text-lg text-gray-400 line-through">${{ product.compare_price }}</span>
                     </div>
 
-                    <div class="mt-4">
+                    <div class="mt-4 flex items-center gap-3">
                         <Link :href="route('shops.show', product.shop.slug)" class="text-sm text-gray-600 dark:text-gray-400 hover:text-indigo-600">
                             {{ (lang.sold_by || 'Sold by :name').replace(':name', product.shop.name) }}
                         </Link>
+                        <button
+                            v-if="!isOwnProduct"
+                            @click="askSeller"
+                            :disabled="asking"
+                            class="inline-flex items-center gap-1.5 text-sm font-medium text-indigo-600 hover:text-indigo-800 disabled:opacity-50"
+                        >
+                            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M8.625 12a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0H8.25m4.125 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0H12m4.125 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0h-.375M21 12c0 4.556-4.03 8.25-9 8.25a9.764 9.764 0 01-2.555-.337A5.972 5.972 0 015.41 20.97a5.969 5.969 0 01-.474-.065 4.48 4.48 0 00.978-2.025c.09-.457-.133-.901-.467-1.226C3.93 16.178 3 14.189 3 12c0-4.556 4.03-8.25 9-8.25s9 3.694 9 8.25z" />
+                            </svg>
+                            {{ lang.ask_seller || 'Ask Seller' }}
+                        </button>
                     </div>
 
-                    <div class="mt-6" v-if="product.stock > 0">
+                    <div class="mt-6" v-if="!isAvailable">
+                        <p class="text-red-500 font-medium">{{ lang.unavailable || 'This product is no longer available' }}</p>
+                    </div>
+                    <div class="mt-6" v-else-if="product.stock > 0">
                         <p class="text-sm text-green-600 mb-3">{{ (lang.in_stock_count || ':count available').replace(':count', product.stock) }}</p>
                         <div class="flex items-center gap-4">
                             <select v-model="quantity" class="rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700">

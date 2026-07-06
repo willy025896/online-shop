@@ -3,8 +3,10 @@
 namespace App\Http\Controllers;
 
 use App\Models\Conversation;
+use App\Models\Product;
 use App\Services\ConversationService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Collection;
 use Inertia\Inertia;
 
 class ConversationController extends Controller
@@ -13,26 +15,22 @@ class ConversationController extends Controller
 
     public function index()
     {
-        $userId = auth()->id();
-
-        $conversations = Conversation::query()
-            ->where('buyer_id', $userId)
-            ->orWhere('seller_user_id', $userId)
-            ->with([
-                'buyer:id,name,profile_photo_path',
-                'seller:id,name,profile_photo_path',
-                'order:id,order_number,status,total,shop_id',
-                'order.shop:id,name',
-                'latestMessage',
-            ])
-            ->orderByDesc('last_message_at')
-            ->orderByDesc('id')
-            ->get()
-            ->map(fn ($c) => $this->presentConversation($c));
-
         return Inertia::render('Messages/Index', [
-            'conversations' => $conversations,
+            'conversations' => $this->conversationsFor(auth()->id()),
         ]);
+    }
+
+    public function askAboutProduct(Product $product)
+    {
+        abort_unless($product->status === Product::STATUS_ACTIVE, 404);
+
+        $product->loadMissing('shop');
+        abort_if($product->shop->user_id === auth()->id(), 403);
+
+        $conversation = $this->service->getOrCreateForProduct($product, auth()->user());
+        $this->service->sendMessage($conversation, auth()->user(), null, null, $product);
+
+        return redirect()->route('messages.show', $conversation);
     }
 
     public function show(Conversation $conversation)
@@ -44,55 +42,28 @@ class ConversationController extends Controller
         $conversation->load([
             'buyer:id,name,profile_photo_path',
             'seller:id,name,profile_photo_path',
-            'order:id,order_number,status,total,shop_id,user_id',
-            'order.shop:id,name',
+            'seller.shop:id,user_id,name',
+            'order:id,order_number,status,total',
             'messages.sender:id,name,profile_photo_path',
+            'messages.product:id,name,slug,price',
+            'messages.product.primaryImage',
         ]);
 
-        $userId = auth()->id();
-
-        $allConversations = Conversation::query()
-            ->where('buyer_id', $userId)
-            ->orWhere('seller_user_id', $userId)
-            ->with([
-                'buyer:id,name,profile_photo_path',
-                'seller:id,name,profile_photo_path',
-                'order:id,order_number,status,total,shop_id',
-                'order.shop:id,name',
-                'latestMessage',
-            ])
-            ->orderByDesc('last_message_at')
-            ->orderByDesc('id')
-            ->get()
-            ->map(fn ($c) => $this->presentConversation($c));
-
         return Inertia::render('Messages/Show', [
-            'conversations' => $allConversations,
+            'conversations' => $this->conversationsFor(auth()->id()),
             'conversation' => [
                 'id' => $conversation->id,
-                'order' => [
+                'shop_name' => $conversation->seller->shop->name,
+                'order' => $conversation->order ? [
                     'id' => $conversation->order->id,
                     'order_number' => $conversation->order->order_number,
                     'status' => $conversation->order->status,
                     'total' => $conversation->order->total,
-                    'shop_name' => $conversation->order->shop->name,
-                ],
+                ] : null,
                 'other_user' => $conversation->otherParticipant(auth()->user())->only([
                     'id', 'name', 'profile_photo_url',
                 ]),
-                'messages' => $conversation->messages->map(fn ($m) => [
-                    'id' => $m->id,
-                    'sender_id' => $m->sender_id,
-                    'body' => $m->body,
-                    'image_path' => $m->image_path,
-                    'read_at' => $m->read_at,
-                    'created_at' => $m->created_at,
-                    'sender' => [
-                        'id' => $m->sender->id,
-                        'name' => $m->sender->name,
-                        'profile_photo_url' => $m->sender->profile_photo_url,
-                    ],
-                ]),
+                'messages' => $conversation->messages->map->toChatPayload(),
             ],
         ]);
     }
@@ -129,6 +100,24 @@ class ConversationController extends Controller
         return back();
     }
 
+    private function conversationsFor(int $userId): Collection
+    {
+        return Conversation::query()
+            ->where('buyer_id', $userId)
+            ->orWhere('seller_user_id', $userId)
+            ->with([
+                'buyer:id,name,profile_photo_path',
+                'seller:id,name,profile_photo_path',
+                'seller.shop:id,user_id,name',
+                'order:id,order_number,status,total',
+                'latestMessage',
+            ])
+            ->orderByDesc('last_message_at')
+            ->orderByDesc('id')
+            ->get()
+            ->map(fn ($c) => $this->presentConversation($c));
+    }
+
     private function presentConversation(Conversation $c): array
     {
         $user = auth()->user();
@@ -137,11 +126,11 @@ class ConversationController extends Controller
         return [
             'id' => $c->id,
             'last_message_at' => $c->last_message_at,
-            'order' => [
+            'shop_name' => $c->seller->shop->name,
+            'order' => $c->order ? [
                 'order_number' => $c->order->order_number,
                 'status' => $c->order->status,
-                'shop_name' => $c->order->shop->name,
-            ],
+            ] : null,
             'other_user' => [
                 'id' => $other->id,
                 'name' => $other->name,
@@ -152,6 +141,7 @@ class ConversationController extends Controller
                 'image_path' => $c->latestMessage->image_path,
                 'sender_id' => $c->latestMessage->sender_id,
                 'created_at' => $c->latestMessage->created_at,
+                'product_id' => $c->latestMessage->product_id,
             ] : null,
             'unread_count' => $c->unreadCountFor($user),
         ];

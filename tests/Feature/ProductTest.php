@@ -31,6 +31,17 @@ test('product show page can be rendered', function () {
         );
 });
 
+test('draft product show page renders as unavailable instead of 404', function () {
+    $product = Product::factory()->draft()->create();
+
+    $this->get(route('products.show', $product->slug))
+        ->assertStatus(200)
+        ->assertInertia(fn ($page) => $page
+            ->component('Products/Show')
+            ->where('isAvailable', false)
+        );
+});
+
 test('categories show page can be rendered', function () {
     $category = Category::factory()->create();
 

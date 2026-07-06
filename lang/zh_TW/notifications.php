@@ -74,4 +74,11 @@ return [
             'body' => '您的賣場「:name」已被停權。',
         ],
     ],
+
+    'message' => [
+        'new' => [
+            'title' => ':name 傳送了新訊息給您',
+            'attachment' => '[附件]',
+        ],
+    ],
 ];

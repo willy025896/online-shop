@@ -13,6 +13,7 @@ const lang = computed(() => page.props.lang || {});
 const previewText = (conv) => {
     if (!conv.latest_message) return lang.value.no_messages_yet || 'No messages yet';
     if (conv.latest_message.image_path) return '📷 ' + (lang.value.image_label || 'Image');
+    if (conv.latest_message.product_id) return '🛍️ ' + (lang.value.product_inquiry || 'Product inquiry');
     return conv.latest_message.body;
 };
 
@@ -61,7 +62,7 @@ const formatTime = (iso) => {
                     <span class="text-[11px] text-gray-400 flex-shrink-0">{{ formatTime(conv.last_message_at) }}</span>
                 </div>
                 <p class="text-xs text-gray-500 dark:text-gray-400 truncate mt-0.5">
-                    <span class="text-gray-400">[{{ conv.order.order_number }}]</span> {{ previewText(conv) }}
+                    <span class="text-gray-400">[{{ conv.order ? conv.order.order_number : conv.shop_name }}]</span> {{ previewText(conv) }}
                 </p>
             </div>
             <span

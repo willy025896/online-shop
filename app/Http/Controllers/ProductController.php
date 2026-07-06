@@ -7,6 +7,7 @@ use App\Models\Product;
 use App\Models\SearchQuery;
 use App\Services\RecommendationService;
 use Illuminate\Http\Request;
+use Illuminate\Pagination\LengthAwarePaginator;
 use Inertia\Inertia;
 
 class ProductController extends Controller
@@ -53,27 +54,34 @@ class ProductController extends Controller
 
     public function show(Product $product, RecommendationService $recommendations)
     {
-        abort_unless($product->status === Product::STATUS_ACTIVE, 404);
-
         $product->load(['shop', 'images', 'category']);
 
-        $relatedProducts = $recommendations->relatedTo($product, 4);
+        $isAvailable = $product->status === Product::STATUS_ACTIVE;
 
-        $reviews = $product->reviews()
-            ->with(['user:id,name,profile_photo_path'])
-            ->published()
-            ->latest()
-            ->paginate(10);
+        if ($isAvailable) {
+            $relatedProducts = $recommendations->relatedTo($product, 4);
 
-        $ratingDistribution = $product->reviews()
-            ->published()
-            ->selectRaw('rating, count(*) as count')
-            ->groupBy('rating')
-            ->pluck('count', 'rating')
-            ->toArray();
+            $reviews = $product->reviews()
+                ->with(['user:id,name,profile_photo_path'])
+                ->published()
+                ->latest()
+                ->paginate(10);
+
+            $ratingDistribution = $product->reviews()
+                ->published()
+                ->selectRaw('rating, count(*) as count')
+                ->groupBy('rating')
+                ->pluck('count', 'rating')
+                ->toArray();
+        } else {
+            $relatedProducts = [];
+            $reviews = new LengthAwarePaginator([], 0, 10);
+            $ratingDistribution = [];
+        }
 
         return Inertia::render('Products/Show', [
             'product' => $product,
+            'isAvailable' => $isAvailable,
             'relatedProducts' => $relatedProducts,
             'reviews' => $reviews,
             'ratingDistribution' => $ratingDistribution,

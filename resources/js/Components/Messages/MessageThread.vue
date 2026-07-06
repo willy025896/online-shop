@@ -100,7 +100,7 @@ onUnmounted(() => {
         </div>
 
         <!-- Order banner -->
-        <OrderCardBanner :order="conversation.order" />
+        <OrderCardBanner v-if="conversation.order" :order="conversation.order" :shop-name="conversation.shop_name" />
 
         <!-- Messages -->
         <div ref="scrollContainer" class="flex-1 overflow-y-auto p-4">
