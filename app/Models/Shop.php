@@ -59,6 +59,11 @@ class Shop extends Model
         return $this->hasMany(Coupon::class);
     }
 
+    public function payouts(): HasMany
+    {
+        return $this->hasMany(Payout::class);
+    }
+
     public function productReviews(): HasMany
     {
         return $this->hasMany(ProductReview::class);
@@ -76,5 +81,10 @@ class Shop extends Model
     public function isApproved(): bool
     {
         return $this->status === self::STATUS_APPROVED;
+    }
+
+    public function scopeApproved($query)
+    {
+        return $query->where('status', self::STATUS_APPROVED);
     }
 }

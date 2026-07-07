@@ -47,6 +47,10 @@ return [
             'title' => 'Return rejected',
             'body' => 'Your return request for order #:number was rejected.',
         ],
+        'payout_completed' => [
+            'title' => 'Payout completed',
+            'body' => 'You were paid out $:amount.',
+        ],
         'status' => [
             'pending' => 'pending',
             'paid' => 'paid',

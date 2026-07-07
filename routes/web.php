@@ -140,6 +140,9 @@ Route::middleware([
 
     // Seller: view buyer credit
     Route::get('/buyers/{user}', [App\Http\Controllers\Seller\BuyerCreditController::class, 'show'])->name('buyers.show');
+
+    // Seller: payout history (read-only — payouts are admin-triggered)
+    Route::get('/payouts', [App\Http\Controllers\Seller\PayoutController::class, 'index'])->name('payouts.index');
 });
 
 // Seller-only preference (excludes admin — admins have no seller dashboard)
@@ -180,4 +183,8 @@ Route::middleware([
     Route::resource('coupons', App\Http\Controllers\Admin\CouponController::class)->except(['show']);
 
     Route::get('/audit-logs', [App\Http\Controllers\Admin\AuditLogController::class, 'index'])->name('audit-logs.index');
+
+    // Platform commission & seller payouts (ADR-014)
+    Route::get('/payouts', [App\Http\Controllers\Admin\PayoutController::class, 'index'])->name('payouts.index');
+    Route::post('/payouts/run', [App\Http\Controllers\Admin\PayoutController::class, 'run'])->name('payouts.run');
 });

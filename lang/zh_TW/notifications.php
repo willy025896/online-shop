@@ -47,6 +47,10 @@ return [
             'title' => '退貨已拒絕',
             'body' => '您的訂單 #:number 退貨申請已被拒絕。',
         ],
+        'payout_completed' => [
+            'title' => '撥款已完成',
+            'body' => '已撥款 $:amount 給您。',
+        ],
         'status' => [
             'pending' => '待處理',
             'paid' => '已付款',

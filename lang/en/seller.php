@@ -215,4 +215,15 @@ return [
         'description' => 'Description',
         'save' => 'Save Changes',
     ],
+
+    'payouts' => [
+        'title' => 'Payouts',
+        'no_payouts' => 'No payouts yet.',
+        'paid_at' => 'Paid At',
+        'orders' => 'Orders',
+        'gross_amount' => 'Gross Amount',
+        'commission_amount' => 'Commission',
+        'shipping_amount' => 'Shipping',
+        'net_amount' => 'Net Amount',
+    ],
 ];

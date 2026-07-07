@@ -215,4 +215,15 @@ return [
         'description' => '描述',
         'save' => '儲存變更',
     ],
+
+    'payouts' => [
+        'title' => '撥款紀錄',
+        'no_payouts' => '尚無撥款紀錄。',
+        'paid_at' => '撥款時間',
+        'orders' => '訂單數',
+        'gross_amount' => '商品淨額',
+        'commission_amount' => '平台抽成',
+        'shipping_amount' => '運費',
+        'net_amount' => '實付金額',
+    ],
 ];

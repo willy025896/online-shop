@@ -24,6 +24,7 @@ return [
     'seller_orders' => '訂單管理',
     'seller_coupons' => '折扣碼',
     'seller_reviews' => '評論管理',
+    'seller_payouts' => '撥款紀錄',
     'seller_shop_settings' => '店鋪設定',
     'back_to_store' => '返回商店',
 
@@ -37,4 +38,5 @@ return [
     'admin_orders' => '訂單管理',
     'admin_coupons' => '平台折扣碼',
     'admin_audit_logs' => '操作稽核紀錄',
+    'admin_payouts' => '撥款管理',
 ];

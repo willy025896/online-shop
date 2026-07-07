@@ -24,6 +24,7 @@ return [
     'seller_orders' => 'Orders',
     'seller_coupons' => 'Coupons',
     'seller_reviews' => 'Reviews',
+    'seller_payouts' => 'Payouts',
     'seller_shop_settings' => 'Shop Settings',
     'back_to_store' => 'Back to Store',
 
@@ -37,4 +38,5 @@ return [
     'admin_orders' => 'Orders',
     'admin_coupons' => 'Coupons',
     'admin_audit_logs' => 'Audit Logs',
+    'admin_payouts' => 'Payouts',
 ];

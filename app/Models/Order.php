@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasManyThrough;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Order extends Model
@@ -137,7 +138,7 @@ class Order extends Model
         return $this->hasMany(OrderItem::class);
     }
 
-    public function conversation(): \Illuminate\Database\Eloquent\Relations\HasOne
+    public function conversation(): HasOne
     {
         return $this->hasOne(Conversation::class);
     }
@@ -163,19 +164,24 @@ class Order extends Model
             ->where('product_reviews.status', ProductReview::STATUS_PUBLISHED);
     }
 
-    public function buyerReview(): \Illuminate\Database\Eloquent\Relations\HasOne
+    public function buyerReview(): HasOne
     {
         return $this->hasOne(BuyerReview::class);
     }
 
-    public function latestCancellation(): \Illuminate\Database\Eloquent\Relations\HasOne
+    public function latestCancellation(): HasOne
     {
         return $this->hasOne(OrderCancellation::class)->latestOfMany();
     }
 
-    public function latestReturn(): \Illuminate\Database\Eloquent\Relations\HasOne
+    public function latestReturn(): HasOne
     {
         return $this->hasOne(OrderReturn::class)->latestOfMany();
+    }
+
+    public function payoutItem(): HasOne
+    {
+        return $this->hasOne(PayoutItem::class);
     }
 
     public function isPaid(): bool
@@ -248,6 +254,27 @@ class Order extends Model
             && $this->completed_at !== null
             && now()->lte($this->completed_at->copy()->addDays(config('returns.window_days')))
             && $this->pendingReturn() === null;
+    }
+
+    /**
+     * Orders whose return window has fully closed — the complement of
+     * canRequestReturn()'s window check (strictly past vs. that method's "up
+     * to and including" boundary), so the two never both hold at once. Used
+     * by PayoutService to find orders whose amount can no longer change.
+     */
+    public function scopePastReturnWindow($query)
+    {
+        return $query->whereNotNull('completed_at')
+            ->where('completed_at', '<', now()->subDays(config('returns.window_days')));
+    }
+
+    /**
+     * Orders with no return request still awaiting seller review — the
+     * query-level counterpart of pendingReturn().
+     */
+    public function scopeWithoutPendingReturn($query)
+    {
+        return $query->whereDoesntHave('returns', fn ($q) => $q->where('status', OrderReturn::STATUS_REQUESTED));
     }
 
     /**
