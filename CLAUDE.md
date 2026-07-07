@@ -226,6 +226,20 @@ Two consequences to keep in mind when changing order status:
 - **Atomicity** — the log insert fires inside the `updated` event, so it only commits atomically with the status change if the `$order->update()` runs inside a `DB::transaction`. All current status-mutating paths (`updateStatus`, `PaymentService::simulatePayment`, `OrderService` cancellation methods) are wrapped in a transaction for this reason. Wrap any new one too.
 - **Bulk-update caveat** — Eloquent's `updated` event does **not** fire on query-builder bulk updates (`Order::where(...)->update(['status' => ...])`), so those would silently bypass the log. Always change order status via a model instance (`$order->update(...)`), never a bulk query.
 
+### Order Returns/Refunds (售後退貨/退款)
+
+`OrderService` owns return mutations (`requestReturn`, `approveReturn`, `rejectReturn`, private `finalizeReturn`) — same single-entry-point, lock+idempotent-guard convention as cancellations. See ADR-013.
+
+Key design points:
+- **Window** — a buyer may request a return within `config('returns.window_days')` (default 7, overridable via `ORDER_RETURN_WINDOW_DAYS`) days after `completed_at`. `Order::canRequestReturn()`.
+- **One pending return at a time** — `Order::pendingReturn()` gates new requests; since only one return can be pending at once, `pendingReturn()` uses the already eager-loaded `latestReturn` relation (`hasOne(...)->latestOfMany()`) as a fast path instead of firing an extra query when it's loaded, falling back to a fresh query otherwise.
+- **Partial + repeated returns over time** — `OrderReturn`/`OrderReturnItem` (one row per returned line item per request). `OrderItem::returnedQuantity()` / `remainingReturnableQuantity()` sum only **approved** return items, so a line item can be returned across several separate approved requests. `Order::isFullyReturned()` checks every item has caught up to its ordered quantity.
+- **Refund math lives in `CouponService`** — `CouponService::refundableAmount($order, $itemsSubtotal)` applies the same discount ratio used at checkout (`discount / subtotal`) to the returned items' subtotal (proportional deduction); shipping is never refunded. Coupon usage (`used_count` / `CouponRedemption`) is only released via `releaseForOrder()` once `isFullyReturned()` — a partial return does not free up the buyer's coupon allowance.
+- **Stock restock is shared** — `OrderService::restockOrderItem()` (used by both `finalizeCancellation` and `finalizeReturn`) resolves the stock owner (variant or plain product) with `withTrashed()` so a since-removed listing still gets its stock restored.
+- **`orders.refunded_amount`** — a denormalized running total, incremented via `PaymentService::simulateRefund()` (mirrors `simulatePayment()`'s shape; not yet wired to a real gateway). Refunding does **not** change `orders.status` — a refunded order stays `completed`.
+- **Duplicate-row validation guard** — `OrderController::requestReturn`'s cross-field validator groups requested quantities **by `order_item_id`** before comparing against the remaining returnable quantity, so splitting one line item across two request rows can't bypass the per-item cap; `order_return_items` also has a DB-level `unique(order_return_id, order_item_id)` as a second line of defense.
+- **Documented out-of-scope gap** — cancelling an already-**paid** order still has no refund logic (only stock/coupon are reversed); ADR-013 explicitly excludes fixing this pre-existing gap. Don't assume it's resolved.
+
 ### Notifications
 
 Uses Laravel's built-in `Notifiable` pipeline. Each Notification's `via()` returns `['database', 'broadcast']`:
@@ -246,6 +260,8 @@ Notification classes live in `app/Notifications/`. Each `toArray()` returns a un
 | Seller directly cancels | `OrderService::cancelBySeller` | `OrderCancelledBySellerNotification` | Buyer |
 | Shop `approved`/`suspended` | `Admin\ShopController::updateStatus` | `ShopStatusChangedNotification` | Seller |
 | New chat message (order chat or product Q&A) | `ConversationService::sendMessage` | `NewMessageNotification` | The other participant |
+| Buyer requests a return | `OrderService::requestReturn` | `OrderReturnRequestedNotification` | Seller |
+| Seller approves/rejects a return | `OrderService::approveReturn` / `rejectReturn` | `OrderReturnRespondedNotification` | Buyer |
 
 `cancelled` is intentionally **excluded** from `Order::BUYER_NOTIFY_STATUSES` — every cancellation path already fires a path-specific notification, so including it would double-notify the buyer (or self-notify when they cancel their own order). If you add a new cancellation path, dispatch the relevant notification explicitly inside the same `DB::transaction`.
 
@@ -331,13 +347,13 @@ online-shop/
 │   ├── Http/
 │   │   ├── Controllers/        # public + utility + seller + admin (incl. NotificationController, Review controllers)
 │   │   └── Middleware/         # EnsureRole, SetLocale, HandleInertiaRequests
-│   ├── Notifications/          # 10 Notification classes (Order*, Shop*, Review*); all use BroadcastsAsArray trait
+│   ├── Notifications/          # 13 Notification classes (Order*, Shop*, Review*); all use BroadcastsAsArray trait
 │   │   └── Concerns/           # BroadcastsAsArray trait
-│   ├── Policies/               # 4 policies (Product, Order, Shop, ProductReview)
-│   ├── Models/                 # 16 models (User, Shop, Product, Order, ProductReview, BuyerReview, WishlistItem, ...)
-│   └── Services/               # Cart, Order, Payment, Shipping, Conversation, Review, Wishlist
+│   ├── Policies/               # 6 policies (Product, Order, Shop, ProductReview, Coupon, ...)
+│   ├── Models/                 # 25 models (User, Shop, Product, Order, OrderReturn, ProductVariant, ProductReview, BuyerReview, WishlistItem, Coupon, ...)
+│   └── Services/               # Cart, Order, Payment, Shipping, Coupon, Conversation, Review, Wishlist, ProductVariant
 ├── database/
-│   └── migrations/             # 23 migrations (incl. product_reviews, buyer_reviews, aggregates, completed_at, wishlist_items)
+│   └── migrations/             # 44 migrations (incl. product_reviews, buyer_reviews, aggregates, completed_at, wishlist_items, product_variants, order_returns)
 ├── lang/
 │   ├── en/                     # English translations (incl. notifications.php, reviews.php, wishlist.php)
 │   └── zh_TW/                  # Traditional Chinese translations
@@ -350,6 +366,6 @@ online-shop/
 │   ├── web.php                 # All HTTP routes (4 groups: public, auth, seller, admin)
 │   ├── console.php             # Scheduled commands (reviews:release every 10 min)
 │   └── channels.php            # Broadcast channel authorization (App.Models.User.{id}, conversation.{id})
-└── tests/Feature/              # Pest tests: Product, Shop, Cart, Wishlist, Seller, Admin, Order, Notification, Conversation, Review
+└── tests/Feature/              # Pest tests: Product, Shop, Cart, Wishlist, Seller, Admin, Order, OrderReturn, Coupon, Notification, Conversation, Review
 ```
 
