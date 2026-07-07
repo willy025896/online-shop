@@ -99,6 +99,7 @@ class Order extends Model
         'notes',
         'review_cooling_until',
         'review_released_at',
+        'refunded_amount',
     ];
 
     protected function casts(): array
@@ -112,6 +113,7 @@ class Order extends Model
             'completed_at' => 'datetime',
             'review_cooling_until' => 'datetime',
             'review_released_at' => 'datetime',
+            'refunded_amount' => 'decimal:2',
         ];
     }
 
@@ -145,6 +147,11 @@ class Order extends Model
         return $this->hasMany(OrderCancellation::class);
     }
 
+    public function returns(): HasMany
+    {
+        return $this->hasMany(OrderReturn::class);
+    }
+
     public function statusLogs(): HasMany
     {
         return $this->hasMany(OrderStatusLog::class);
@@ -164,6 +171,11 @@ class Order extends Model
     public function latestCancellation(): \Illuminate\Database\Eloquent\Relations\HasOne
     {
         return $this->hasOne(OrderCancellation::class)->latestOfMany();
+    }
+
+    public function latestReturn(): \Illuminate\Database\Eloquent\Relations\HasOne
+    {
+        return $this->hasOne(OrderReturn::class)->latestOfMany();
     }
 
     public function isPaid(): bool
@@ -210,6 +222,42 @@ class Order extends Model
     {
         return in_array($this->status, [self::STATUS_PENDING, self::STATUS_PAID, self::STATUS_PROCESSING])
             && $this->pendingCancellation() === null;
+    }
+
+    public function pendingReturn(): ?OrderReturn
+    {
+        if ($this->relationLoaded('returns')) {
+            return $this->returns->firstWhere('status', OrderReturn::STATUS_REQUESTED);
+        }
+
+        // Only one return can be pending at a time (canRequestReturn() blocks a
+        // new request while one exists), so the most recent return — when
+        // already eager-loaded as latestReturn — is the pending one iff its
+        // status is still "requested". Avoids a redundant query in the common
+        // case where callers already loaded latestReturn (e.g. order show pages).
+        if ($this->relationLoaded('latestReturn')) {
+            return $this->latestReturn?->status === OrderReturn::STATUS_REQUESTED ? $this->latestReturn : null;
+        }
+
+        return $this->returns()->where('status', OrderReturn::STATUS_REQUESTED)->first();
+    }
+
+    public function canRequestReturn(): bool
+    {
+        return $this->status === self::STATUS_COMPLETED
+            && $this->completed_at !== null
+            && now()->lte($this->completed_at->copy()->addDays(config('returns.window_days')))
+            && $this->pendingReturn() === null;
+    }
+
+    /**
+     * True once every order item's approved-return quantity has caught up to
+     * its originally ordered quantity — i.e. the order is returned in full,
+     * possibly across several separate return requests over time.
+     */
+    public function isFullyReturned(): bool
+    {
+        return $this->items->every(fn (OrderItem $item) => $item->returnedQuantity() >= $item->quantity);
     }
 
     public function isReviewWindowOpen(): bool

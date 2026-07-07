@@ -33,7 +33,7 @@ class OrderController extends Controller
     {
         $this->authorize('view', $order);
 
-        $order->load('user', 'items.product', 'latestCancellation.responder', 'buyerReview');
+        $order->load('user', 'items.product', 'latestCancellation.responder', 'latestReturn.items.orderItem', 'buyerReview');
 
         $buyer = $order->user;
         $buyerRating = $buyer && $buyer->buyer_reviews_count > 0
@@ -52,6 +52,7 @@ class OrderController extends Controller
             'canReviewBuyer' => $order->status === Order::STATUS_COMPLETED
                 && $order->isReviewWindowOpen()
                 && ! $order->buyerReview,
+            'canManageReturn' => $order->pendingReturn() !== null,
         ]);
     }
 
@@ -111,5 +112,33 @@ class OrderController extends Controller
         $this->orderService->rejectCancellation($cancellation, $request->user(), $validated['response_reason']);
 
         return back()->with('success', 'Cancellation rejected.');
+    }
+
+    public function approveReturn(Order $order): RedirectResponse
+    {
+        $this->authorize('manageReturn', $order);
+
+        $orderReturn = $order->pendingReturn();
+        abort_if($orderReturn === null, 409, 'No pending return request.');
+
+        $this->orderService->approveReturn($orderReturn, request()->user());
+
+        return back()->with('success', 'Return approved.');
+    }
+
+    public function rejectReturn(Request $request, Order $order): RedirectResponse
+    {
+        $this->authorize('manageReturn', $order);
+
+        $validated = $request->validate([
+            'response_reason' => 'required|string|max:1000',
+        ]);
+
+        $orderReturn = $order->pendingReturn();
+        abort_if($orderReturn === null, 409, 'No pending return request.');
+
+        $this->orderService->rejectReturn($orderReturn, $request->user(), $validated['response_reason']);
+
+        return back()->with('success', 'Return rejected.');
     }
 }

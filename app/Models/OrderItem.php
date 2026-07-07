@@ -49,4 +49,30 @@ class OrderItem extends Model
     {
         return $this->hasOne(ProductReview::class);
     }
+
+    public function returnItems(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+        return $this->hasMany(OrderReturnItem::class);
+    }
+
+    /**
+     * Total quantity of this line item already covered by approved returns —
+     * used to cap how much of it can still be requested for return.
+     */
+    public function returnedQuantity(): int
+    {
+        return (int) $this->returnItems()
+            ->whereHas('orderReturn', fn ($query) => $query->where('status', OrderReturn::STATUS_APPROVED))
+            ->sum('quantity');
+    }
+
+    /**
+     * How many units of this line item are still eligible to be requested for
+     * return — the single definition shared by the buyer-facing display and
+     * the server-side quantity cap in OrderController::requestReturn().
+     */
+    public function remainingReturnableQuantity(): int
+    {
+        return max(0, $this->quantity - $this->returnedQuantity());
+    }
 }

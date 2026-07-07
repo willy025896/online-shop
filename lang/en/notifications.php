@@ -35,6 +35,18 @@ return [
             'title' => 'Order cancelled by seller',
             'body' => 'Order #:number was cancelled by the seller.',
         ],
+        'return_requested' => [
+            'title' => 'Return requested',
+            'body' => 'Buyer requested a return for order #:number.',
+        ],
+        'return_approved' => [
+            'title' => 'Return approved',
+            'body' => 'Your return request for order #:number was approved.',
+        ],
+        'return_rejected' => [
+            'title' => 'Return rejected',
+            'body' => 'Your return request for order #:number was rejected.',
+        ],
         'status' => [
             'pending' => 'pending',
             'paid' => 'paid',

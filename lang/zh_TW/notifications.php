@@ -35,6 +35,18 @@ return [
             'title' => '訂單已被賣家取消',
             'body' => '訂單 #:number 已被賣家取消。',
         ],
+        'return_requested' => [
+            'title' => '退貨申請',
+            'body' => '買家申請退貨訂單 #:number。',
+        ],
+        'return_approved' => [
+            'title' => '退貨已核准',
+            'body' => '您的訂單 #:number 退貨申請已核准。',
+        ],
+        'return_rejected' => [
+            'title' => '退貨已拒絕',
+            'body' => '您的訂單 #:number 退貨申請已被拒絕。',
+        ],
         'status' => [
             'pending' => '待處理',
             'paid' => '已付款',

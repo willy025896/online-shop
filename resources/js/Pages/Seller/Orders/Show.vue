@@ -20,6 +20,7 @@ const props = defineProps({
     nextStatuses: Object,
     buyerRating: Object,
     canReviewBuyer: Boolean,
+    canManageReturn: Boolean,
 });
 
 const reviewDaysLeft = useReviewCountdown(() => props.order);
@@ -86,6 +87,32 @@ const submitCancel = () => {
     });
 };
 
+const orderReturn = computed(() => props.order.latest_return);
+const returnPending = computed(() => props.canManageReturn && orderReturn.value?.status === 'requested');
+const returnResolved = computed(() => orderReturn.value && !returnPending.value);
+
+const { processing: approvingReturn, run: runApproveReturn } = useAsyncAction();
+const approveReturn = () => {
+    runApproveReturn((finish) => router.post(route('seller.orders.returns.approve', props.order.id), {}, {
+        preserveScroll: true,
+        onFinish: finish,
+    }));
+};
+
+const showRejectReturnModal = ref(false);
+const rejectReturnForm = useForm({ response_reason: '' });
+const openRejectReturnModal = () => {
+    rejectReturnForm.reset();
+    rejectReturnForm.clearErrors();
+    showRejectReturnModal.value = true;
+};
+const submitRejectReturn = () => {
+    rejectReturnForm.post(route('seller.orders.returns.reject', props.order.id), {
+        preserveScroll: true,
+        onSuccess: () => { showRejectReturnModal.value = false; },
+    });
+};
+
 const nextStatuses = props.nextStatuses;
 </script>
 
@@ -131,6 +158,36 @@ const nextStatuses = props.nextStatuses;
                 </h3>
                 <p class="text-sm text-gray-700 dark:text-gray-300">
                     <span class="font-medium">{{ t.cancel_reason }}:</span> {{ cancellation.reason }}
+                </p>
+            </div>
+
+            <!-- Pending return request -->
+            <div v-if="returnPending" class="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg p-6">
+                <h3 class="text-lg font-medium text-yellow-800 dark:text-yellow-300 mb-2">{{ t.return_requested }}</h3>
+                <ul class="text-sm text-gray-700 dark:text-gray-300 mb-2 list-disc list-inside">
+                    <li v-for="returnItem in orderReturn.items" :key="returnItem.id">
+                        {{ returnItem.order_item?.product_name }} x {{ returnItem.quantity }}
+                    </li>
+                </ul>
+                <p class="text-sm text-gray-700 dark:text-gray-300 mb-4">
+                    <span class="font-medium">{{ t.return_reason }}:</span> {{ orderReturn.reason }}
+                </p>
+                <div class="flex gap-3">
+                    <DangerButton :disabled="approvingReturn" class="inline-flex items-center gap-2" @click="approveReturn">
+                        <Spinner v-if="approvingReturn" class="h-4 w-4" />
+                        {{ t.approve_return }}
+                    </DangerButton>
+                    <SecondaryButton @click="openRejectReturnModal">{{ t.reject_return }}</SecondaryButton>
+                </div>
+            </div>
+
+            <!-- Resolved return info -->
+            <div v-else-if="returnResolved" class="rounded-lg p-6 border" :class="orderReturn.status === 'approved' ? 'bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800' : 'bg-gray-50 dark:bg-gray-700/40 border-gray-200 dark:border-gray-600'">
+                <h3 class="text-lg font-medium mb-2" :class="orderReturn.status === 'approved' ? 'text-green-800 dark:text-green-300' : 'text-gray-800 dark:text-gray-200'">
+                    {{ orderReturn.status === 'approved' ? t.return_approved.replace(':amount', Number(orderReturn.refund_amount).toFixed(2)) : t.return_rejected }}
+                </h3>
+                <p class="text-sm text-gray-700 dark:text-gray-300">
+                    <span class="font-medium">{{ t.return_reason }}:</span> {{ orderReturn.reason }}
                 </p>
             </div>
 
@@ -229,6 +286,7 @@ const nextStatuses = props.nextStatuses;
                     <p v-if="Number(order.discount) > 0" class="text-sm text-green-600">{{ t.discount }}<span v-if="order.coupon_code"> ({{ order.coupon_code }})</span>: -${{ Number(order.discount).toFixed(2) }}</p>
                     <p class="text-sm text-gray-500">{{ t.shipping }}: ${{ Number(order.shipping_fee).toFixed(2) }}</p>
                     <p class="text-lg font-semibold text-gray-900 dark:text-gray-100">{{ t.total }}: ${{ Number(order.total).toFixed(2) }}</p>
+                    <p v-if="Number(order.refunded_amount) > 0" class="text-sm text-green-600">{{ t.refunded_amount }}: -${{ Number(order.refunded_amount).toFixed(2) }}</p>
                 </div>
             </div>
 
@@ -288,6 +346,31 @@ const nextStatuses = props.nextStatuses;
                     :class="{ 'opacity-25': rejectForm.processing }"
                     :disabled="rejectForm.processing"
                     @click="submitReject"
+                >
+                    {{ t.confirm }}
+                </DangerButton>
+            </template>
+        </DialogModal>
+
+        <!-- Reject return modal -->
+        <DialogModal :show="showRejectReturnModal" @close="showRejectReturnModal = false">
+            <template #title>{{ t.reject_return }}</template>
+            <template #content>
+                <p class="mb-3">{{ t.reject_return_prompt }}</p>
+                <textarea
+                    v-model="rejectReturnForm.response_reason"
+                    rows="4"
+                    class="w-full rounded-md border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-sm"
+                ></textarea>
+                <InputError :message="rejectReturnForm.errors.response_reason" class="mt-2" />
+            </template>
+            <template #footer>
+                <SecondaryButton @click="showRejectReturnModal = false">{{ t.cancel }}</SecondaryButton>
+                <DangerButton
+                    class="ms-3"
+                    :class="{ 'opacity-25': rejectReturnForm.processing }"
+                    :disabled="rejectReturnForm.processing"
+                    @click="submitRejectReturn"
                 >
                     {{ t.confirm }}
                 </DangerButton>

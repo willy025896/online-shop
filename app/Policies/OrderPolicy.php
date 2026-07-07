@@ -44,4 +44,16 @@ class OrderPolicy
             && $order->status === Order::STATUS_COMPLETED
             && $order->isReviewWindowOpen();
     }
+
+    public function requestReturn(User $user, Order $order): bool
+    {
+        return $user->id === $order->user_id
+            && $order->canRequestReturn();
+    }
+
+    public function manageReturn(User $user, Order $order): bool
+    {
+        return ($user->isSeller() && $user->shop?->id === $order->shop_id)
+            && $order->pendingReturn() !== null;
+    }
 }

@@ -67,6 +67,7 @@ Route::middleware([
     Route::get('/orders/{order}', [OrderController::class, 'show'])->name('orders.show');
     Route::post('/orders/{order}/pay', [OrderController::class, 'simulatePayment'])->name('orders.pay');
     Route::post('/orders/{order}/cancel', [OrderController::class, 'cancel'])->name('orders.cancel');
+    Route::post('/orders/{order}/returns', [OrderController::class, 'requestReturn'])->name('orders.returns.store');
     Route::post('/orders/{order}/conversation', [OrderController::class, 'startConversation'])->name('orders.conversation');
 
     // Conversations
@@ -118,6 +119,8 @@ Route::middleware([
     Route::post('/orders/{order}/cancel', [App\Http\Controllers\Seller\OrderController::class, 'cancel'])->name('orders.cancel');
     Route::post('/orders/{order}/cancellation/approve', [App\Http\Controllers\Seller\OrderController::class, 'approveCancellation'])->name('orders.cancellation.approve');
     Route::post('/orders/{order}/cancellation/reject', [App\Http\Controllers\Seller\OrderController::class, 'rejectCancellation'])->name('orders.cancellation.reject');
+    Route::post('/orders/{order}/returns/approve', [App\Http\Controllers\Seller\OrderController::class, 'approveReturn'])->name('orders.returns.approve');
+    Route::post('/orders/{order}/returns/reject', [App\Http\Controllers\Seller\OrderController::class, 'rejectReturn'])->name('orders.returns.reject');
 
     Route::get('/shop/edit', [App\Http\Controllers\Seller\ShopController::class, 'edit'])->name('shop.edit');
     Route::put('/shop', [App\Http\Controllers\Seller\ShopController::class, 'update'])->name('shop.update');

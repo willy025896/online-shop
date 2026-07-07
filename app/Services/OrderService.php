@@ -5,12 +5,16 @@ namespace App\Services;
 use App\Models\Cart;
 use App\Models\Order;
 use App\Models\OrderCancellation;
+use App\Models\OrderItem;
+use App\Models\OrderReturn;
 use App\Models\Product;
 use App\Models\ProductVariant;
 use App\Models\User;
 use App\Notifications\OrderCancellationRequestedNotification;
 use App\Notifications\OrderCancellationRespondedNotification;
 use App\Notifications\OrderCancelledBySellerNotification;
+use App\Notifications\OrderReturnRequestedNotification;
+use App\Notifications\OrderReturnRespondedNotification;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 
@@ -19,6 +23,7 @@ class OrderService
     public function __construct(
         private ShippingService $shippingService,
         private CouponService $couponService,
+        private PaymentService $paymentService,
     ) {}
 
     /**
@@ -244,11 +249,7 @@ class OrderService
         }
 
         foreach ($order->items as $item) {
-            $stockOwnerQuery = $item->product_variant_id
-                ? ProductVariant::withTrashed()->where('id', $item->product_variant_id)
-                : Product::where('id', $item->product_id);
-
-            $stockOwnerQuery->increment('stock', $item->quantity);
+            $this->restockOrderItem($item, $item->quantity);
         }
 
         // Release any coupon consumed by this order so a cancellation doesn't
@@ -256,5 +257,124 @@ class OrderService
         $this->couponService->releaseForOrder($order);
 
         $order->update(['status' => Order::STATUS_CANCELLED]);
+    }
+
+    /**
+     * Restores stock for one order line item, resolving the stock owner
+     * (variant or plain product) with withTrashed() so a since-removed
+     * listing still gets its stock restored. Shared by finalizeCancellation
+     * and finalizeReturn.
+     */
+    private function restockOrderItem(OrderItem $orderItem, int $quantity): void
+    {
+        $stockOwnerQuery = $orderItem->product_variant_id
+            ? ProductVariant::withTrashed()->where('id', $orderItem->product_variant_id)
+            : Product::withTrashed()->where('id', $orderItem->product_id);
+
+        $stockOwnerQuery->increment('stock', $quantity);
+    }
+
+    /**
+     * @param  array<int, array{order_item_id: int, quantity: int}>  $items
+     */
+    public function requestReturn(Order $order, array $items, string $reason): void
+    {
+        DB::transaction(function () use ($order, $items, $reason) {
+            $lockedOrder = Order::lockForUpdate()->find($order->id);
+
+            if (! $lockedOrder->canRequestReturn()) {
+                return; // idempotent — silently skip duplicates
+            }
+
+            $return = $lockedOrder->returns()->create([
+                'status' => OrderReturn::STATUS_REQUESTED,
+                'reason' => $reason,
+            ]);
+
+            foreach ($items as $item) {
+                $return->items()->create([
+                    'order_item_id' => $item['order_item_id'],
+                    'quantity' => $item['quantity'],
+                ]);
+            }
+
+            $lockedOrder->loadMissing('shop.user');
+            $lockedOrder->shop?->user?->notify(new OrderReturnRequestedNotification($lockedOrder));
+        });
+    }
+
+    public function approveReturn(OrderReturn $orderReturn, User $responder): void
+    {
+        DB::transaction(function () use ($orderReturn, $responder) {
+            $locked = OrderReturn::lockForUpdate()->find($orderReturn->id);
+
+            if ($locked->status !== OrderReturn::STATUS_REQUESTED) {
+                return; // already handled by a concurrent request
+            }
+
+            $locked->update([
+                'status' => OrderReturn::STATUS_APPROVED,
+                'responder_id' => $responder->id,
+                'responded_at' => now(),
+            ]);
+
+            $this->finalizeReturn($locked);
+
+            $locked->order->loadMissing('user');
+            $locked->order->user?->notify(new OrderReturnRespondedNotification($locked));
+        });
+    }
+
+    public function rejectReturn(OrderReturn $orderReturn, User $responder, string $responseReason): void
+    {
+        DB::transaction(function () use ($orderReturn, $responder, $responseReason) {
+            $locked = OrderReturn::lockForUpdate()->find($orderReturn->id);
+
+            if ($locked->status !== OrderReturn::STATUS_REQUESTED) {
+                return; // already handled by a concurrent request
+            }
+
+            $locked->update([
+                'status' => OrderReturn::STATUS_REJECTED,
+                'responder_id' => $responder->id,
+                'response_reason' => $responseReason,
+                'responded_at' => now(),
+            ]);
+
+            $locked->order->loadMissing('user');
+            $locked->order->user?->notify(new OrderReturnRespondedNotification($locked));
+        });
+    }
+
+    /**
+     * Restocks the returned items, computes the refund (proportionally
+     * deducting any coupon discount from the returned items' subtotal —
+     * shipping is never refunded), simulates the refund, and releases the
+     * coupon only once the order has been returned in full. See ADR-013.
+     */
+    private function finalizeReturn(OrderReturn $orderReturn): void
+    {
+        $orderReturn->load('items.orderItem', 'order.items');
+        $order = $orderReturn->order;
+
+        $itemsSubtotal = 0.0;
+
+        foreach ($orderReturn->items as $returnItem) {
+            $orderItem = $returnItem->orderItem;
+
+            $this->restockOrderItem($orderItem, $returnItem->quantity);
+
+            $itemsSubtotal += (float) $orderItem->unit_price * $returnItem->quantity;
+        }
+
+        $refundAmount = $this->couponService->refundableAmount($order, $itemsSubtotal);
+
+        $this->paymentService->simulateRefund($order, $refundAmount);
+
+        if ($order->isFullyReturned()) {
+            $this->couponService->releaseForOrder($order);
+        }
+
+        $orderReturn->update(['refund_amount' => $refundAmount]);
     }
 }

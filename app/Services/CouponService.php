@@ -107,6 +107,21 @@ class CouponService
     }
 
     /**
+     * The refund owed for a returned subset of an order's items, proportionally
+     * deducting the order's coupon discount (shipping is never refunded).
+     * Mirrors discountFor()'s role at checkout — the discount ratio applied
+     * then is applied again here, on the returned slice of the subtotal.
+     */
+    public function refundableAmount(Order $order, float $itemsSubtotal): float
+    {
+        $discountRatio = (float) $order->subtotal > 0
+            ? (float) $order->discount / (float) $order->subtotal
+            : 0.0;
+
+        return round($itemsSubtotal * (1 - $discountRatio), 2);
+    }
+
+    /**
      * Inverse of redeem: release the coupon an order consumed (on cancellation)
      * so a cancelled order never permanently burns the buyer's per-user
      * allowance or the total budget. Runs inside the caller's transaction.

@@ -24,4 +24,19 @@ class PaymentService
 
         return true;
     }
+
+    /**
+     * Simulated refund — mirrors simulatePayment()'s shape. Does not change
+     * `orders.status` (a refunded order stays `completed`); it only records
+     * how much has been refunded so far. MUST run inside the caller's
+     * DB::transaction (OrderService::finalizeReturn) so it commits atomically
+     * with the OrderReturn/stock/coupon changes. Swap this internals for a
+     * real gateway refund call once real payments are integrated.
+     */
+    public function simulateRefund(Order $order, float $amount): bool
+    {
+        $order->increment('refunded_amount', $amount);
+
+        return true;
+    }
 }
