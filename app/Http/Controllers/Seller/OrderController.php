@@ -62,6 +62,8 @@ class OrderController extends Controller
 
         $validated = $request->validate([
             'status' => ['required', Rule::in([Order::STATUS_PROCESSING, Order::STATUS_SHIPPED, Order::STATUS_COMPLETED])],
+            'carrier' => ['nullable', 'string', Rule::in(Order::CARRIERS)],
+            'tracking_number' => ['nullable', 'string', 'max:255'],
         ]);
 
         abort_unless($order->canTransitionStatusTo($validated['status']), 422, 'Invalid status transition.');
@@ -71,6 +73,30 @@ class OrderController extends Controller
         DB::transaction(fn () => $order->update($validated));
 
         return back()->with('success', 'Order status updated.');
+    }
+
+    public function updateShipment(Request $request, Order $order)
+    {
+        $this->authorize('updateStatus', $order);
+
+        // Editing (as opposed to initially filling in during the ship
+        // transition above) is only meaningful once the order has actually
+        // shipped — e.g. the tracking number wasn't known yet at ship time,
+        // or was mistyped and needs correcting.
+        abort_unless(
+            in_array($order->status, [Order::STATUS_SHIPPED, Order::STATUS_COMPLETED], true),
+            422,
+            'Shipment details can only be edited after the order has shipped.'
+        );
+
+        $validated = $request->validate([
+            'carrier' => ['nullable', 'string', Rule::in(Order::CARRIERS)],
+            'tracking_number' => ['nullable', 'string', 'max:255'],
+        ]);
+
+        $order->update($validated);
+
+        return back()->with('success', 'Shipment details updated.');
     }
 
     public function cancel(Request $request, Order $order)

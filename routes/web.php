@@ -120,6 +120,7 @@ Route::middleware([
     Route::get('/orders', [App\Http\Controllers\Seller\OrderController::class, 'index'])->name('orders.index');
     Route::get('/orders/{order}', [App\Http\Controllers\Seller\OrderController::class, 'show'])->name('orders.show');
     Route::patch('/orders/{order}/status', [App\Http\Controllers\Seller\OrderController::class, 'updateStatus'])->name('orders.status');
+    Route::patch('/orders/{order}/shipment', [App\Http\Controllers\Seller\OrderController::class, 'updateShipment'])->name('orders.shipment');
     Route::post('/orders/{order}/cancel', [App\Http\Controllers\Seller\OrderController::class, 'cancel'])->name('orders.cancel');
     Route::post('/orders/{order}/cancellation/approve', [App\Http\Controllers\Seller\OrderController::class, 'approveCancellation'])->name('orders.cancellation.approve');
     Route::post('/orders/{order}/cancellation/reject', [App\Http\Controllers\Seller\OrderController::class, 'rejectCancellation'])->name('orders.cancellation.reject');

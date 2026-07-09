@@ -28,6 +28,20 @@ class Order extends Model
     public const STATUS_CANCELLED = 'cancelled';
 
     /**
+     * Whitelist of supported logistics carriers. Kept as a closed list (rather
+     * than free text) so a future carrier-tracking API integration doesn't have
+     * to deal with typo'd values.
+     */
+    public const CARRIERS = [
+        'black_cat',
+        'hct',
+        'post_office',
+        'seven_eleven',
+        'family_mart',
+        'other',
+    ];
+
+    /**
      * Forward progress ranking of the normal fulfillment flow. Higher = later.
      * Used to forbid backward transitions while still allowing legitimate skips
      * (e.g. pending→shipped for cash-on-delivery, paid→completed for virtual goods).
@@ -94,6 +108,8 @@ class Order extends Model
         'shipping_name',
         'shipping_phone',
         'shipping_address',
+        'carrier',
+        'tracking_number',
         'payment_method',
         'paid_at',
         'gateway_trade_no',

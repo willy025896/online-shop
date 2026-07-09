@@ -10,6 +10,7 @@ import DangerButton from '@/Components/DangerButton.vue';
 import SecondaryButton from '@/Components/SecondaryButton.vue';
 import InputError from '@/Components/InputError.vue';
 import ImageWithFallback from '@/Components/ImageWithFallback.vue';
+import { carrierLabel } from '@/Utils/carrierLabel';
 
 const props = defineProps({
     order: Object,
@@ -184,6 +185,10 @@ const askSeller = (orderId) => {
                         <p class="text-gray-900 dark:text-gray-100">{{ order.shipping_name }}</p>
                         <p class="text-sm text-gray-600 dark:text-gray-400">{{ order.shipping_phone }}</p>
                         <p class="text-sm text-gray-600 dark:text-gray-400">{{ order.shipping_address }}</p>
+                        <div v-if="order.carrier || order.tracking_number" class="mt-4 rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900/50 p-4">
+                            <p v-if="order.carrier" class="text-sm text-gray-700 dark:text-gray-300"><span class="font-medium">{{ lang.shipping_carrier }}:</span> {{ carrierLabel(lang.carriers, order.carrier) }}</p>
+                            <p v-if="order.tracking_number" class="text-sm text-gray-700 dark:text-gray-300"><span class="font-medium">{{ lang.tracking_number }}:</span> {{ order.tracking_number }}</p>
+                        </div>
                     </div>
                 </div>
 

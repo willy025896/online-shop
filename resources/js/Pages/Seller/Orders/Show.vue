@@ -13,6 +13,7 @@ import { Link } from '@inertiajs/vue3';
 import { useReviewCountdown } from '@/Composables/useReviewCountdown';
 import { useAsyncAction } from '@/Composables/useAsyncAction';
 import { useToast } from '@/Composables/useToast';
+import { carrierLabel } from '@/Utils/carrierLabel';
 
 const props = defineProps({
     order: Object,
@@ -36,10 +37,48 @@ const canSellerCancel = computed(() => props.canSellerCancel);
 
 const toast = useToast();
 
+const trackingNumber = ref(props.order.tracking_number || '');
+const carrier = ref(props.order.carrier || '');
+const showShipmentFields = computed(() => props.nextStatuses[props.order.status] === 'shipped');
+const carrierOptions = computed(() => t.value.carriers || {});
+
 const { processing: updatingStatus, run: runUpdateStatus } = useAsyncAction();
 const updateStatus = (status) => {
-    runUpdateStatus((finish) => router.patch(route('seller.orders.status', props.order.id), { status }, {
-        onError: (errors) => toast.error(errors.status),
+    // Only the transition into "shipped" edits carrier/tracking_number (as
+    // null when empty, so the seller can clear a previously filled value);
+    // other transitions leave those columns untouched.
+    const payload = showShipmentFields.value
+        ? { status, carrier: carrier.value || null, tracking_number: trackingNumber.value || null }
+        : { status };
+
+    runUpdateStatus((finish) => router.patch(route('seller.orders.status', props.order.id), payload, {
+        onError: (errors) => toast.error(errors.carrier || errors.tracking_number || errors.status),
+        onFinish: finish,
+    }));
+};
+
+// Once shipped, the status-transition gate above no longer offers a
+// "shipped" step to attach carrier/tracking_number to, so editing them
+// afterwards (e.g. the tracking number wasn't known yet at ship time, or
+// was mistyped) goes through a separate endpoint that doesn't touch status.
+const canEditShipment = computed(() => ['shipped', 'completed'].includes(props.order.status));
+const editingShipment = ref(false);
+
+const startEditShipment = () => {
+    carrier.value = props.order.carrier || '';
+    trackingNumber.value = props.order.tracking_number || '';
+    editingShipment.value = true;
+};
+
+const { processing: savingShipment, run: runSaveShipment } = useAsyncAction();
+const saveShipment = () => {
+    runSaveShipment((finish) => router.patch(route('seller.orders.shipment', props.order.id), {
+        carrier: carrier.value || null,
+        tracking_number: trackingNumber.value || null,
+    }, {
+        preserveScroll: true,
+        onSuccess: () => { editingShipment.value = false; },
+        onError: (errors) => toast.error(errors.carrier || errors.tracking_number),
         onFinish: finish,
     }));
 };
@@ -113,7 +152,6 @@ const submitRejectReturn = () => {
     });
 };
 
-const nextStatuses = props.nextStatuses;
 </script>
 
 <template>
@@ -250,6 +288,56 @@ const nextStatuses = props.nextStatuses;
                         <dt class="text-gray-500 dark:text-gray-400">{{ t.address }}</dt>
                         <dd class="mt-1 text-gray-900 dark:text-gray-100">{{ order.shipping_address }}</dd>
                     </div>
+                    <div v-if="order.carrier || order.tracking_number || canEditShipment" class="col-span-2">
+                        <div class="flex items-center justify-between">
+                            <dt class="text-gray-500 dark:text-gray-400">{{ t.shipping_carrier }} / {{ t.tracking_number }}</dt>
+                            <button
+                                v-if="canEditShipment && !editingShipment"
+                                @click="startEditShipment"
+                                class="text-xs font-medium text-indigo-600 hover:text-indigo-500"
+                            >
+                                {{ t.edit_shipment }}
+                            </button>
+                        </div>
+                        <div v-if="editingShipment" class="grid gap-3 mt-2">
+                            <select
+                                v-model="carrier"
+                                class="block w-full rounded-md border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-sm"
+                            >
+                                <option value="">{{ t.select_carrier }}</option>
+                                <option v-for="(label, value) in carrierOptions" :key="value" :value="value">{{ label }}</option>
+                            </select>
+                            <input
+                                v-model="trackingNumber"
+                                type="text"
+                                class="block w-full rounded-md border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-sm"
+                                :placeholder="t.tracking_number"
+                            />
+                            <div class="flex gap-2">
+                                <button
+                                    @click="saveShipment"
+                                    :disabled="savingShipment"
+                                    class="inline-flex items-center gap-2 px-3 py-1.5 bg-indigo-600 text-white text-xs font-medium rounded-md hover:bg-indigo-700 disabled:opacity-50"
+                                >
+                                    <Spinner v-if="savingShipment" class="h-3 w-3" />
+                                    {{ t.confirm }}
+                                </button>
+                                <button
+                                    @click="editingShipment = false"
+                                    :disabled="savingShipment"
+                                    class="px-3 py-1.5 text-xs font-medium text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100"
+                                >
+                                    {{ t.cancel }}
+                                </button>
+                            </div>
+                        </div>
+                        <dd v-else class="mt-1 text-gray-900 dark:text-gray-100">
+                            <span v-if="order.carrier">{{ carrierLabel(carrierOptions, order.carrier) }}</span>
+                            <span v-if="order.carrier && order.tracking_number"> — </span>
+                            <span v-if="order.tracking_number">{{ order.tracking_number }}</span>
+                            <span v-if="!order.carrier && !order.tracking_number" class="text-gray-400 italic">{{ t.no_shipment_info }}</span>
+                        </dd>
+                    </div>
                 </dl>
             </div>
 
@@ -293,7 +381,28 @@ const nextStatuses = props.nextStatuses;
             <!-- Update Status -->
             <div v-if="nextStatuses[order.status]" class="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-6">
                 <h3 class="text-lg font-medium text-gray-900 dark:text-gray-100 mb-4">{{ t.update_status }}</h3>
-                <div class="flex gap-3">
+                <div v-if="showShipmentFields" class="grid gap-4 mb-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">{{ t.shipping_carrier }}</label>
+                        <select
+                            v-model="carrier"
+                            class="block w-full rounded-md border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-sm"
+                        >
+                            <option value="">{{ t.select_carrier }}</option>
+                            <option v-for="(label, value) in carrierOptions" :key="value" :value="value">{{ label }}</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">{{ t.tracking_number }}</label>
+                        <input
+                            v-model="trackingNumber"
+                            type="text"
+                            class="block w-full rounded-md border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-sm"
+                            :placeholder="t.tracking_number"
+                        />
+                    </div>
+                </div>
+                <div class="flex gap-3 flex-wrap">
                     <button
                         @click="updateStatus(nextStatuses[order.status])"
                         :disabled="updatingStatus"
