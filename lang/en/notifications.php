@@ -41,7 +41,7 @@ return [
         ],
         'return_approved' => [
             'title' => 'Return approved',
-            'body' => 'Your return request for order #:number was approved.',
+            'body' => 'Your return request for order #:number was approved. Refund amount: $:amount.',
         ],
         'return_rejected' => [
             'title' => 'Return rejected',
@@ -96,5 +96,9 @@ return [
             'title' => ':name sent you a new message',
             'attachment' => '[Attachment]',
         ],
+    ],
+
+    'mail' => [
+        'view_details' => 'View Details',
     ],
 ];

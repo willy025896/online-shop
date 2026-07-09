@@ -4,19 +4,16 @@ namespace App\Notifications;
 
 use App\Models\OrderReturn;
 use App\Notifications\Concerns\BroadcastsAsArray;
+use App\Notifications\Concerns\MailsAsArray;
 use Illuminate\Bus\Queueable;
+use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Notification;
 
-class OrderReturnRespondedNotification extends Notification
+class OrderReturnRespondedNotification extends Notification implements ShouldQueue
 {
-    use BroadcastsAsArray, Queueable;
+    use BroadcastsAsArray, MailsAsArray, Queueable;
 
     public function __construct(public OrderReturn $orderReturn) {}
-
-    public function via(object $notifiable): array
-    {
-        return ['database', 'broadcast'];
-    }
 
     public function toArray(object $notifiable): array
     {
@@ -24,10 +21,15 @@ class OrderReturnRespondedNotification extends Notification
         $approved = $this->orderReturn->status === OrderReturn::STATUS_APPROVED;
         $key = $approved ? 'approved' : 'rejected';
 
+        $bodyParams = ['number' => $order->order_number];
+        if ($approved) {
+            $bodyParams['amount'] = number_format((float) $this->orderReturn->refund_amount, 2);
+        }
+
         return [
             'type' => 'order.return_'.$key,
             'title' => __('notifications.order.return_'.$key.'.title'),
-            'body' => __('notifications.order.return_'.$key.'.body', ['number' => $order->order_number]),
+            'body' => __('notifications.order.return_'.$key.'.body', $bodyParams),
             'url' => route('orders.show', $order),
             'meta' => [
                 'order_id' => $order->id,

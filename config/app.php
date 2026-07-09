@@ -84,6 +84,10 @@ return [
 
     'faker_locale' => env('APP_FAKER_LOCALE', 'en_US'),
 
+    // Locales selectable via the front-end language switcher (LocaleController,
+    // SetLocale middleware). Single source of truth so the two never drift apart.
+    'supported_locales' => ['en', 'zh_TW'],
+
     /*
     |--------------------------------------------------------------------------
     | Encryption Key

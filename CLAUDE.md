@@ -35,7 +35,7 @@ npm install
 # Development
 npm run dev          # Start Vite dev server (hot reload)
 php artisan serve    # Start Laravel dev server
-npm run dev:full     # Start Vite + Laravel + Reverb in parallel (use this when working on notifications/messaging)
+npm run dev:full     # Start Vite + Laravel + Reverb + queue:listen in parallel (use this when working on notifications/messaging)
 
 # Build
 npm run build        # Production Vite build
@@ -107,7 +107,7 @@ Auth is handled entirely by Jetstream/Fortify. The middleware group `['auth:sanc
 
 Role-based access uses the `EnsureRole` middleware registered as `role` — e.g. `'role:seller,admin'`. User roles are stored as a string column on `users` and can be `customer`, `seller`, or `admin`.
 
-Locale is set per-request by `SetLocale` middleware (`app/Http/Middleware/SetLocale.php`), which reads `session('locale')` and calls `App::setLocale()`. The `LocaleController` stores the chosen locale into the session.
+Locale is set per-request by `SetLocale` middleware (`app/Http/Middleware/SetLocale.php`), which reads `session('locale')` — falling back to the authenticated user's persisted `users.locale` column (e.g. a fresh session on a new device) before the app default — and calls `App::setLocale()`, writing the resolved value back into the session when it changed. `LocaleController::store()` persists the chosen locale into both the session and (for authenticated users) `users.locale`; `CreateNewUser` seeds `locale` from `app()->getLocale()` at registration. `users.locale` is also what `User::preferredLocale()` (`HasLocalePreference`) reads for queued notifications — see ADR-016. The set of selectable locales (`en`/`zh_TW`) is centralized in `config('app.supported_locales')` — both `SetLocale` and `LocaleController`'s validation rule read from it, so adding a locale is a one-line config change, not two hand-kept lists.
 
 ### Model Constants
 
@@ -256,10 +256,13 @@ Key design points:
 
 ### Notifications
 
-Uses Laravel's built-in `Notifiable` pipeline. Each Notification's `via()` returns `['database', 'broadcast']`:
+Uses Laravel's built-in `Notifiable` pipeline. Each Notification's `via()` returns `['database', 'broadcast']`, plus `'mail'` for the 9 order-lifecycle-critical events listed below (see ADR-016):
 
 - **database** — written to the `notifications` table; the `NotificationBell` dropdown and `/notifications` index page read from it via `$request->user()->notifications()` / `unreadNotifications()`.
 - **broadcast** — pushed over Reverb to Laravel's default `private-App.Models.User.{id}` channel (authorization is registered in `routes/channels.php`). The front-end `NotificationBell.vue` subscribes via `Echo.private(...).notification(cb)` and prepends new entries without a page reload.
+- **mail** — via `toMail()` from the `MailsAsArray` trait (mirrors `BroadcastsAsArray`, see below). Only added to notifications representing events a recipient shouldn't miss while logged out: `OrderPaidNotification`, `OrderStatusChangedNotification`, `OrderCancellationRequestedNotification`, `OrderCancellationRespondedNotification`, `OrderCancelledBySellerNotification`, `OrderReturnRequestedNotification`, `OrderReturnRespondedNotification`, `PayoutCompletedNotification`, `ShopStatusChangedNotification`. Chat (`NewMessageNotification`) and review-flow notifications deliberately stay database+broadcast only, to avoid mail spam. `MAIL_MAILER=log` by default — no real SMTP is configured out of the box (see ADR-016).
+
+These same 9 classes `implements ShouldQueue` — required so the mail send actually happens asynchronously on the queue rather than blocking the request/webhook thread that triggered it. Several dispatch sites hold a `DB::transaction` + `lockForUpdate()` while calling `->notify()` (`PaymentService::markAsPaid`, `OrderService`'s cancellation/return methods, `Order::booted()`'s `updated` event, `PayoutService::generateForShop`); without `ShouldQueue`, a slow/failed mail send would extend the row lock and could roll back an already-correct business transaction over a transient SMTP hiccup. This means local dev needs a running queue worker for these 9 to actually deliver — `npm run dev:full` starts `php artisan queue:listen` alongside Vite/Reverb for this reason. The other 5 classes (chat, review-flow) are **not** `ShouldQueue` — they're cheap local writes (no external I/O) and, for `NewMessageNotification` specifically, need to land synchronously alongside the immediate chat broadcast.
 
 Notification classes live in `app/Notifications/`. Each `toArray()` returns a uniform payload — `{ type, title, body, url, meta }` — so the bell renders any type from a single template.
 
@@ -284,7 +287,9 @@ Channel auth is in `routes/channels.php`: `App.Models.User.{id}` accepts only th
 
 The `MessageSent` event (`Conversation` chat) is a **separate broadcast channel** (`private-conversation.{id}`) from the notification pipeline's `App.Models.User.{id}` channel — chat keeps its own `unreadMessageCount` badge and real-time bubble rendering via `MessageSent`; don't merge the two channels. They are not mutually exclusive, though: `ConversationService::sendMessage()` fires **both** — `broadcast(new MessageSent($message))->toOthers()` for the open chat thread, **and** `NewMessageNotification` (database + bell) so the recipient is told about a new message even when they aren't on the Messages page.
 
-All Notification classes share the `BroadcastsAsArray` trait (`app/Notifications/Concerns/BroadcastsAsArray.php`), which implements `toBroadcast()` as `new BroadcastMessage($this->toArray($notifiable))`. This enforces the project-wide convention that broadcast payload = database payload. New Notification classes must `use BroadcastsAsArray, Queueable;` and must NOT add a custom `toBroadcast()`.
+All Notification classes share the `BroadcastsAsArray` trait (`app/Notifications/Concerns/BroadcastsAsArray.php`), which implements `toBroadcast()` as `new BroadcastMessage($this->toArray($notifiable))`. This enforces the project-wide convention that broadcast payload = database payload. New Notification classes must `use BroadcastsAsArray, Queueable;` and must NOT add a custom `toBroadcast()`. The 9 mail-enabled classes additionally `use MailsAsArray;` (`app/Notifications/Concerns/MailsAsArray.php`), which implements **both** `toMail()` (built entirely from `toArray()`'s `title`/`body`/`url`) **and** `via()` (`['database', 'broadcast', 'mail']` — since none of the 9 classes vary this per-notifiable, it lives once in the trait rather than being copy-pasted into each class). Adding mail to a new event is therefore just `use MailsAsArray;` + `implements ShouldQueue` — no custom `toMail()` or `via()` needed. Any class NOT using `MailsAsArray` must still declare its own `via()` (typically `['database', 'broadcast']`).
+
+**Locale for queued sends** — the 9 mail-enabled notifications are genuinely queued (`QUEUE_CONNECTION=database`, `ShouldQueue`), so by the time a queue worker renders one, the HTTP session that triggered it is long gone. `User implements HasLocalePreference` (`preferredLocale()` returns the `users.locale` column, persisted by `LocaleController::store()` whenever an authenticated user switches language, and seeded at registration by `CreateNewUser`) — Laravel's `NotificationSender::sendNow()` automatically wraps the entire send (`toArray()`/`toBroadcast()`/`toMail()`) in the recipient's preferred locale when this contract is implemented. This is a general fix, not mail-specific: it also corrects the same latent locale bug for the database/broadcast channels on these 9 classes. See ADR-016.
 
 **Review notification trigger map (additions):**
 
@@ -363,13 +368,13 @@ online-shop/
 │   ├── Http/
 │   │   ├── Controllers/        # public + utility + seller + admin (incl. NotificationController, EcpayController, Review controllers)
 │   │   └── Middleware/         # EnsureRole, SetLocale, HandleInertiaRequests
-│   ├── Notifications/          # 14 Notification classes (Order*, Shop*, Review*, Payout*); all use BroadcastsAsArray trait
-│   │   └── Concerns/           # BroadcastsAsArray trait
+│   ├── Notifications/          # 14 Notification classes (Order*, Shop*, Review*, Payout*); all use BroadcastsAsArray trait, 9 also use MailsAsArray (mail channel)
+│   │   └── Concerns/           # BroadcastsAsArray, MailsAsArray traits
 │   ├── Policies/               # 6 policies (Product, Order, Shop, ProductReview, Coupon, ...)
 │   ├── Models/                 # 27 models (User, Shop, Product, Order, OrderReturn, ProductVariant, ProductReview, BuyerReview, WishlistItem, Coupon, Payout, PayoutItem, ...)
 │   └── Services/               # Cart, Order, Payment, Ecpay (gateway), Shipping, Coupon, Conversation, Review, Wishlist, ProductVariant, Payout, Recommendation, AdminAuditLogger
 ├── database/
-│   └── migrations/             # 47 migrations (incl. product_reviews, buyer_reviews, aggregates, completed_at, wishlist_items, product_variants, order_returns, payouts, gateway_trade_no)
+│   └── migrations/             # 48 migrations (incl. product_reviews, buyer_reviews, aggregates, completed_at, wishlist_items, product_variants, order_returns, payouts, gateway_trade_no, users.locale)
 ├── lang/
 │   ├── en/                     # English translations (incl. notifications.php, reviews.php, wishlist.php)
 │   └── zh_TW/                  # Traditional Chinese translations

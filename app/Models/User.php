@@ -3,6 +3,7 @@
 namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
+use Illuminate\Contracts\Translation\HasLocalePreference;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -13,7 +14,7 @@ use Laravel\Fortify\TwoFactorAuthenticatable;
 use Laravel\Jetstream\HasProfilePhoto;
 use Laravel\Sanctum\HasApiTokens;
 
-class User extends Authenticatable
+class User extends Authenticatable implements HasLocalePreference
 {
     use HasApiTokens;
     use HasFactory;
@@ -32,6 +33,7 @@ class User extends Authenticatable
         'email',
         'password',
         'phone',
+        'locale',
         'preferences',
         'buyer_reviews_count',
         'buyer_rating_sum',
@@ -116,6 +118,11 @@ class User extends Authenticatable
     public function isCustomer(): bool
     {
         return $this->role === self::ROLE_CUSTOMER;
+    }
+
+    public function preferredLocale(): ?string
+    {
+        return $this->locale;
     }
 
     public function wishlistItems(): HasMany

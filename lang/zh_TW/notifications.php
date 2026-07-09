@@ -41,7 +41,7 @@ return [
         ],
         'return_approved' => [
             'title' => '退貨已核准',
-            'body' => '您的訂單 #:number 退貨申請已核准。',
+            'body' => '您的訂單 #:number 退貨申請已核准，退款金額：$:amount。',
         ],
         'return_rejected' => [
             'title' => '退貨已拒絕',
@@ -96,5 +96,9 @@ return [
             'title' => ':name 傳送了新訊息給您',
             'attachment' => '[附件]',
         ],
+    ],
+
+    'mail' => [
+        'view_details' => '查看詳情',
     ],
 ];

@@ -4,19 +4,16 @@ namespace App\Notifications;
 
 use App\Models\Order;
 use App\Notifications\Concerns\BroadcastsAsArray;
+use App\Notifications\Concerns\MailsAsArray;
 use Illuminate\Bus\Queueable;
+use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Notification;
 
-class OrderCancelledBySellerNotification extends Notification
+class OrderCancelledBySellerNotification extends Notification implements ShouldQueue
 {
-    use BroadcastsAsArray, Queueable;
+    use BroadcastsAsArray, MailsAsArray, Queueable;
 
     public function __construct(public Order $order) {}
-
-    public function via(object $notifiable): array
-    {
-        return ['database', 'broadcast'];
-    }
 
     public function toArray(object $notifiable): array
     {

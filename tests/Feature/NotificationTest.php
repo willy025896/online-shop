@@ -1,15 +1,27 @@
 <?php
 
+use App\Models\Message;
 use App\Models\Order;
 use App\Models\OrderCancellation;
+use App\Models\OrderReturn;
+use App\Models\Payout;
 use App\Models\Product;
+use App\Models\ProductReview;
 use App\Models\Shop;
 use App\Models\User;
+use App\Notifications\NewMessageNotification;
 use App\Notifications\OrderCancellationRequestedNotification;
 use App\Notifications\OrderCancellationRespondedNotification;
 use App\Notifications\OrderCancelledBySellerNotification;
 use App\Notifications\OrderPaidNotification;
+use App\Notifications\OrderReturnRequestedNotification;
+use App\Notifications\OrderReturnRespondedNotification;
 use App\Notifications\OrderStatusChangedNotification;
+use App\Notifications\PayoutCompletedNotification;
+use App\Notifications\ReviewCoolingResetNotification;
+use App\Notifications\ReviewCoolingStartedNotification;
+use App\Notifications\ReviewReleasedNotification;
+use App\Notifications\SellerReplyNotification;
 use App\Notifications\ShopStatusChangedNotification;
 use Illuminate\Support\Facades\Notification;
 
@@ -29,6 +41,22 @@ function makeOrderForNotificationTest(array $orderState = [], int $stock = 5, in
     ]);
 
     return compact('seller', 'shop', 'product', 'buyer', 'order');
+}
+
+/** @return array<int, \Illuminate\Notifications\Notification> */
+function mailEnabledNotifications(Order $order, OrderCancellation $cancellation, OrderReturn $orderReturn, Payout $payout): array
+{
+    return [
+        new OrderPaidNotification($order),
+        new OrderStatusChangedNotification($order, Order::STATUS_SHIPPED),
+        new OrderCancellationRequestedNotification($order),
+        new OrderCancellationRespondedNotification($cancellation),
+        new OrderCancelledBySellerNotification($order),
+        new OrderReturnRequestedNotification($order),
+        new OrderReturnRespondedNotification($orderReturn),
+        new PayoutCompletedNotification($payout),
+        new ShopStatusChangedNotification($order->shop),
+    ];
 }
 
 // ---- Trigger tests ----
@@ -143,6 +171,138 @@ test('shop approval notifies the seller', function () {
         ->assertRedirect();
 
     Notification::assertSentTo($seller, ShopStatusChangedNotification::class);
+});
+
+// ---- Mail channel tests ----
+
+test('order-lifecycle-critical notifications include the mail channel', function () {
+    ['buyer' => $buyer, 'order' => $order] = makeOrderForNotificationTest();
+    $cancellation = OrderCancellation::factory()->requested()->create(['order_id' => $order->id]);
+    $orderReturn = OrderReturn::factory()->requested()->create(['order_id' => $order->id]);
+    $payout = Payout::factory()->create(['shop_id' => $order->shop_id]);
+
+    foreach (mailEnabledNotifications($order, $cancellation, $orderReturn, $payout) as $notification) {
+        expect($notification->via($buyer))->toContain('mail');
+    }
+});
+
+test('chat and review-flow notifications do NOT include the mail channel', function () {
+    ['order' => $order] = makeOrderForNotificationTest();
+    $message = Message::factory()->create();
+    $productReview = ProductReview::factory()->create();
+
+    $notMailable = [
+        new NewMessageNotification($message),
+        new ReviewCoolingStartedNotification($order, now()->addDay()),
+        new ReviewCoolingResetNotification($order),
+        new ReviewReleasedNotification($order, null),
+        new SellerReplyNotification($productReview),
+    ];
+
+    foreach ($notMailable as $notification) {
+        expect($notification->via($order->user))->not->toContain('mail');
+    }
+});
+
+test('OrderPaidNotification renders a mail message from the same payload as the bell', function () {
+    ['seller' => $seller, 'order' => $order] = makeOrderForNotificationTest();
+
+    $mail = (new OrderPaidNotification($order))->toMail($seller);
+
+    expect($mail->subject)->toBe(__('notifications.order.paid.title'));
+    expect($mail->introLines)->toContain(__('notifications.order.paid.body', ['number' => $order->order_number]));
+    expect($mail->actionText)->toBe(__('notifications.mail.view_details'));
+    expect($mail->actionUrl)->toBe(route('seller.orders.show', $order));
+});
+
+test('OrderCancellationRespondedNotification mail reflects the approved/rejected outcome', function () {
+    ['buyer' => $buyer, 'order' => $order] = makeOrderForNotificationTest();
+    $cancellation = OrderCancellation::factory()->approved()->create(['order_id' => $order->id]);
+
+    $mail = (new OrderCancellationRespondedNotification($cancellation))->toMail($buyer);
+
+    expect($mail->subject)->toBe(__('notifications.order.cancellation_approved.title'));
+    expect($mail->actionUrl)->toBe(route('orders.show', $order));
+});
+
+// ---- Locale persistence tests ----
+
+test('preferredLocale returns the persisted locale column', function () {
+    $user = User::factory()->create(['locale' => 'zh_TW']);
+
+    expect($user->preferredLocale())->toBe('zh_TW');
+    expect(User::factory()->create(['locale' => null])->preferredLocale())->toBeNull();
+});
+
+test('switching locale persists it onto the authenticated user', function () {
+    $user = User::factory()->create(['locale' => null]);
+
+    $this->actingAs($user)
+        ->post(route('locale.store'), ['locale' => 'zh_TW'])
+        ->assertRedirect();
+
+    expect($user->fresh()->locale)->toBe('zh_TW');
+});
+
+test('switching locale as a guest only writes to the session', function () {
+    $this->post(route('locale.store'), ['locale' => 'zh_TW'])
+        ->assertRedirect();
+
+    expect(session('locale'))->toBe('zh_TW');
+});
+
+test('User implements HasLocalePreference so Laravel wraps queued notification sends in the recipient locale', function () {
+    // This is the actual wiring a queued send depends on (NotificationSender::sendNow()
+    // only calls preferredLocale() and wraps the whole send in App::setLocale(...) for
+    // notifiables implementing this contract) — asserting the contract, not
+    // re-testing Laravel's own withLocale()/preferredLocale() machinery.
+    expect(User::factory()->create())->toBeInstanceOf(\Illuminate\Contracts\Translation\HasLocalePreference::class);
+});
+
+test('the 9 mail-enabled notifications implement ShouldQueue so mail sends never block the triggering request/transaction', function () {
+    ['order' => $order] = makeOrderForNotificationTest();
+    $cancellation = OrderCancellation::factory()->requested()->create(['order_id' => $order->id]);
+    $orderReturn = OrderReturn::factory()->requested()->create(['order_id' => $order->id]);
+    $payout = Payout::factory()->create(['shop_id' => $order->shop_id]);
+
+    foreach (mailEnabledNotifications($order, $cancellation, $orderReturn, $payout) as $notification) {
+        expect($notification)->toBeInstanceOf(\Illuminate\Contracts\Queue\ShouldQueue::class);
+    }
+});
+
+test('an approved return mail includes the refund amount, not just the in-app meta', function () {
+    ['buyer' => $buyer, 'order' => $order] = makeOrderForNotificationTest();
+    $orderReturn = OrderReturn::factory()->approved()->create(['order_id' => $order->id, 'refund_amount' => 150]);
+
+    $notification = new OrderReturnRespondedNotification($orderReturn);
+    $data = $notification->toArray($buyer);
+    $mail = $notification->toMail($buyer);
+
+    expect($data['body'])->toContain('150.00');
+    expect($mail->introLines)->toContain($data['body']);
+});
+
+test('SetLocale falls back to the authenticated users persisted locale when the session has none', function () {
+    $user = User::factory()->create(['locale' => 'zh_TW']);
+
+    $this->actingAs($user)
+        ->get(route('dashboard'))
+        ->assertInertia(fn ($page) => $page->where('locale', 'zh_TW'));
+
+    expect(session('locale'))->toBe('zh_TW');
+});
+
+test('registering a new user seeds locale from the current session', function () {
+    session(['locale' => 'zh_TW']);
+
+    $this->post(route('register'), [
+        'name' => 'Test User',
+        'email' => 'newuser@example.com',
+        'password' => 'password',
+        'password_confirmation' => 'password',
+    ])->assertRedirect();
+
+    expect(User::where('email', 'newuser@example.com')->first()->locale)->toBe('zh_TW');
 });
 
 // ---- API tests ----

@@ -30,6 +30,11 @@ class CreateNewUser implements CreatesNewUsers
             'name' => $input['name'],
             'email' => $input['email'],
             'password' => Hash::make($input['password']),
+            // Seed from the locale they were already browsing in (resolved by
+            // SetLocale middleware earlier in the request), so queued
+            // notifications don't fall back to the app default until they
+            // explicitly switch.
+            'locale' => app()->getLocale(),
         ]);
     }
 }
