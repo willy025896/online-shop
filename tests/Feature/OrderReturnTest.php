@@ -52,7 +52,7 @@ test('buyer can request a return within the window', function () {
         ])
         ->assertRedirect();
 
-    expect($order->returns()->where('status', 'requested')->count())->toBe(1);
+    expect($order->returns()->where('status', OrderReturn::STATUS_REQUESTED)->count())->toBe(1);
     expect($order->returns()->first()->items()->count())->toBe(1);
 });
 
@@ -70,7 +70,7 @@ test('buyer cannot request return outside the return window', function () {
 });
 
 test('buyer cannot request return on a non-completed order', function () {
-    ['buyer' => $buyer, 'order' => $order, 'item' => $item] = makeCompletedOrderWithItem(['status' => 'processing', 'completed_at' => null]);
+    ['buyer' => $buyer, 'order' => $order, 'item' => $item] = makeCompletedOrderWithItem(['status' => Order::STATUS_PROCESSING, 'completed_at' => null]);
 
     $this->actingAs($buyer)
         ->post(route('orders.returns.store', $order), [
@@ -116,9 +116,9 @@ test('seller can approve a return which restores stock and refunds without chang
         ->assertRedirect();
 
     expect($product->fresh()->stock)->toBe(6);
-    expect($order->fresh()->status)->toBe('completed');
+    expect($order->fresh()->status)->toBe(Order::STATUS_COMPLETED);
     expect((float) $order->fresh()->refunded_amount)->toBe(100.0);
-    expect($return->fresh()->status)->toBe('approved');
+    expect($return->fresh()->status)->toBe(OrderReturn::STATUS_APPROVED);
     expect((float) $return->fresh()->refund_amount)->toBe(100.0);
 });
 
@@ -133,7 +133,7 @@ test('seller can reject a return leaving stock and refund unchanged', function (
 
     expect($product->fresh()->stock)->toBe(5);
     expect((float) $order->fresh()->refunded_amount)->toBe(0.0);
-    expect($return->fresh()->status)->toBe('rejected');
+    expect($return->fresh()->status)->toBe(OrderReturn::STATUS_REJECTED);
     expect($return->fresh()->response_reason)->toBe('Item not returned');
 });
 

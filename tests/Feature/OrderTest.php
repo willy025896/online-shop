@@ -50,10 +50,10 @@ test('seller can update order status', function () {
     $order = Order::factory()->paid()->create(['shop_id' => $shop->id]);
 
     $this->actingAs($user)
-        ->patch(route('seller.orders.status', $order), ['status' => 'processing'])
+        ->patch(route('seller.orders.status', $order), ['status' => Order::STATUS_PROCESSING])
         ->assertRedirect();
 
-    expect($order->fresh()->status)->toBe('processing');
+    expect($order->fresh()->status)->toBe(Order::STATUS_PROCESSING);
 });
 
 test('checkout page shows only items matching item_ids', function () {
@@ -165,31 +165,31 @@ function makeOrderWithItem(array $orderState = [], int $stock = 5, int $qty = 2)
 }
 
 test('buyer can directly cancel a pending order with a reason and stock is restored', function () {
-    ['buyer' => $buyer, 'product' => $product, 'order' => $order] = makeOrderWithItem(['status' => 'pending'], stock: 5, qty: 2);
+    ['buyer' => $buyer, 'product' => $product, 'order' => $order] = makeOrderWithItem(['status' => Order::STATUS_PENDING], stock: 5, qty: 2);
 
     $this->actingAs($buyer)
         ->post(route('orders.cancel', $order), ['reason' => 'Changed my mind'])
         ->assertRedirect();
 
-    expect($order->fresh()->status)->toBe('cancelled');
+    expect($order->fresh()->status)->toBe(Order::STATUS_CANCELLED);
     expect($product->fresh()->stock)->toBe(7);
-    expect($order->cancellations()->where('status', 'approved')->where('initiated_by', 'buyer')->count())->toBe(1);
+    expect($order->cancellations()->where('status', OrderCancellation::STATUS_APPROVED)->where('initiated_by', OrderCancellation::INITIATED_BY_BUYER)->count())->toBe(1);
 });
 
 test('buyer requesting cancellation on a processing order does not cancel it yet', function () {
-    ['buyer' => $buyer, 'product' => $product, 'order' => $order] = makeOrderWithItem(['status' => 'processing'], stock: 5, qty: 2);
+    ['buyer' => $buyer, 'product' => $product, 'order' => $order] = makeOrderWithItem(['status' => Order::STATUS_PROCESSING], stock: 5, qty: 2);
 
     $this->actingAs($buyer)
         ->post(route('orders.cancel', $order), ['reason' => 'Too slow'])
         ->assertRedirect();
 
-    expect($order->fresh()->status)->toBe('processing');
+    expect($order->fresh()->status)->toBe(Order::STATUS_PROCESSING);
     expect($product->fresh()->stock)->toBe(5);
-    expect($order->cancellations()->where('status', 'requested')->count())->toBe(1);
+    expect($order->cancellations()->where('status', OrderCancellation::STATUS_REQUESTED)->count())->toBe(1);
 });
 
 test('cancellation reason is required', function () {
-    ['buyer' => $buyer, 'order' => $order] = makeOrderWithItem(['status' => 'pending']);
+    ['buyer' => $buyer, 'order' => $order] = makeOrderWithItem(['status' => Order::STATUS_PENDING]);
 
     $this->actingAs($buyer)
         ->post(route('orders.cancel', $order), ['reason' => ''])
@@ -197,18 +197,18 @@ test('cancellation reason is required', function () {
 });
 
 test('buyer cannot cancel a shipped order', function () {
-    ['buyer' => $buyer, 'order' => $order] = makeOrderWithItem(['status' => 'shipped']);
+    ['buyer' => $buyer, 'order' => $order] = makeOrderWithItem(['status' => Order::STATUS_SHIPPED]);
 
     $this->actingAs($buyer)
         ->post(route('orders.cancel', $order), ['reason' => 'Too late'])
         ->assertForbidden();
 
-    expect($order->fresh()->status)->toBe('shipped');
+    expect($order->fresh()->status)->toBe(Order::STATUS_SHIPPED);
     expect($order->cancellations()->count())->toBe(0);
 });
 
 test('buyer cannot request cancellation again after rejection', function () {
-    ['buyer' => $buyer, 'order' => $order] = makeOrderWithItem(['status' => 'processing']);
+    ['buyer' => $buyer, 'order' => $order] = makeOrderWithItem(['status' => Order::STATUS_PROCESSING]);
     OrderCancellation::factory()->rejected()->create(['order_id' => $order->id]);
 
     $this->actingAs($buyer)
@@ -217,56 +217,56 @@ test('buyer cannot request cancellation again after rejection', function () {
 });
 
 test('seller can approve a cancellation request which cancels the order and restores stock', function () {
-    ['seller' => $seller, 'product' => $product, 'order' => $order] = makeOrderWithItem(['status' => 'processing'], stock: 5, qty: 2);
+    ['seller' => $seller, 'product' => $product, 'order' => $order] = makeOrderWithItem(['status' => Order::STATUS_PROCESSING], stock: 5, qty: 2);
     OrderCancellation::factory()->requested()->create(['order_id' => $order->id]);
 
     $this->actingAs($seller)
         ->post(route('seller.orders.cancellation.approve', $order))
         ->assertRedirect();
 
-    expect($order->fresh()->status)->toBe('cancelled');
+    expect($order->fresh()->status)->toBe(Order::STATUS_CANCELLED);
     expect($product->fresh()->stock)->toBe(7);
 });
 
 test('seller can reject a cancellation request leaving the order unchanged', function () {
-    ['seller' => $seller, 'product' => $product, 'order' => $order] = makeOrderWithItem(['status' => 'processing'], stock: 5, qty: 2);
+    ['seller' => $seller, 'product' => $product, 'order' => $order] = makeOrderWithItem(['status' => Order::STATUS_PROCESSING], stock: 5, qty: 2);
     OrderCancellation::factory()->requested()->create(['order_id' => $order->id]);
 
     $this->actingAs($seller)
         ->post(route('seller.orders.cancellation.reject', $order), ['response_reason' => 'Already shipped'])
         ->assertRedirect();
 
-    expect($order->fresh()->status)->toBe('processing');
+    expect($order->fresh()->status)->toBe(Order::STATUS_PROCESSING);
     expect($product->fresh()->stock)->toBe(5);
-    expect($order->cancellations()->where('status', 'rejected')->count())->toBe(1);
+    expect($order->cancellations()->where('status', OrderCancellation::STATUS_REJECTED)->count())->toBe(1);
 });
 
 test('seller cannot directly cancel a shipped order', function () {
-    ['seller' => $seller, 'product' => $product, 'order' => $order] = makeOrderWithItem(['status' => 'shipped'], stock: 5, qty: 2);
+    ['seller' => $seller, 'product' => $product, 'order' => $order] = makeOrderWithItem(['status' => Order::STATUS_SHIPPED], stock: 5, qty: 2);
 
     $this->actingAs($seller)
         ->post(route('seller.orders.cancel', $order), ['reason' => 'Recall'])
         ->assertForbidden();
 
-    expect($order->fresh()->status)->toBe('shipped');
+    expect($order->fresh()->status)->toBe(Order::STATUS_SHIPPED);
     expect($product->fresh()->stock)->toBe(5);
     expect($order->cancellations()->count())->toBe(0);
 });
 
 test('seller can directly cancel an order with a reason', function () {
-    ['seller' => $seller, 'product' => $product, 'order' => $order] = makeOrderWithItem(['status' => 'processing'], stock: 5, qty: 2);
+    ['seller' => $seller, 'product' => $product, 'order' => $order] = makeOrderWithItem(['status' => Order::STATUS_PROCESSING], stock: 5, qty: 2);
 
     $this->actingAs($seller)
         ->post(route('seller.orders.cancel', $order), ['reason' => 'Out of stock'])
         ->assertRedirect();
 
-    expect($order->fresh()->status)->toBe('cancelled');
+    expect($order->fresh()->status)->toBe(Order::STATUS_CANCELLED);
     expect($product->fresh()->stock)->toBe(7);
-    expect($order->cancellations()->where('status', 'approved')->where('initiated_by', 'seller')->count())->toBe(1);
+    expect($order->cancellations()->where('status', OrderCancellation::STATUS_APPROVED)->where('initiated_by', OrderCancellation::INITIATED_BY_SELLER)->count())->toBe(1);
 });
 
 test('a different buyer cannot cancel someone elses order', function () {
-    ['order' => $order] = makeOrderWithItem(['status' => 'pending']);
+    ['order' => $order] = makeOrderWithItem(['status' => Order::STATUS_PENDING]);
     $other = User::factory()->create();
 
     $this->actingAs($other)
@@ -275,7 +275,7 @@ test('a different buyer cannot cancel someone elses order', function () {
 });
 
 test('a seller from another shop cannot manage a cancellation request', function () {
-    ['order' => $order] = makeOrderWithItem(['status' => 'processing']);
+    ['order' => $order] = makeOrderWithItem(['status' => Order::STATUS_PROCESSING]);
     OrderCancellation::factory()->requested()->create(['order_id' => $order->id]);
     $otherSeller = User::factory()->seller()->create();
     Shop::factory()->create(['user_id' => $otherSeller->id]);
@@ -286,7 +286,7 @@ test('a seller from another shop cannot manage a cancellation request', function
 });
 
 test('seller double approve or reject handles missing cancellation gracefully (Bug 1)', function () {
-    ['seller' => $seller, 'order' => $order] = makeOrderWithItem(['status' => 'processing']);
+    ['seller' => $seller, 'order' => $order] = makeOrderWithItem(['status' => Order::STATUS_PROCESSING]);
 
     $response = $this->actingAs($seller)
         ->post(route('seller.orders.cancellation.approve', $order));
@@ -300,7 +300,7 @@ test('seller double approve or reject handles missing cancellation gracefully (B
 });
 
 test('seller cannot bypass buyer review via cancelAsSeller when pending cancellation exists (Bug 3)', function () {
-    ['seller' => $seller, 'order' => $order] = makeOrderWithItem(['status' => 'processing']);
+    ['seller' => $seller, 'order' => $order] = makeOrderWithItem(['status' => Order::STATUS_PROCESSING]);
     OrderCancellation::factory()->requested()->create(['order_id' => $order->id]);
 
     $this->actingAs($seller)
@@ -309,114 +309,114 @@ test('seller cannot bypass buyer review via cancelAsSeller when pending cancella
 });
 
 test('duplicate cancellation requests are handled idempotently (Bug 4)', function () {
-    ['buyer' => $buyer, 'order' => $order] = makeOrderWithItem(['status' => 'processing']);
+    ['buyer' => $buyer, 'order' => $order] = makeOrderWithItem(['status' => Order::STATUS_PROCESSING]);
 
     $service = app(App\Services\OrderService::class);
 
     $service->requestCancellation($order, 'First try');
     $service->requestCancellation($order, 'Second try');
 
-    expect($order->cancellations()->where('status', 'requested')->count())->toBe(1);
+    expect($order->cancellations()->where('status', OrderCancellation::STATUS_REQUESTED)->count())->toBe(1);
 });
 
 test('duplicate direct buyer cancellations do not restore stock twice (Bug 5)', function () {
-    ['product' => $product, 'order' => $order] = makeOrderWithItem(['status' => 'paid'], stock: 5, qty: 2);
+    ['product' => $product, 'order' => $order] = makeOrderWithItem(['status' => Order::STATUS_PAID], stock: 5, qty: 2);
 
     $service = app(App\Services\OrderService::class);
 
     $service->directCancelByBuyer($order, 'First try');
     $service->directCancelByBuyer($order, 'Second try');
 
-    expect($order->fresh()->status)->toBe('cancelled');
+    expect($order->fresh()->status)->toBe(Order::STATUS_CANCELLED);
     expect($product->fresh()->stock)->toBe(7);
-    expect($order->cancellations()->where('status', 'approved')->count())->toBe(1);
+    expect($order->cancellations()->where('status', OrderCancellation::STATUS_APPROVED)->count())->toBe(1);
 });
 
 test('duplicate direct seller cancellations do not restore stock twice (Bug 5)', function () {
-    ['seller' => $seller, 'product' => $product, 'order' => $order] = makeOrderWithItem(['status' => 'processing'], stock: 5, qty: 2);
+    ['seller' => $seller, 'product' => $product, 'order' => $order] = makeOrderWithItem(['status' => Order::STATUS_PROCESSING], stock: 5, qty: 2);
 
     $service = app(App\Services\OrderService::class);
 
     $service->cancelBySeller($order, $seller, 'First try');
     $service->cancelBySeller($order, $seller, 'Second try');
 
-    expect($order->fresh()->status)->toBe('cancelled');
+    expect($order->fresh()->status)->toBe(Order::STATUS_CANCELLED);
     expect($product->fresh()->stock)->toBe(7);
-    expect($order->cancellations()->where('status', 'approved')->count())->toBe(1);
+    expect($order->cancellations()->where('status', OrderCancellation::STATUS_APPROVED)->count())->toBe(1);
 });
 
 test('seller cannot revive a cancelled order via status update (case 1)', function () {
-    ['seller' => $seller, 'order' => $order] = makeOrderWithItem(['status' => 'cancelled']);
+    ['seller' => $seller, 'order' => $order] = makeOrderWithItem(['status' => Order::STATUS_CANCELLED]);
 
     $this->actingAs($seller)
-        ->patch(route('seller.orders.status', $order), ['status' => 'processing'])
+        ->patch(route('seller.orders.status', $order), ['status' => Order::STATUS_PROCESSING])
         ->assertStatus(422);
 
-    expect($order->fresh()->status)->toBe('cancelled');
+    expect($order->fresh()->status)->toBe(Order::STATUS_CANCELLED);
 });
 
 test('seller cannot move order status backwards (case 4)', function () {
-    ['seller' => $seller, 'order' => $order] = makeOrderWithItem(['status' => 'shipped']);
+    ['seller' => $seller, 'order' => $order] = makeOrderWithItem(['status' => Order::STATUS_SHIPPED]);
 
     $this->actingAs($seller)
-        ->patch(route('seller.orders.status', $order), ['status' => 'processing'])
+        ->patch(route('seller.orders.status', $order), ['status' => Order::STATUS_PROCESSING])
         ->assertStatus(422);
 
-    expect($order->fresh()->status)->toBe('shipped');
+    expect($order->fresh()->status)->toBe(Order::STATUS_SHIPPED);
 });
 
 test('seller cannot update status while a buyer cancellation awaits review (case 5)', function () {
-    ['seller' => $seller, 'order' => $order] = makeOrderWithItem(['status' => 'processing']);
+    ['seller' => $seller, 'order' => $order] = makeOrderWithItem(['status' => Order::STATUS_PROCESSING]);
     OrderCancellation::factory()->requested()->create(['order_id' => $order->id]);
 
     $this->actingAs($seller)
-        ->patch(route('seller.orders.status', $order), ['status' => 'shipped'])
+        ->patch(route('seller.orders.status', $order), ['status' => Order::STATUS_SHIPPED])
         ->assertStatus(422);
 
-    expect($order->fresh()->status)->toBe('processing');
+    expect($order->fresh()->status)->toBe(Order::STATUS_PROCESSING);
 });
 
 test('seller can ship an unpaid order for cash-on-delivery (case 2 stays allowed)', function () {
-    ['seller' => $seller, 'order' => $order] = makeOrderWithItem(['status' => 'pending']);
+    ['seller' => $seller, 'order' => $order] = makeOrderWithItem(['status' => Order::STATUS_PENDING]);
 
     $this->actingAs($seller)
-        ->patch(route('seller.orders.status', $order), ['status' => 'shipped'])
+        ->patch(route('seller.orders.status', $order), ['status' => Order::STATUS_SHIPPED])
         ->assertRedirect();
 
-    expect($order->fresh()->status)->toBe('shipped');
+    expect($order->fresh()->status)->toBe(Order::STATUS_SHIPPED);
 });
 
 test('seller can complete a paid order directly for virtual goods (case 3 stays allowed)', function () {
-    ['seller' => $seller, 'order' => $order] = makeOrderWithItem(['status' => 'paid']);
+    ['seller' => $seller, 'order' => $order] = makeOrderWithItem(['status' => Order::STATUS_PAID]);
 
     $this->actingAs($seller)
-        ->patch(route('seller.orders.status', $order), ['status' => 'completed'])
+        ->patch(route('seller.orders.status', $order), ['status' => Order::STATUS_COMPLETED])
         ->assertRedirect();
 
-    expect($order->fresh()->status)->toBe('completed');
+    expect($order->fresh()->status)->toBe(Order::STATUS_COMPLETED);
 });
 
 test('status transitions are recorded in the status log', function () {
-    ['seller' => $seller, 'order' => $order] = makeOrderWithItem(['status' => 'paid']);
+    ['seller' => $seller, 'order' => $order] = makeOrderWithItem(['status' => Order::STATUS_PAID]);
 
     $this->actingAs($seller)
-        ->patch(route('seller.orders.status', $order), ['status' => 'processing'])
+        ->patch(route('seller.orders.status', $order), ['status' => Order::STATUS_PROCESSING])
         ->assertRedirect();
 
     $log = $order->statusLogs()->latest('id')->first();
 
     expect($log)->not->toBeNull();
-    expect($log->from_status)->toBe('paid');
-    expect($log->to_status)->toBe('processing');
+    expect($log->from_status)->toBe(Order::STATUS_PAID);
+    expect($log->to_status)->toBe(Order::STATUS_PROCESSING);
     expect($log->changed_by)->toBe($seller->id);
 });
 
 test('cancellation is also recorded in the status log', function () {
-    ['order' => $order] = makeOrderWithItem(['status' => 'paid']);
+    ['order' => $order] = makeOrderWithItem(['status' => Order::STATUS_PAID]);
 
     app(App\Services\OrderService::class)->directCancelByBuyer($order, 'Changed my mind');
 
-    expect($order->statusLogs()->where('to_status', 'cancelled')->count())->toBe(1);
+    expect($order->statusLogs()->where('to_status', Order::STATUS_CANCELLED)->count())->toBe(1);
 });
 
 test('non-admin users cannot access admin order show', function () {
@@ -434,11 +434,11 @@ test('non-admin users cannot access admin order show', function () {
 });
 
 test('admin can view order show with status logs loaded', function () {
-    ['seller' => $seller, 'order' => $order] = makeOrderWithItem(['status' => 'paid']);
+    ['seller' => $seller, 'order' => $order] = makeOrderWithItem(['status' => Order::STATUS_PAID]);
     $admin = User::factory()->admin()->create();
 
     $this->actingAs($seller)
-        ->patch(route('seller.orders.status', $order), ['status' => 'processing'])
+        ->patch(route('seller.orders.status', $order), ['status' => Order::STATUS_PROCESSING])
         ->assertRedirect();
 
     $this->actingAs($admin)
@@ -448,8 +448,8 @@ test('admin can view order show with status logs loaded', function () {
             ->component('Admin/Orders/Show')
             ->where('order.id', $order->id)
             ->has('order.status_logs', 1)
-            ->where('order.status_logs.0.from_status', 'paid')
-            ->where('order.status_logs.0.to_status', 'processing')
+            ->where('order.status_logs.0.from_status', Order::STATUS_PAID)
+            ->where('order.status_logs.0.to_status', Order::STATUS_PROCESSING)
             ->where('order.status_logs.0.changed_by.id', $seller->id)
         );
 });

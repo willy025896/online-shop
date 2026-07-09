@@ -95,7 +95,7 @@ test('seller can create a product', function () {
             'name' => 'Test Product',
             'price' => 29.99,
             'stock' => 10,
-            'status' => 'active',
+            'status' => Product::STATUS_ACTIVE,
         ])
         ->assertRedirect();
 
@@ -112,7 +112,7 @@ test('seller can update a product', function () {
             'name' => 'Updated Product',
             'price' => 39.99,
             'stock' => 5,
-            'status' => 'active',
+            'status' => Product::STATUS_ACTIVE,
         ])
         ->assertRedirect();
 

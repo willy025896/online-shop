@@ -10,7 +10,7 @@ use Carbon\Carbon;
 function makeSeller(): array
 {
     $seller = User::factory()->seller()->create();
-    $shop = Shop::factory()->create(['user_id' => $seller->id, 'status' => 'approved']);
+    $shop = Shop::factory()->create(['user_id' => $seller->id, 'status' => Shop::STATUS_APPROVED]);
 
     return compact('seller', 'shop');
 }

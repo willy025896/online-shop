@@ -224,8 +224,8 @@ test('seller cannot reply twice', function () {
 
 test('products can be sorted by rating descending', function () {
     $shop = Shop::factory()->create();
-    $high = Product::factory()->create(['shop_id' => $shop->id, 'status' => 'active', 'reviews_count' => 10, 'rating_sum' => 45]);
-    $low = Product::factory()->create(['shop_id' => $shop->id, 'status' => 'active', 'reviews_count' => 10, 'rating_sum' => 20]);
+    $high = Product::factory()->create(['shop_id' => $shop->id, 'status' => Product::STATUS_ACTIVE, 'reviews_count' => 10, 'rating_sum' => 45]);
+    $low = Product::factory()->create(['shop_id' => $shop->id, 'status' => Product::STATUS_ACTIVE, 'reviews_count' => 10, 'rating_sum' => 20]);
 
     $this->get(route('products.index', ['sort' => 'rating_desc']))
         ->assertOk()
@@ -237,8 +237,8 @@ test('products can be sorted by rating descending', function () {
 
 test('products can be filtered by minimum rating', function () {
     $shop = Shop::factory()->create();
-    $high = Product::factory()->create(['shop_id' => $shop->id, 'status' => 'active', 'reviews_count' => 5, 'rating_sum' => 25]);
-    Product::factory()->create(['shop_id' => $shop->id, 'status' => 'active', 'reviews_count' => 5, 'rating_sum' => 10]);
+    $high = Product::factory()->create(['shop_id' => $shop->id, 'status' => Product::STATUS_ACTIVE, 'reviews_count' => 5, 'rating_sum' => 25]);
+    Product::factory()->create(['shop_id' => $shop->id, 'status' => Product::STATUS_ACTIVE, 'reviews_count' => 5, 'rating_sum' => 10]);
 
     $this->get(route('products.index', ['min_rating' => 4]))
         ->assertOk()

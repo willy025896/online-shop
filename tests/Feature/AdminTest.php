@@ -129,10 +129,10 @@ test('admin can approve a shop', function () {
     $shop = Shop::factory()->pending()->create();
 
     $this->actingAs($admin)
-        ->patch(route('admin.shops.status', $shop), ['status' => 'approved'])
+        ->patch(route('admin.shops.status', $shop), ['status' => Shop::STATUS_APPROVED])
         ->assertRedirect();
 
-    expect($shop->fresh()->status)->toBe('approved');
+    expect($shop->fresh()->status)->toBe(Shop::STATUS_APPROVED);
     expect($shop->fresh()->approved_at)->not->toBeNull();
 });
 
@@ -141,10 +141,10 @@ test('admin can suspend a shop', function () {
     $shop = Shop::factory()->create();
 
     $this->actingAs($admin)
-        ->patch(route('admin.shops.status', $shop), ['status' => 'suspended'])
+        ->patch(route('admin.shops.status', $shop), ['status' => Shop::STATUS_SUSPENDED])
         ->assertRedirect();
 
-    expect($shop->fresh()->status)->toBe('suspended');
+    expect($shop->fresh()->status)->toBe(Shop::STATUS_SUSPENDED);
 });
 
 test('admin can view categories', function () {

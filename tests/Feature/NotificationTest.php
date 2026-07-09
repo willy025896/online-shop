@@ -64,7 +64,7 @@ function mailEnabledNotifications(Order $order, OrderCancellation $cancellation,
 test('paying an order notifies the seller and the buyer', function () {
     Notification::fake();
 
-    ['seller' => $seller, 'buyer' => $buyer, 'order' => $order] = makeOrderForNotificationTest(['status' => 'pending']);
+    ['seller' => $seller, 'buyer' => $buyer, 'order' => $order] = makeOrderForNotificationTest(['status' => Order::STATUS_PENDING]);
 
     app(App\Services\PaymentService::class)->markAsPaid($order);
 
@@ -75,10 +75,10 @@ test('paying an order notifies the seller and the buyer', function () {
 test('shipping an order notifies the buyer', function () {
     Notification::fake();
 
-    ['seller' => $seller, 'buyer' => $buyer, 'order' => $order] = makeOrderForNotificationTest(['status' => 'paid']);
+    ['seller' => $seller, 'buyer' => $buyer, 'order' => $order] = makeOrderForNotificationTest(['status' => Order::STATUS_PAID]);
 
     $this->actingAs($seller)
-        ->patch(route('seller.orders.status', $order), ['status' => 'shipped'])
+        ->patch(route('seller.orders.status', $order), ['status' => Order::STATUS_SHIPPED])
         ->assertRedirect();
 
     Notification::assertSentTo($buyer, OrderStatusChangedNotification::class);
@@ -87,10 +87,10 @@ test('shipping an order notifies the buyer', function () {
 test('transitioning to processing does NOT notify the buyer (whitelist filter)', function () {
     Notification::fake();
 
-    ['seller' => $seller, 'buyer' => $buyer, 'order' => $order] = makeOrderForNotificationTest(['status' => 'paid']);
+    ['seller' => $seller, 'buyer' => $buyer, 'order' => $order] = makeOrderForNotificationTest(['status' => Order::STATUS_PAID]);
 
     $this->actingAs($seller)
-        ->patch(route('seller.orders.status', $order), ['status' => 'processing'])
+        ->patch(route('seller.orders.status', $order), ['status' => Order::STATUS_PROCESSING])
         ->assertRedirect();
 
     Notification::assertNotSentTo($buyer, OrderStatusChangedNotification::class);
@@ -99,7 +99,7 @@ test('transitioning to processing does NOT notify the buyer (whitelist filter)',
 test('buyer requesting cancellation notifies the seller', function () {
     Notification::fake();
 
-    ['seller' => $seller, 'order' => $order] = makeOrderForNotificationTest(['status' => 'processing']);
+    ['seller' => $seller, 'order' => $order] = makeOrderForNotificationTest(['status' => Order::STATUS_PROCESSING]);
 
     app(App\Services\OrderService::class)->requestCancellation($order, 'Too slow');
 
@@ -109,7 +109,7 @@ test('buyer requesting cancellation notifies the seller', function () {
 test('seller approving a cancellation notifies the buyer', function () {
     Notification::fake();
 
-    ['seller' => $seller, 'buyer' => $buyer, 'order' => $order] = makeOrderForNotificationTest(['status' => 'processing']);
+    ['seller' => $seller, 'buyer' => $buyer, 'order' => $order] = makeOrderForNotificationTest(['status' => Order::STATUS_PROCESSING]);
     $cancellation = OrderCancellation::factory()->requested()->create(['order_id' => $order->id]);
 
     app(App\Services\OrderService::class)->approveCancellation($cancellation, $seller);
@@ -120,7 +120,7 @@ test('seller approving a cancellation notifies the buyer', function () {
 test('seller rejecting a cancellation notifies the buyer', function () {
     Notification::fake();
 
-    ['seller' => $seller, 'buyer' => $buyer, 'order' => $order] = makeOrderForNotificationTest(['status' => 'processing']);
+    ['seller' => $seller, 'buyer' => $buyer, 'order' => $order] = makeOrderForNotificationTest(['status' => Order::STATUS_PROCESSING]);
     $cancellation = OrderCancellation::factory()->requested()->create(['order_id' => $order->id]);
 
     app(App\Services\OrderService::class)->rejectCancellation($cancellation, $seller, 'Already shipped');
@@ -131,7 +131,7 @@ test('seller rejecting a cancellation notifies the buyer', function () {
 test('seller directly cancelling notifies the buyer', function () {
     Notification::fake();
 
-    ['seller' => $seller, 'buyer' => $buyer, 'order' => $order] = makeOrderForNotificationTest(['status' => 'processing']);
+    ['seller' => $seller, 'buyer' => $buyer, 'order' => $order] = makeOrderForNotificationTest(['status' => Order::STATUS_PROCESSING]);
 
     app(App\Services\OrderService::class)->cancelBySeller($order, $seller, 'Out of stock');
 
@@ -142,15 +142,15 @@ test('cancellation paths do NOT also fire the generic status-changed notificatio
     Notification::fake();
 
     // Path 1: buyer direct cancel (pending → cancelled) — buyer must not self-notify
-    ['buyer' => $buyer1, 'order' => $order1] = makeOrderForNotificationTest(['status' => 'pending']);
+    ['buyer' => $buyer1, 'order' => $order1] = makeOrderForNotificationTest(['status' => Order::STATUS_PENDING]);
     app(App\Services\OrderService::class)->directCancelByBuyer($order1, 'changed my mind');
 
     // Path 2: seller direct cancel (processing → cancelled)
-    ['seller' => $seller2, 'buyer' => $buyer2, 'order' => $order2] = makeOrderForNotificationTest(['status' => 'processing']);
+    ['seller' => $seller2, 'buyer' => $buyer2, 'order' => $order2] = makeOrderForNotificationTest(['status' => Order::STATUS_PROCESSING]);
     app(App\Services\OrderService::class)->cancelBySeller($order2, $seller2, 'out of stock');
 
     // Path 3: seller approves a cancellation request (processing → cancelled)
-    ['seller' => $seller3, 'buyer' => $buyer3, 'order' => $order3] = makeOrderForNotificationTest(['status' => 'processing']);
+    ['seller' => $seller3, 'buyer' => $buyer3, 'order' => $order3] = makeOrderForNotificationTest(['status' => Order::STATUS_PROCESSING]);
     $cancellation = OrderCancellation::factory()->requested()->create(['order_id' => $order3->id]);
     app(App\Services\OrderService::class)->approveCancellation($cancellation, $seller3);
 
