@@ -3,6 +3,7 @@ import { computed } from 'vue';
 import { Link, usePage } from '@inertiajs/vue3';
 import AdminLayout from '@/Layouts/AdminLayout.vue';
 import OrderStatusBadge from '@/Components/OrderStatusBadge.vue';
+import { carrierLabel } from '@/Utils/carrierLabel';
 
 const props = defineProps({
     order: Object,
@@ -95,6 +96,14 @@ const cancellationStatusLabel = (status) =>
                     <div class="col-span-2">
                         <dt class="text-gray-500 dark:text-gray-400">{{ t.address }}</dt>
                         <dd class="mt-1 text-gray-900 dark:text-gray-100">{{ order.shipping_address }}</dd>
+                    </div>
+                    <div v-if="order.carrier" class="col-span-2">
+                        <dt class="text-gray-500 dark:text-gray-400">{{ t.shipping_carrier }}</dt>
+                        <dd class="mt-1 text-gray-900 dark:text-gray-100">{{ carrierLabel(t.carriers, order.carrier) }}</dd>
+                    </div>
+                    <div v-if="order.tracking_number" class="col-span-2">
+                        <dt class="text-gray-500 dark:text-gray-400">{{ t.tracking_number }}</dt>
+                        <dd class="mt-1 text-gray-900 dark:text-gray-100">{{ order.tracking_number }}</dd>
                     </div>
                 </dl>
             </div>

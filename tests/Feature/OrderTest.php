@@ -56,6 +56,126 @@ test('seller can update order status', function () {
     expect($order->fresh()->status)->toBe(Order::STATUS_PROCESSING);
 });
 
+test('seller can ship an order with shipment details', function () {
+    $user = User::factory()->seller()->create();
+    $shop = Shop::factory()->create(['user_id' => $user->id]);
+    $order = Order::factory()->paid()->create(['shop_id' => $shop->id]);
+
+    $this->actingAs($user)
+        ->patch(route('seller.orders.status', $order), [
+            'status' => Order::STATUS_SHIPPED,
+            'carrier' => 'black_cat',
+            'tracking_number' => 'TRACK123',
+        ])
+        ->assertRedirect();
+
+    $fresh = $order->fresh();
+
+    expect($fresh->status)->toBe(Order::STATUS_SHIPPED)
+        ->and($fresh->carrier)->toBe('black_cat')
+        ->and($fresh->tracking_number)->toBe('TRACK123');
+});
+
+test('seller cannot ship an order with a carrier outside the whitelist', function () {
+    $user = User::factory()->seller()->create();
+    $shop = Shop::factory()->create(['user_id' => $user->id]);
+    $order = Order::factory()->paid()->create(['shop_id' => $shop->id]);
+
+    $this->actingAs($user)
+        ->patch(route('seller.orders.status', $order), [
+            'status' => Order::STATUS_SHIPPED,
+            'carrier' => 'Not A Real Carrier',
+            'tracking_number' => 'TRACK123',
+        ])
+        ->assertSessionHasErrors('carrier');
+
+    expect($order->fresh()->carrier)->toBeNull();
+});
+
+test('seller can clear previously filled shipment details', function () {
+    $user = User::factory()->seller()->create();
+    $shop = Shop::factory()->create(['user_id' => $user->id]);
+    $order = Order::factory()->paid()->create(['shop_id' => $shop->id, 'carrier' => 'black_cat', 'tracking_number' => 'TRACK123']);
+
+    $this->actingAs($user)
+        ->patch(route('seller.orders.status', $order), [
+            'status' => Order::STATUS_SHIPPED,
+            'carrier' => null,
+            'tracking_number' => null,
+        ])
+        ->assertRedirect();
+
+    $fresh = $order->fresh();
+
+    expect($fresh->status)->toBe(Order::STATUS_SHIPPED)
+        ->and($fresh->carrier)->toBeNull()
+        ->and($fresh->tracking_number)->toBeNull();
+});
+
+test('seller can edit shipment details after the order has shipped', function () {
+    $user = User::factory()->seller()->create();
+    $shop = Shop::factory()->create(['user_id' => $user->id]);
+    $order = Order::factory()->create(['shop_id' => $shop->id, 'status' => Order::STATUS_SHIPPED, 'carrier' => 'black_cat', 'tracking_number' => 'TRACK123']);
+
+    $this->actingAs($user)
+        ->patch(route('seller.orders.shipment', $order), [
+            'carrier' => 'hct',
+            'tracking_number' => 'CORRECTED456',
+        ])
+        ->assertRedirect();
+
+    $fresh = $order->fresh();
+
+    expect($fresh->status)->toBe(Order::STATUS_SHIPPED)
+        ->and($fresh->carrier)->toBe('hct')
+        ->and($fresh->tracking_number)->toBe('CORRECTED456');
+});
+
+test('seller cannot edit shipment details before the order has shipped', function () {
+    $user = User::factory()->seller()->create();
+    $shop = Shop::factory()->create(['user_id' => $user->id]);
+    $order = Order::factory()->create(['shop_id' => $shop->id, 'status' => Order::STATUS_PROCESSING]);
+
+    $this->actingAs($user)
+        ->patch(route('seller.orders.shipment', $order), [
+            'carrier' => 'hct',
+            'tracking_number' => 'TRACK123',
+        ])
+        ->assertStatus(422);
+
+    expect($order->fresh()->carrier)->toBeNull();
+});
+
+test('a seller from another shop cannot edit another shops shipment details', function () {
+    $owner = User::factory()->seller()->create();
+    $shop = Shop::factory()->create(['user_id' => $owner->id]);
+    $order = Order::factory()->create(['shop_id' => $shop->id, 'status' => Order::STATUS_SHIPPED, 'carrier' => 'black_cat', 'tracking_number' => 'TRACK123']);
+
+    $otherSeller = User::factory()->seller()->create();
+
+    $this->actingAs($otherSeller)
+        ->patch(route('seller.orders.shipment', $order), [
+            'carrier' => 'hct',
+            'tracking_number' => 'HIJACKED',
+        ])
+        ->assertForbidden();
+
+    expect($order->fresh()->carrier)->toBe('black_cat');
+});
+
+test('buyer order show page includes shipment details when available', function () {
+    ['buyer' => $buyer, 'order' => $order] = makeOrderWithItem(['status' => Order::STATUS_SHIPPED, 'carrier' => 'black_cat', 'tracking_number' => 'TRACK123']);
+
+    $this->actingAs($buyer)
+        ->get(route('orders.show', $order))
+        ->assertStatus(200)
+        ->assertInertia(fn ($page) => $page
+            ->component('Orders/Show')
+            ->where('order.carrier', 'black_cat')
+            ->where('order.tracking_number', 'TRACK123')
+        );
+});
+
 test('checkout page shows only items matching item_ids', function () {
     $user = User::factory()->create();
     $shop1 = Shop::factory()->create(['user_id' => User::factory()->seller()->create()->id]);
