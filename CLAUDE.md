@@ -246,6 +246,20 @@ Key design points:
 - **`PaymentService::refund()` rounds once** (ECPay only accepts whole-TWD amounts) and uses that same rounded figure for both the gateway call and the local `refunded_amount` increment, so the internal ledger never drifts from what ECPay actually refunded.
 - **CheckMacValue is hand-implemented** (no third-party SDK dependency, matching this project's zero-dependency convention) — `EcpayGateway::generateCheckMacValue()` mirrors ECPay's own official SDK algorithm: case-insensitive key sort (`uksort`+`strcasecmp`, not a plain `ksort`), `urlencode` + lowercase + the documented PHP→.NET character fixups, SHA256, uppercase.
 
+### Electronic Invoice (電子發票, B2C)
+
+> ⚠️ **Core path implemented only — no Pest test coverage and no post-change-review yet.** Treat this section as accurate for how the code is wired, but not yet verified. See ADR-019.
+
+`InvoiceService` (`app/Services/InvoiceService.php`) decides *whether* an order's e-invoice state should change; `EcpayInvoiceGateway` (`app/Services/EcpayInvoiceGateway.php`) is the wire-format layer (AES-128-CBC encryption, ECPay's B2C invoice HTTP calls). This is a **separate integration from the payment gateway above** — different credentials (`config/ecpay_invoice.php`, `ECPAY_INVOICE_*` env vars) and a different crypto scheme (AES over the whole JSON payload, not a SHA256 `CheckMacValue`). See ADR-019 for the full design rationale, including why 字軌/配號 (invoice number track allocation) is an ECPay-backend administrative setup step, not something this codebase decides.
+
+Key design points:
+- **Issued on payment confirmation** — `PaymentService::markAsPaid()` calls `InvoiceService::issueForOrder()` in the same transaction as `OrderPaidNotification`, since that's currently the only "payment received" moment in the system (no real cash-on-delivery path exists yet).
+- **Cancellation voids or allowances depending on the invoice's age** — `OrderService::finalizeCancellation()` calls `InvoiceService::voidForOrder()` if the invoice was issued in the current calendar month, otherwise `InvoiceService::allowanceForOrder()` (a deliberately simplified stand-in for ECPay's actual reporting-cutoff rule — this is a side project, not a real business, so the exact statutory boundary wasn't chased down; see ADR-019).
+- **Returns always allowance, never void** — `OrderService::finalizeReturn()` always calls `InvoiceService::allowanceForOrder()` with the returned items' amount, regardless of month.
+- **Invoice failures are best-effort and must never roll back a real payment/refund** — every `InvoiceService` call site (`PaymentService::markAsPaid`, `OrderService::finalizeCancellation`/`finalizeReturn`) wraps the call in `try/catch(\Throwable)` and only `Log::warning`s on failure. This is the opposite of `PaymentService::refund()`'s "throw and roll back the whole transaction" policy — deliberately so, because by the time these calls run, ECPay has already moved real money; rolling back the transaction would desync our DB state from ECPay's actual state, which is worse than a manually-fixable missing invoice.
+- **`orders.invoice_status`** (`Order::INVOICE_ISSUED` / `INVOICE_VOIDED` / `INVOICE_ALLOWANCED`, `null` = not yet issued) is what every `InvoiceService` method checks before acting, making all three methods idempotent — callers never need their own guard.
+- **`EinvoiceException`** (`app/Exceptions/EinvoiceException.php`) carries a machine `reason`, mirroring `EcpayException`'s shape, but does **not** define `render()` — unlike `EcpayException`, it's always caught internally by `InvoiceService`'s callers and never bubbles up to a controller.
+
 ### Order Returns/Refunds (售後退貨/退款)
 
 `OrderService` owns return mutations (`requestReturn`, `approveReturn`, `rejectReturn`, private `finalizeReturn`) — same single-entry-point, lock+idempotent-guard convention as cancellations. See ADR-013.
@@ -370,7 +384,7 @@ online-shop/
 ├── app/
 │   ├── Console/Commands/       # ReleaseReviews
 │   ├── Events/                 # MessageSent (chat broadcast)
-│   ├── Exceptions/             # CouponException, EcpayException (machine-readable `reason`)
+│   ├── Exceptions/             # CouponException, EcpayException, EinvoiceException (machine-readable `reason`)
 │   ├── Http/
 │   │   ├── Controllers/        # public + utility + seller + admin (incl. NotificationController, EcpayController, Review controllers)
 │   │   └── Middleware/         # EnsureRole, SetLocale, HandleInertiaRequests
@@ -378,9 +392,9 @@ online-shop/
 │   │   └── Concerns/           # BroadcastsAsArray, MailsAsArray traits
 │   ├── Policies/               # 6 policies (Product, Order, Shop, ProductReview, Coupon, ...)
 │   ├── Models/                 # 27 models (User, Shop, Product, Order, OrderReturn, ProductVariant, ProductReview, BuyerReview, WishlistItem, Coupon, Payout, PayoutItem, ...)
-│   └── Services/               # Cart, Order, Payment, Ecpay (gateway), Shipping, Coupon, Conversation, Review, Wishlist, ProductVariant, Payout, Recommendation, AdminAuditLogger
+│   └── Services/               # Cart, Order, Payment, Ecpay (gateway), EcpayInvoice (gateway), Invoice, Shipping, Coupon, Conversation, Review, Wishlist, ProductVariant, Payout, Recommendation, AdminAuditLogger
 ├── database/
-│   └── migrations/             # 48 migrations (incl. product_reviews, buyer_reviews, aggregates, completed_at, wishlist_items, product_variants, order_returns, payouts, gateway_trade_no, users.locale)
+│   └── migrations/             # 51 migrations (incl. product_reviews, buyer_reviews, aggregates, completed_at, wishlist_items, product_variants, order_returns, payouts, gateway_trade_no, users.locale, einvoice fields)
 ├── lang/
 │   ├── en/                     # English translations (incl. notifications.php, reviews.php, wishlist.php)
 │   └── zh_TW/                  # Traditional Chinese translations

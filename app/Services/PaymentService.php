@@ -5,11 +5,13 @@ namespace App\Services;
 use App\Models\Order;
 use App\Notifications\OrderPaidNotification;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 class PaymentService
 {
     public function __construct(
         private EcpayGateway $gateway,
+        private InvoiceService $invoiceService,
     ) {}
 
     /**
@@ -104,6 +106,20 @@ class PaymentService
 
             $order->loadMissing('shop.user');
             $order->shop?->user?->notify(new OrderPaidNotification($order));
+
+            // Best-effort: e-invoice issuance is a side effect of "payment
+            // confirmed", not part of it. It must never roll back an already
+            // real ECPay payment over a transient invoice-API failure — see
+            // ADR-019. A failure here just means the invoice needs a manual
+            // follow-up, logged for that purpose.
+            try {
+                $this->invoiceService->issueForOrder($order);
+            } catch (\Throwable $e) {
+                Log::warning('Failed to issue e-invoice for order', [
+                    'order_id' => $order->id,
+                    'error' => $e->getMessage(),
+                ]);
+            }
         });
 
         return true;

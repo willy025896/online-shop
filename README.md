@@ -113,16 +113,16 @@ online-shop/
 ├── app/
 │   ├── Console/Commands/       # ReleaseReviews (排程：每 10 分鐘公開到期評論)
 │   ├── Events/                 # MessageSent (chat broadcast)
-│   ├── Exceptions/             # CouponException, EcpayException（機器可讀的 `reason`）
+│   ├── Exceptions/             # CouponException, EcpayException, EinvoiceException（機器可讀的 `reason`）
 │   ├── Http/
 │   │   ├── Controllers/        # public + utility + seller + admin (incl. NotificationController, EcpayController, ReviewControllers)
 │   │   └── Middleware/         # EnsureRole, SetLocale, HandleInertiaRequests
 │   ├── Notifications/          # 14 個 Notification classes (Order*, Shop*, Review*, Payout*)，共用 BroadcastsAsArray trait
 │   ├── Policies/                # Product, Order, Shop, ProductReview, Coupon, Conversation
 │   ├── Models/                 # 27 models (User, Shop, Product, Order, OrderReturn, ProductVariant, ProductReview, BuyerReview, WishlistItem, Coupon, Payout, ...)
-│   └── Services/               # Cart, Order, Payment, Ecpay (gateway), Shipping, Coupon, Conversation, Review, Wishlist, ProductVariant, Payout, Recommendation, AdminAuditLogger
+│   └── Services/               # Cart, Order, Payment, Ecpay (gateway), EcpayInvoice (gateway), Invoice, Shipping, Coupon, Conversation, Review, Wishlist, ProductVariant, Payout, Recommendation, AdminAuditLogger
 ├── database/
-│   └── migrations/             # 47 migrations
+│   └── migrations/             # 51 migrations
 ├── lang/
 │   ├── en/                     # English translations (incl. notifications.php)
 │   └── zh_TW/                  # Traditional Chinese translations
@@ -168,6 +168,7 @@ online-shop/
 
 - **`PaymentService::handleGatewayNotification()` 驗簽與退款政策決策耦合**——這個方法同時做「驗證 ECPay CheckMacValue 簽章」（gateway 機制層）跟「訂單若已離開 pending 狀態時該退多少錢」（業務政策層，目前退款金額用 `$locked->total` 內聯計算，跟其餘退款路徑的比例折扣邏輯形狀不同）。更深的修法是拆成「驗簽」與「決定 notify 結果」兩層，並把這個退款決策搬進 `OrderService`，跟其餘取消/退貨的退款邏輯放在同一處。目前只有一個呼叫點，暫不視為急迫（見 ADR-015）。
 - **「退款呼叫必須是 transaction 最後一步」只靠註解約定**——`OrderService::finalizeCancellation()`/`finalizeReturn()` 都手動把 `PaymentService::refund()` 放在方法最後一行，靠註解提醒之後不能再有會失敗的步驟，沒有結構化機制強制執行。可考慮做一個 `runWithTrailingRefund(callable $body): void` 之類的 helper；目前只有 2 個呼叫點，還沒到需要抽象化的門檻，先記錄、之後有第三個退款呼叫點再評估。
+- **電子發票（B2C）只做了核心路徑，尚未補測試與 review**——`InvoiceService`/`EcpayInvoiceGateway`（開立掛在 `PaymentService::markAsPaid()`，作廢/折讓掛在 `OrderService::finalizeCancellation()`/`finalizeReturn()`）已經可以運作，但**沒有任何 Pest 測試覆蓋，也還沒跑過 `post-change-review`（code-review + security-review）**，AES 加解密邏輯目前只驗證過內部一致性（加解密 round-trip），沒有對 ECPay stage 環境送過任何真實 HTTP 請求。上線前務必補齊這三項再使用。詳見 ADR-019。
 
 ## License
 

@@ -28,6 +28,16 @@ class Order extends Model
     public const STATUS_CANCELLED = 'cancelled';
 
     /**
+     * Electronic invoice (電子發票) lifecycle — see ADR-019. `null` means no
+     * invoice has been issued yet (order not yet paid).
+     */
+    public const INVOICE_ISSUED = 'issued';
+
+    public const INVOICE_VOIDED = 'voided';
+
+    public const INVOICE_ALLOWANCED = 'allowanced';
+
+    /**
      * Whitelist of supported logistics carriers. Kept as a closed list (rather
      * than free text) so a future carrier-tracking API integration doesn't have
      * to deal with typo'd values.
@@ -118,6 +128,10 @@ class Order extends Model
         'review_cooling_until',
         'review_released_at',
         'refunded_amount',
+        'invoice_number',
+        'invoice_random_code',
+        'invoice_issued_at',
+        'invoice_status',
     ];
 
     protected function casts(): array
@@ -132,6 +146,7 @@ class Order extends Model
             'review_cooling_until' => 'datetime',
             'review_released_at' => 'datetime',
             'refunded_amount' => 'decimal:2',
+            'invoice_issued_at' => 'datetime',
         ];
     }
 
