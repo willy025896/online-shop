@@ -46,17 +46,31 @@ class OrderController extends Controller
         ]);
     }
 
-    public function simulatePayment(Order $order)
+    public function pay(Order $order)
     {
         $this->authorize('view', $order);
 
-        if ($order->isPaid()) {
-            return back()->with('error', 'Order is already paid.');
+        // Only a still-pending order can start a new checkout session — an
+        // already-paid order obviously shouldn't be charged again, and a
+        // cancelled/completed order must not be resurrected by generating a
+        // fresh (validly signed) checkout for it either.
+        if (! $order->isPending()) {
+            return redirect()->route('orders.show', $order)->with('error', 'This order can no longer be paid.');
         }
 
-        $this->paymentService->simulatePayment($order);
+        $redirect = $this->paymentService->checkoutRedirectData($order);
 
-        return back()->with('success', 'Payment successful!');
+        return view('payments.ecpay-redirect', $redirect);
+    }
+
+    public function payReturn(Order $order)
+    {
+        $this->authorize('view', $order);
+
+        // This is just the buyer's browser bouncing back from ECPay's hosted
+        // page (ClientBackURL) — it carries no trustworthy payment result, so
+        // the message must stay neutral rather than claiming success.
+        return redirect()->route('orders.show', $order)->with('success', 'Returned from the payment gateway — confirming your payment result…');
     }
 
     public function cancel(Request $request, Order $order)

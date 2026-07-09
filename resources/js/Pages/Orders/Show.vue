@@ -81,7 +81,7 @@ const submitReturn = () => {
 };
 
 const pay = (orderId) => {
-    router.post(route('orders.pay', orderId));
+    window.location.href = route('orders.pay', orderId);
 };
 
 const askSeller = (orderId) => {
@@ -238,7 +238,7 @@ const askSeller = (orderId) => {
                         @click="pay(order.id)"
                         class="bg-green-600 text-white py-2 px-6 rounded-lg hover:bg-green-700 transition text-sm font-medium"
                     >
-                        {{ lang.pay_now_simulated }}
+                        {{ lang.pay_now }}
                     </button>
                     <button
                         v-if="showCancelButton"

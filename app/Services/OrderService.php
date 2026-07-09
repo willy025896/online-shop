@@ -256,7 +256,24 @@ class OrderService
         // permanently burn the buyer's per-user allowance or the total budget.
         $this->couponService->releaseForOrder($order);
 
+        $wasPaid = $order->isPaid();
+        $refundAmount = $wasPaid
+            ? $this->couponService->refundableAmount($order, (float) $order->subtotal)
+            : null;
+
         $order->update(['status' => Order::STATUS_CANCELLED]);
+
+        // A cancelled order that was already paid needs a real refund — the
+        // full goods amount (proportionally net of any coupon discount, same
+        // helper the return flow uses), shipping never refunded. Called last:
+        // once this succeeds, nothing else in this transaction can still fail
+        // and roll back a refund ECPay has already sent. A gateway failure
+        // throws and rolls back this whole transaction (stock/coupon/status
+        // together), leaving the cancellation retryable. See ADR-013's
+        // documented gap, closed by ADR-015.
+        if ($wasPaid) {
+            $this->paymentService->refund($order, $refundAmount);
+        }
     }
 
     /**
@@ -369,12 +386,14 @@ class OrderService
 
         $refundAmount = $this->couponService->refundableAmount($order, $itemsSubtotal);
 
-        $this->paymentService->simulateRefund($order, $refundAmount);
-
         if ($order->isFullyReturned()) {
             $this->couponService->releaseForOrder($order);
         }
 
         $orderReturn->update(['refund_amount' => $refundAmount]);
+
+        // Called last — once this succeeds, nothing else in this transaction
+        // can still fail and roll back a refund ECPay has already sent.
+        $this->paymentService->refund($order, $refundAmount);
     }
 }

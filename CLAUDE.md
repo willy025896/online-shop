@@ -223,8 +223,22 @@ Seller status changes go through `Seller\OrderController::updateStatus`, guarded
 
 Two consequences to keep in mind when changing order status:
 
-- **Atomicity** — the log insert fires inside the `updated` event, so it only commits atomically with the status change if the `$order->update()` runs inside a `DB::transaction`. All current status-mutating paths (`updateStatus`, `PaymentService::simulatePayment`, `OrderService` cancellation methods) are wrapped in a transaction for this reason. Wrap any new one too.
+- **Atomicity** — the log insert fires inside the `updated` event, so it only commits atomically with the status change if the `$order->update()` runs inside a `DB::transaction`. All current status-mutating paths (`updateStatus`, `PaymentService::markAsPaid`, `OrderService` cancellation methods) are wrapped in a transaction for this reason. Wrap any new one too.
 - **Bulk-update caveat** — Eloquent's `updated` event does **not** fire on query-builder bulk updates (`Order::where(...)->update(['status' => ...])`), so those would silently bypass the log. Always change order status via a model instance (`$order->update(...)`), never a bulk query.
+
+### Payment Gateway (ECPay 綠界)
+
+`PaymentService` (`app/Services/PaymentService.php`) orchestrates payment/refund; all ECPay wire-format details (CheckMacValue signing/verification, HTTP calls) live in `EcpayGateway` (`app/Services/EcpayGateway.php`) — callers never touch raw ECPay params. Credentials/mode are config-driven (`config/ecpay.php`, `ECPAY_*` env vars), defaulting to ECPay's officially published stage/test merchant credentials so local dev works with zero setup. See ADR-015.
+
+Key design points:
+- **Notify webhook is the only source of truth for "paid"** — the buyer's "Pay" button (`OrderController::pay`) redirects to an auto-submitting form (`resources/views/payments/ecpay-redirect.blade.php`) that POSTs straight to ECPay's hosted checkout page; it does **not** mark the order paid. Only ECPay's server-to-server notify callback (`POST /api/payments/ecpay/notify` → `EcpayController::notify` → `PaymentService::handleGatewayNotification()`), after verifying `CheckMacValue` and `RtnCode == 1`, calls `PaymentService::markAsPaid()`. The notify route lives on `routes/api.php` (no CSRF, no session auth) since it's ECPay's server calling it, not a logged-in user.
+- **`pay()` only accepts a still-`STATUS_PENDING` order** (not just "not yet paid") — otherwise a cancelled/completed order could still generate a fresh, validly-signed checkout session.
+- **Idempotent + status-checked notify, under a row lock** — `handleGatewayNotification()` locks the order (`Order::lockForUpdate()`) before deciding: `isPaid()` already true is a no-op success (ECPay retries until it gets `"1|OK"`, so replays must not double-notify); if the order is no longer `STATUS_PENDING` (e.g. the buyer cancelled it while payment was in flight at ECPay), it does **not** resurrect the order to `paid` — it captures the `TradeNo` this notify carries and immediately refunds the full charged amount instead, since nothing was fulfilled.
+- **`MerchantTradeNo` is derived from the order id**, not `order_number` (ECPay requires alnum-only, ≤20 chars) — `EcpayGateway::merchantTradeNoFor()` / `tradeNoToOrderId()` are the only two places that encode/decode this mapping.
+- **`orders.gateway_trade_no`** stores ECPay's own `TradeNo` (captured from the notify payload), distinct from our `MerchantTradeNo`/`order_number`. It's required to issue a refund — `EcpayGateway::refund()` throws `EcpayException` if it's missing.
+- **Refund failures roll back the whole transaction** — `EcpayGateway::refund()` throws `EcpayException` on any network failure or non-`1` `RtnCode`. Both refund call sites (`OrderService::finalizeReturn`, `finalizeCancellation`) call `PaymentService::refund()` as the **last statement** in their transaction (so nothing afterward can fail and roll back a refund ECPay already sent), from inside their existing `DB::transaction` — a gateway failure rolls back stock/coupon/status changes together, leaving the return/cancellation request retryable rather than half-applied. `EcpayException` defines `render()` (mirroring `CouponException`'s `translatedMessage()` via `lang/{locale}/orders.php` → `payment_errors.{reason}`), so Laravel auto-flashes a translated error — controllers don't need their own try/catch.
+- **`PaymentService::refund()` rounds once** (ECPay only accepts whole-TWD amounts) and uses that same rounded figure for both the gateway call and the local `refunded_amount` increment, so the internal ledger never drifts from what ECPay actually refunded.
+- **CheckMacValue is hand-implemented** (no third-party SDK dependency, matching this project's zero-dependency convention) — `EcpayGateway::generateCheckMacValue()` mirrors ECPay's own official SDK algorithm: case-insensitive key sort (`uksort`+`strcasecmp`, not a plain `ksort`), `urlencode` + lowercase + the documented PHP→.NET character fixups, SHA256, uppercase.
 
 ### Order Returns/Refunds (售後退貨/退款)
 
@@ -236,9 +250,9 @@ Key design points:
 - **Partial + repeated returns over time** — `OrderReturn`/`OrderReturnItem` (one row per returned line item per request). `OrderItem::returnedQuantity()` / `remainingReturnableQuantity()` sum only **approved** return items, so a line item can be returned across several separate approved requests. `Order::isFullyReturned()` checks every item has caught up to its ordered quantity.
 - **Refund math lives in `CouponService`** — `CouponService::refundableAmount($order, $itemsSubtotal)` applies the same discount ratio used at checkout (`discount / subtotal`) to the returned items' subtotal (proportional deduction); shipping is never refunded. Coupon usage (`used_count` / `CouponRedemption`) is only released via `releaseForOrder()` once `isFullyReturned()` — a partial return does not free up the buyer's coupon allowance.
 - **Stock restock is shared** — `OrderService::restockOrderItem()` (used by both `finalizeCancellation` and `finalizeReturn`) resolves the stock owner (variant or plain product) with `withTrashed()` so a since-removed listing still gets its stock restored.
-- **`orders.refunded_amount`** — a denormalized running total, incremented via `PaymentService::simulateRefund()` (mirrors `simulatePayment()`'s shape; not yet wired to a real gateway). Refunding does **not** change `orders.status` — a refunded order stays `completed`.
+- **`orders.refunded_amount`** — a denormalized running total, incremented via `PaymentService::refund()` (calls ECPay's real credit card refund API — see the Payment Gateway section above; throws and rolls back on failure). Refunding does **not** change `orders.status` — a refunded order stays `completed`.
 - **Duplicate-row validation guard** — `OrderController::requestReturn`'s cross-field validator groups requested quantities **by `order_item_id`** before comparing against the remaining returnable quantity, so splitting one line item across two request rows can't bypass the per-item cap; `order_return_items` also has a DB-level `unique(order_return_id, order_item_id)` as a second line of defense.
-- **Documented out-of-scope gap** — cancelling an already-**paid** order still has no refund logic (only stock/coupon are reversed); ADR-013 explicitly excludes fixing this pre-existing gap. Don't assume it's resolved.
+- **Cancelling an already-paid order now refunds too** (closes the gap ADR-013 originally left open) — `OrderService::finalizeCancellation()` calls `PaymentService::refund()` for the full goods amount (net of any coupon discount, shipping excluded) whenever `$order->isPaid()`, before the status flips to `cancelled`. See ADR-015.
 
 ### Notifications
 
@@ -253,7 +267,7 @@ Notification classes live in `app/Notifications/`. Each `toArray()` returns a un
 
 | Event | Triggered in | Notification | Recipient |
 |-------|--------------|--------------|-----------|
-| Payment success | `PaymentService::simulatePayment` | `OrderPaidNotification` | Seller |
+| Payment success | `PaymentService::markAsPaid` (called from `EcpayController::notify` after signature verification) | `OrderPaidNotification` | Seller |
 | Status changes to `paid`/`shipped`/`completed` | `Order::booted()` `updated` event (whitelist `BUYER_NOTIFY_STATUSES`) | `OrderStatusChangedNotification` | Buyer |
 | Buyer requests cancellation | `OrderService::requestCancellation` | `OrderCancellationRequestedNotification` | Seller |
 | Seller approves/rejects cancellation | `OrderService::approveCancellation` / `rejectCancellation` | `OrderCancellationRespondedNotification` | Buyer |
@@ -344,16 +358,17 @@ online-shop/
 ├── app/
 │   ├── Console/Commands/       # ReleaseReviews
 │   ├── Events/                 # MessageSent (chat broadcast)
+│   ├── Exceptions/             # CouponException, EcpayException (machine-readable `reason`)
 │   ├── Http/
-│   │   ├── Controllers/        # public + utility + seller + admin (incl. NotificationController, Review controllers)
+│   │   ├── Controllers/        # public + utility + seller + admin (incl. NotificationController, EcpayController, Review controllers)
 │   │   └── Middleware/         # EnsureRole, SetLocale, HandleInertiaRequests
 │   ├── Notifications/          # 13 Notification classes (Order*, Shop*, Review*); all use BroadcastsAsArray trait
 │   │   └── Concerns/           # BroadcastsAsArray trait
 │   ├── Policies/               # 6 policies (Product, Order, Shop, ProductReview, Coupon, ...)
 │   ├── Models/                 # 25 models (User, Shop, Product, Order, OrderReturn, ProductVariant, ProductReview, BuyerReview, WishlistItem, Coupon, ...)
-│   └── Services/               # Cart, Order, Payment, Shipping, Coupon, Conversation, Review, Wishlist, ProductVariant
+│   └── Services/               # Cart, Order, Payment, Ecpay (gateway), Shipping, Coupon, Conversation, Review, Wishlist, ProductVariant
 ├── database/
-│   └── migrations/             # 44 migrations (incl. product_reviews, buyer_reviews, aggregates, completed_at, wishlist_items, product_variants, order_returns)
+│   └── migrations/             # 45 migrations (incl. product_reviews, buyer_reviews, aggregates, completed_at, wishlist_items, product_variants, order_returns, gateway_trade_no)
 ├── lang/
 │   ├── en/                     # English translations (incl. notifications.php, reviews.php, wishlist.php)
 │   └── zh_TW/                  # Traditional Chinese translations
@@ -364,6 +379,7 @@ online-shop/
 │   └── Pages/                  # Public, Auth, Seller/, Admin/, Notifications/, Reviews/, Wishlist/ pages
 ├── routes/
 │   ├── web.php                 # All HTTP routes (4 groups: public, auth, seller, admin)
+│   ├── api.php                 # No-CSRF endpoints (component-lang, ECPay payment notify)
 │   ├── console.php             # Scheduled commands (reviews:release every 10 min)
 │   └── channels.php            # Broadcast channel authorization (App.Models.User.{id}, conversation.{id})
 └── tests/Feature/              # Pest tests: Product, Shop, Cart, Wishlist, Seller, Admin, Order, OrderReturn, Coupon, Notification, Conversation, Review

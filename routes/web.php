@@ -65,7 +65,11 @@ Route::middleware([
     // Customer orders
     Route::get('/orders', [OrderController::class, 'index'])->name('orders.index');
     Route::get('/orders/{order}', [OrderController::class, 'show'])->name('orders.show');
-    Route::post('/orders/{order}/pay', [OrderController::class, 'simulatePayment'])->name('orders.pay');
+    Route::get('/orders/{order}/pay', [OrderController::class, 'pay'])->name('orders.pay');
+    // ECPay's ClientBackURL — a plain browser-side link/redirect after payment
+    // (unlike ReturnURL, which is ECPay's own server POSTing the notify), so
+    // GET avoids any CSRF concern here; this route never mutates order state.
+    Route::get('/orders/{order}/pay/return', [OrderController::class, 'payReturn'])->name('orders.pay.return');
     Route::post('/orders/{order}/cancel', [OrderController::class, 'cancel'])->name('orders.cancel');
     Route::post('/orders/{order}/returns', [OrderController::class, 'requestReturn'])->name('orders.returns.store');
     Route::post('/orders/{order}/conversation', [OrderController::class, 'startConversation'])->name('orders.conversation');

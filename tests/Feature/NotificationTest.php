@@ -38,7 +38,7 @@ test('paying an order notifies the seller and the buyer', function () {
 
     ['seller' => $seller, 'buyer' => $buyer, 'order' => $order] = makeOrderForNotificationTest(['status' => 'pending']);
 
-    app(App\Services\PaymentService::class)->simulatePayment($order);
+    app(App\Services\PaymentService::class)->markAsPaid($order);
 
     Notification::assertSentTo($seller, OrderPaidNotification::class);
     Notification::assertSentTo($buyer, OrderStatusChangedNotification::class);

@@ -27,7 +27,7 @@ return [
     'shop' => 'Shop',
     'shipping_to' => 'Shipping To',
     'free' => 'Free',
-    'pay_now_simulated' => 'Pay Now (Simulated)',
+    'pay_now' => 'Pay Now',
     'ask_seller' => 'Ask Seller',
     'reply_customer' => 'Reply Customer',
     'request_cancellation' => 'Request Cancellation',
@@ -58,5 +58,10 @@ return [
         'shipped' => 'Shipped',
         'completed' => 'Completed',
         'cancelled' => 'Cancelled',
+    ],
+    'payment_errors' => [
+        'missing_trade_no' => 'This order has no payment record to refund. Please contact support.',
+        'network_error' => 'Could not reach the payment gateway, please try again shortly.',
+        'gateway_rejected' => 'The payment gateway rejected this refund. Please try again later.',
     ],
 ];

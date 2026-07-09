@@ -96,6 +96,7 @@ class Order extends Model
         'shipping_address',
         'payment_method',
         'paid_at',
+        'gateway_trade_no',
         'completed_at',
         'notes',
         'review_cooling_until',
@@ -187,6 +188,11 @@ class Order extends Model
     public function isPaid(): bool
     {
         return $this->paid_at !== null;
+    }
+
+    public function isPending(): bool
+    {
+        return $this->status === self::STATUS_PENDING;
     }
 
     public function pendingCancellation(): ?OrderCancellation

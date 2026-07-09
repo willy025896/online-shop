@@ -153,6 +153,11 @@ online-shop/
 
 詳細實作細節（服務層設計、資料表結構、ADR 決策）請見 `CLAUDE.md`。
 
+## Known Limitations（已知架構債）
+
+- **`PaymentService::handleGatewayNotification()` 驗簽與退款政策決策耦合**——這個方法同時做「驗證 ECPay CheckMacValue 簽章」（gateway 機制層）跟「訂單若已離開 pending 狀態時該退多少錢」（業務政策層，目前退款金額用 `$locked->total` 內聯計算，跟其餘退款路徑的比例折扣邏輯形狀不同）。更深的修法是拆成「驗簽」與「決定 notify 結果」兩層，並把這個退款決策搬進 `OrderService`，跟其餘取消/退貨的退款邏輯放在同一處。目前只有一個呼叫點，暫不視為急迫（見 ADR-015）。
+- **「退款呼叫必須是 transaction 最後一步」只靠註解約定**——`OrderService::finalizeCancellation()`/`finalizeReturn()` 都手動把 `PaymentService::refund()` 放在方法最後一行，靠註解提醒之後不能再有會失敗的步驟，沒有結構化機制強制執行。可考慮做一個 `runWithTrailingRefund(callable $body): void` 之類的 helper；目前只有 2 個呼叫點，還沒到需要抽象化的門檻，先記錄、之後有第三個退款呼叫點再評估。
+
 ## License
 
 MIT

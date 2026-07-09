@@ -27,7 +27,7 @@ return [
     'shop' => '店鋪',
     'shipping_to' => '收件資訊',
     'free' => '免運費',
-    'pay_now_simulated' => '立即付款（模擬）',
+    'pay_now' => '立即付款',
     'ask_seller' => '詢問賣家',
     'reply_customer' => '回覆客戶',
     'request_cancellation' => '申請取消',
@@ -58,5 +58,10 @@ return [
         'shipped' => '已出貨',
         'completed' => '已完成',
         'cancelled' => '已取消',
+    ],
+    'payment_errors' => [
+        'missing_trade_no' => '此訂單沒有可退款的付款紀錄，請聯繫客服。',
+        'network_error' => '無法連線至金流服務，請稍後再試。',
+        'gateway_rejected' => '金流服務拒絕了這筆退款，請稍後再試。',
     ],
 ];

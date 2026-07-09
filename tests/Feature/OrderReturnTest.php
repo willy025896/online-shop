@@ -7,6 +7,14 @@ use App\Models\OrderReturn;
 use App\Models\Product;
 use App\Models\Shop;
 use App\Models\User;
+use Illuminate\Support\Facades\Http;
+
+function fakeEcpaySuccessfulRefund(): void
+{
+    Http::fake([
+        'payment-stage.ecpay.com.tw/*' => Http::response('RtnCode=1&RtnMsg=Succeeded'),
+    ]);
+}
 
 function makeCompletedOrderWithItem(array $orderState = [], int $stock = 5, int $qty = 2, float $unitPrice = 100): array
 {
@@ -21,6 +29,7 @@ function makeCompletedOrderWithItem(array $orderState = [], int $stock = 5, int 
         'discount' => 0,
         'total' => $qty * $unitPrice,
         'completed_at' => now()->subDay(),
+        'gateway_trade_no' => 'TEST'.uniqid(),
     ], $orderState));
     $item = $order->items()->create([
         'product_id' => $product->id,
@@ -97,6 +106,7 @@ test('buyer cannot submit a new return request while one is pending', function (
 });
 
 test('seller can approve a return which restores stock and refunds without changing order status', function () {
+    fakeEcpaySuccessfulRefund();
     ['seller' => $seller, 'product' => $product, 'order' => $order, 'item' => $item] = makeCompletedOrderWithItem(stock: 5, qty: 2, unitPrice: 100);
     $return = OrderReturn::factory()->requested()->create(['order_id' => $order->id]);
     $return->items()->create(['order_item_id' => $item->id, 'quantity' => 1]);
@@ -128,6 +138,7 @@ test('seller can reject a return leaving stock and refund unchanged', function (
 });
 
 test('fully returning an order releases the coupon', function () {
+    fakeEcpaySuccessfulRefund();
     ['seller' => $seller, 'buyer' => $buyer, 'product' => $product, 'order' => $order, 'item' => $item] =
         makeCompletedOrderWithItem(stock: 5, qty: 2, unitPrice: 100, orderState: ['discount' => 20]);
 
@@ -148,6 +159,7 @@ test('fully returning an order releases the coupon', function () {
 });
 
 test('partially returning an order does not release the coupon', function () {
+    fakeEcpaySuccessfulRefund();
     ['seller' => $seller, 'buyer' => $buyer, 'product' => $product, 'order' => $order, 'item' => $item] =
         makeCompletedOrderWithItem(stock: 5, qty: 2, unitPrice: 100, orderState: ['discount' => 20]);
 
@@ -207,6 +219,7 @@ test('a seller from another shop cannot manage a return request', function () {
 });
 
 test('duplicate return approval does not restore stock or refund twice', function () {
+    fakeEcpaySuccessfulRefund();
     ['product' => $product, 'order' => $order, 'item' => $item] = makeCompletedOrderWithItem(stock: 5, qty: 2, unitPrice: 100);
     $return = OrderReturn::factory()->requested()->create(['order_id' => $order->id]);
     $return->items()->create(['order_item_id' => $item->id, 'quantity' => 1]);
