@@ -230,6 +230,10 @@ const logout = () => {
                                             {{ nav.orders }}
                                         </DropdownLink>
 
+                                        <DropdownLink :href="route('addresses.index')">
+                                            {{ nav.addresses }}
+                                        </DropdownLink>
+
                                         <DropdownLink v-if="$page.props.jetstream.hasApiFeatures" :href="route('api-tokens.index')">
                                             {{ nav.api_tokens }}
                                         </DropdownLink>
@@ -350,6 +354,10 @@ const logout = () => {
 
                             <ResponsiveNavLink :href="route('orders.index')" :active="route().current('orders.*')">
                                 {{ nav.orders }}
+                            </ResponsiveNavLink>
+
+                            <ResponsiveNavLink :href="route('addresses.index')" :active="route().current('addresses.*')">
+                                {{ nav.addresses }}
                             </ResponsiveNavLink>
 
                             <ResponsiveNavLink v-if="$page.props.jetstream.hasApiFeatures" :href="route('api-tokens.index')" :active="route().current('api-tokens.index')">

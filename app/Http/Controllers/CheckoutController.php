@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Exceptions\CouponException;
+use App\Services\AddressService;
 use App\Services\CartService;
 use App\Services\OrderService;
 use App\Services\ShippingService;
@@ -15,6 +16,7 @@ class CheckoutController extends Controller
         private CartService $cartService,
         private OrderService $orderService,
         private ShippingService $shippingService,
+        private AddressService $addressService,
     ) {}
 
     public function index()
@@ -55,6 +57,7 @@ class CheckoutController extends Controller
             'shippingConfig' => $this->shippingService->publicConfig(),
             'user' => auth()->user(),
             'itemIds' => $selectedItems->pluck('id')->values()->all(),
+            'addresses' => $this->addressService->listForUser(auth()->user()),
         ]);
     }
 
@@ -70,6 +73,7 @@ class CheckoutController extends Controller
             'item_ids.*' => 'integer',
             'coupons' => 'array', // map of shop_id => coupon code
             'coupons.*' => 'string|max:50',
+            'save_address' => 'boolean',
         ]);
 
         $cart = $this->cartService->getCartWithItems();
@@ -83,13 +87,27 @@ class CheckoutController extends Controller
 
         try {
             $orders = $this->orderService->createOrdersFromCart($cart, $validated, $itemIds, $validated['coupons'] ?? []);
-
-            return redirect()->route('orders.index')
-                ->with('success', count($orders).' order(s) created successfully.');
         } catch (CouponException $e) {
             return back()->withErrors(['checkout' => $e->translatedMessage()]);
         } catch (\Exception $e) {
             return back()->withErrors(['checkout' => $e->getMessage()]);
         }
+
+        // The order is already committed at this point — a failure saving the
+        // address book entry must never surface as a "checkout failed" error.
+        if ($request->boolean('save_address')) {
+            try {
+                $this->addressService->create(auth()->user(), [
+                    'recipient_name' => $validated['shipping_name'],
+                    'phone' => $validated['shipping_phone'],
+                    'address' => $validated['shipping_address'],
+                ]);
+            } catch (\Exception $e) {
+                report($e);
+            }
+        }
+
+        return redirect()->route('orders.index')
+            ->with('success', count($orders).' order(s) created successfully.');
     }
 }

@@ -1,10 +1,11 @@
 <script setup>
-import { computed, reactive } from 'vue';
+import { computed, reactive, ref } from 'vue';
 import { useForm, usePage } from '@inertiajs/vue3';
 import AppLayout from '@/Layouts/AppLayout.vue';
 import CartSummary from '@/Components/CartSummary.vue';
 import Spinner from '@/Components/Spinner.vue';
 import ImageWithFallback from '@/Components/ImageWithFallback.vue';
+import Checkbox from '@/Components/Checkbox.vue';
 import { useAsyncActionGroup } from '@/Composables/useAsyncAction';
 
 const props = defineProps({
@@ -14,6 +15,7 @@ const props = defineProps({
     shippingConfig: Object,
     user: Object,
     itemIds: Array,
+    addresses: { type: Array, default: () => [] },
 });
 
 const page = usePage();
@@ -78,15 +80,38 @@ const freeShippingHints = computed(() => {
         .map(s => ({ shopName: s.shop_name, remaining: (freeThreshold.value - s.subtotal).toFixed(2) }));
 });
 
+// Shared by the initial form state and both picker actions below so the
+// name/phone/address fallback rule only lives in one place.
+const addressFields = (address) => ({
+    shipping_name: address?.recipient_name || props.user?.name || '',
+    shipping_phone: address?.phone || props.user?.phone || '',
+    shipping_address: address?.address || '',
+});
+
+// AddressService guarantees at most one is_default=true address; trust the
+// flag alone rather than re-deriving a second, looser notion of "default".
+const defaultAddress = computed(() => props.addresses.find(a => a.is_default) ?? null);
+const selectedAddressId = ref(defaultAddress.value?.id ?? null);
+
 const form = useForm({
-    shipping_name: props.user?.name || '',
-    shipping_phone: props.user?.phone || '',
-    shipping_address: '',
+    ...addressFields(defaultAddress.value),
     payment_method: 'simulated',
     notes: '',
     item_ids: props.itemIds ?? [],
     coupons: {},
+    save_address: false,
 });
+
+const selectAddress = (address) => {
+    selectedAddressId.value = address.id;
+    Object.assign(form, addressFields(address));
+    form.save_address = false;
+};
+
+const selectNewAddress = () => {
+    selectedAddressId.value = null;
+    Object.assign(form, addressFields(null));
+};
 
 const submit = () => {
     // shop_id -> code map of the applied coupons; server re-validates.
@@ -108,6 +133,43 @@ const submit = () => {
                         <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-6">
                             <h2 class="text-lg font-medium text-gray-900 dark:text-gray-100 mb-4">{{ lang.shipping_info }}</h2>
 
+                            <div v-if="addresses.length" class="mb-4">
+                                <p class="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">{{ lang.saved_addresses }}</p>
+                                <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                                    <button
+                                        v-for="addr in addresses"
+                                        :key="addr.id"
+                                        type="button"
+                                        @click="selectAddress(addr)"
+                                        :class="[
+                                            'text-left text-sm p-3 rounded-md border',
+                                            selectedAddressId === addr.id
+                                                ? 'border-indigo-500 ring-1 ring-indigo-500 bg-indigo-50 dark:bg-indigo-900/20'
+                                                : 'border-gray-200 dark:border-gray-600 hover:border-gray-300',
+                                        ]"
+                                    >
+                                        <span class="flex items-center gap-1.5 font-medium text-gray-900 dark:text-gray-100">
+                                            {{ addr.recipient_name }}
+                                            <span v-if="addr.label" class="text-xs font-normal text-gray-500">({{ addr.label }})</span>
+                                            <span v-if="addr.is_default" class="text-xs font-normal text-indigo-600">{{ lang.default_badge }}</span>
+                                        </span>
+                                        <span class="block text-gray-500 dark:text-gray-400 truncate">{{ addr.address }}</span>
+                                    </button>
+                                    <button
+                                        type="button"
+                                        @click="selectNewAddress"
+                                        :class="[
+                                            'text-left text-sm p-3 rounded-md border flex items-center justify-center',
+                                            selectedAddressId === null
+                                                ? 'border-indigo-500 ring-1 ring-indigo-500 bg-indigo-50 dark:bg-indigo-900/20'
+                                                : 'border-dashed border-gray-300 dark:border-gray-600 hover:border-gray-400',
+                                        ]"
+                                    >
+                                        {{ lang.use_new_address }}
+                                    </button>
+                                </div>
+                            </div>
+
                             <div class="space-y-4">
                                 <div>
                                     <label for="shipping_name" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{{ lang.name }}</label>
@@ -123,6 +185,10 @@ const submit = () => {
                                     <label for="shipping_address" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{{ lang.address }}</label>
                                     <textarea id="shipping_address" v-model="form.shipping_address" rows="3" class="w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700"></textarea>
                                     <p v-if="form.errors.shipping_address" class="mt-1 text-sm text-red-500">{{ form.errors.shipping_address }}</p>
+                                </div>
+                                <div v-if="selectedAddressId === null" class="flex items-center">
+                                    <Checkbox id="save_address" v-model:checked="form.save_address" />
+                                    <label for="save_address" class="ml-2 text-sm text-gray-600 dark:text-gray-400">{{ lang.save_address }}</label>
                                 </div>
                                 <div>
                                     <label for="notes" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{{ lang.notes_optional }}</label>

@@ -57,6 +57,10 @@ Route::middleware([
 
     Route::get('/members', [App\Http\Controllers\MemberController::class, 'index'])->name('members');
 
+    // Addresses (buyer's saved shipping addresses)
+    Route::resource('addresses', App\Http\Controllers\AddressController::class)->except(['show']);
+    Route::patch('/addresses/{address}/default', [App\Http\Controllers\AddressController::class, 'setDefault'])->name('addresses.default');
+
     // Checkout
     Route::get('/checkout', [CheckoutController::class, 'index'])->name('checkout.index');
     Route::post('/checkout', [CheckoutController::class, 'store'])->name('checkout.store');

@@ -1,0 +1,26 @@
+<?php
+
+return [
+    'title' => '我的地址簿',
+    'add' => '新增地址',
+    'create' => '新增地址',
+    'edit' => '編輯地址',
+    'update' => '更新地址',
+    'label' => '標籤',
+    'label_home' => '家',
+    'label_office' => '公司',
+    'label_other' => '其他',
+    'recipient_name' => '收件人姓名',
+    'phone' => '聯絡電話',
+    'address' => '地址',
+    'set_default' => '設為預設地址',
+    'default_badge' => '預設',
+    'no_addresses' => '你還沒有儲存任何地址。',
+    'create_first' => '新增第一筆地址',
+    'action_edit' => '編輯',
+    'action_delete' => '刪除',
+    'action_set_default' => '設為預設',
+    'delete_confirm' => '確定要刪除「:name」的地址嗎？',
+    'cancel' => '取消',
+    'confirm' => '刪除',
+];

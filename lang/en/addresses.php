@@ -1,0 +1,26 @@
+<?php
+
+return [
+    'title' => 'My Addresses',
+    'add' => 'New Address',
+    'create' => 'Add Address',
+    'edit' => 'Edit Address',
+    'update' => 'Update Address',
+    'label' => 'Label',
+    'label_home' => 'Home',
+    'label_office' => 'Office',
+    'label_other' => 'Other',
+    'recipient_name' => 'Recipient Name',
+    'phone' => 'Phone Number',
+    'address' => 'Address',
+    'set_default' => 'Set as default address',
+    'default_badge' => 'Default',
+    'no_addresses' => "You don't have any saved addresses yet.",
+    'create_first' => 'Add your first address',
+    'action_edit' => 'Edit',
+    'action_delete' => 'Delete',
+    'action_set_default' => 'Set as default',
+    'delete_confirm' => 'Delete the address for ":name"?',
+    'cancel' => 'Cancel',
+    'confirm' => 'Delete',
+];

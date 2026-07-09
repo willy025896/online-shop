@@ -7,6 +7,7 @@ return [
     'member_center' => '會員中心',
     'messages' => '訊息',
     'orders' => '訂單',
+    'addresses' => '地址簿',
     'cart' => '購物車',
     'wishlist' => '收藏清單',
     'log_in' => '登入',

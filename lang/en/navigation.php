@@ -7,6 +7,7 @@ return [
     'member_center' => 'Member Center',
     'messages' => 'Messages',
     'orders' => 'Orders',
+    'addresses' => 'Addresses',
     'cart' => 'Cart',
     'wishlist' => 'Wishlist',
     'log_in' => 'Log In',

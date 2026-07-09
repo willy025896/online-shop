@@ -134,4 +134,9 @@ class User extends Authenticatable implements HasLocalePreference
     {
         return $this->belongsToMany(Product::class, 'wishlist_items')->withTimestamps();
     }
+
+    public function addresses(): HasMany
+    {
+        return $this->hasMany(Address::class);
+    }
 }

@@ -27,4 +27,8 @@ return [
     'coupon_placeholder' => '輸入折扣碼',
     'coupon_apply' => '套用',
     'coupon_remove' => '移除',
+    'saved_addresses' => '常用地址',
+    'use_new_address' => '+ 使用新地址',
+    'save_address' => '儲存為常用地址，下次免輸入',
+    'default_badge' => '預設',
 ];

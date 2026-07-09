@@ -27,4 +27,8 @@ return [
     'coupon_placeholder' => 'Enter code',
     'coupon_apply' => 'Apply',
     'coupon_remove' => 'Remove',
+    'saved_addresses' => 'Saved Addresses',
+    'use_new_address' => '+ Use a new address',
+    'save_address' => 'Save this address for next time',
+    'default_badge' => 'Default',
 ];
