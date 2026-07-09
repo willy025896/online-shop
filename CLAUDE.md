@@ -54,6 +54,12 @@ php artisan migrate
 php artisan migrate:fresh --seed
 ```
 
+### `.env.testing` is required and is NOT copied automatically
+
+`.env` and `.env.testing` are both gitignored (not tracked in git) — `phpunit.xml` sets `APP_ENV=testing`, and Laravel loads `.env.testing` for that environment (`.env.testing` points at a real `online_shop_test` MySQL database; `config/database.php`'s default connection is `env('DB_CONNECTION', 'sqlite')`).
+
+**When creating a new git worktree (or any fresh checkout) to work in this repo, `.env`/`.env.testing` must be manually copied or created before running tests.** `git worktree add` does **not** copy gitignored files from the original checkout. If `.env.testing` is missing, Laravel silently falls back — either to `.env`'s DB (pointing at the real dev database, `online_shop`) or, if `.env` is also missing, to the bare `config/database.php` default (`sqlite`) — instead of failing loudly. Either way tests run against the wrong database without any error. Always verify `.env.testing` exists (and points at `DB_DATABASE=online_shop_test`, not `online_shop`) before running `php artisan test`/`pest` in a new worktree.
+
 ## Architecture
 
 ### Inertia.js Data Flow
