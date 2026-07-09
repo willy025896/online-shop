@@ -276,6 +276,7 @@ Notification classes live in `app/Notifications/`. Each `toArray()` returns a un
 | New chat message (order chat or product Q&A) | `ConversationService::sendMessage` | `NewMessageNotification` | The other participant |
 | Buyer requests a return | `OrderService::requestReturn` | `OrderReturnRequestedNotification` | Seller |
 | Seller approves/rejects a return | `OrderService::approveReturn` / `rejectReturn` | `OrderReturnRespondedNotification` | Buyer |
+| Payout generated | `PayoutService::generateForShop` | `PayoutCompletedNotification` | Seller |
 
 `cancelled` is intentionally **excluded** from `Order::BUYER_NOTIFY_STATUSES` — every cancellation path already fires a path-specific notification, so including it would double-notify the buyer (or self-notify when they cancel their own order). If you add a new cancellation path, dispatch the relevant notification explicitly inside the same `DB::transaction`.
 
@@ -362,13 +363,13 @@ online-shop/
 │   ├── Http/
 │   │   ├── Controllers/        # public + utility + seller + admin (incl. NotificationController, EcpayController, Review controllers)
 │   │   └── Middleware/         # EnsureRole, SetLocale, HandleInertiaRequests
-│   ├── Notifications/          # 13 Notification classes (Order*, Shop*, Review*); all use BroadcastsAsArray trait
+│   ├── Notifications/          # 14 Notification classes (Order*, Shop*, Review*, Payout*); all use BroadcastsAsArray trait
 │   │   └── Concerns/           # BroadcastsAsArray trait
 │   ├── Policies/               # 6 policies (Product, Order, Shop, ProductReview, Coupon, ...)
-│   ├── Models/                 # 25 models (User, Shop, Product, Order, OrderReturn, ProductVariant, ProductReview, BuyerReview, WishlistItem, Coupon, ...)
-│   └── Services/               # Cart, Order, Payment, Ecpay (gateway), Shipping, Coupon, Conversation, Review, Wishlist, ProductVariant
+│   ├── Models/                 # 27 models (User, Shop, Product, Order, OrderReturn, ProductVariant, ProductReview, BuyerReview, WishlistItem, Coupon, Payout, PayoutItem, ...)
+│   └── Services/               # Cart, Order, Payment, Ecpay (gateway), Shipping, Coupon, Conversation, Review, Wishlist, ProductVariant, Payout, Recommendation, AdminAuditLogger
 ├── database/
-│   └── migrations/             # 45 migrations (incl. product_reviews, buyer_reviews, aggregates, completed_at, wishlist_items, product_variants, order_returns, gateway_trade_no)
+│   └── migrations/             # 47 migrations (incl. product_reviews, buyer_reviews, aggregates, completed_at, wishlist_items, product_variants, order_returns, payouts, gateway_trade_no)
 ├── lang/
 │   ├── en/                     # English translations (incl. notifications.php, reviews.php, wishlist.php)
 │   └── zh_TW/                  # Traditional Chinese translations

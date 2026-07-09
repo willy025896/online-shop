@@ -109,19 +109,20 @@ php artisan test tests/Feature/AuthenticationTest.php
 
 ```
 online-shop/
-├── .claude/                    # AI task records, decisions, implementation records
+├── .claude/                    # AI task records, decisions (ADR), implementation records
 ├── app/
 │   ├── Console/Commands/       # ReleaseReviews (排程：每 10 分鐘公開到期評論)
 │   ├── Events/                 # MessageSent (chat broadcast)
+│   ├── Exceptions/             # CouponException, EcpayException（機器可讀的 `reason`）
 │   ├── Http/
-│   │   ├── Controllers/        # public + utility + seller + admin (incl. NotificationController, ReviewControllers)
+│   │   ├── Controllers/        # public + utility + seller + admin (incl. NotificationController, EcpayController, ReviewControllers)
 │   │   └── Middleware/         # EnsureRole, SetLocale, HandleInertiaRequests
-│   ├── Notifications/          # Order*, Shop*, Review* (database + broadcast)；共用 BroadcastsAsArray trait
-│   ├── Policies/               # Product, Order, Shop, ProductReview
-│   ├── Models/                 # 16 models (User, Shop, Product, Order, ProductReview, BuyerReview, WishlistItem, ...)
-│   └── Services/               # Cart, Order, Payment, Shipping, Conversation, Review, Wishlist
+│   ├── Notifications/          # 14 個 Notification classes (Order*, Shop*, Review*, Payout*)，共用 BroadcastsAsArray trait
+│   ├── Policies/                # Product, Order, Shop, ProductReview, Coupon, Conversation
+│   ├── Models/                 # 27 models (User, Shop, Product, Order, OrderReturn, ProductVariant, ProductReview, BuyerReview, WishlistItem, Coupon, Payout, ...)
+│   └── Services/               # Cart, Order, Payment, Ecpay (gateway), Shipping, Coupon, Conversation, Review, Wishlist, ProductVariant, Payout, Recommendation, AdminAuditLogger
 ├── database/
-│   └── migrations/             # 23 migrations
+│   └── migrations/             # 47 migrations
 ├── lang/
 │   ├── en/                     # English translations (incl. notifications.php)
 │   └── zh_TW/                  # Traditional Chinese translations
@@ -132,6 +133,8 @@ online-shop/
 │   └── Pages/                  # Vue pages organized by feature (incl. Wishlist/, Notifications/, Reviews/, Seller/Reviews/, Seller/Buyers/)
 ├── routes/
 │   ├── web.php                 # HTTP routes (public, auth, seller, admin)
+│   ├── api.php                 # 免 CSRF 的端點（component-lang、ECPay payment notify）
+│   ├── console.php             # 排程指令（reviews:release 每 10 分鐘）
 │   └── channels.php            # Broadcast channel authorization
 └── tests/                      # Pest tests
 ```
@@ -143,6 +146,14 @@ online-shop/
 - **產品推薦／相關商品** - 商品頁多訊號相關商品推薦
 - **運費計算** - 固定費率 + 滿額免運，依賣場各自計算
 - **折扣碼／優惠券** - 賣家自訂賣場折扣碼，結帳套用與 redemption 皆有交易鎖定防護
+- **商品規格／多變體（SKU）** - 賣家可選擇性新增規格組合，各 variant 各自定價與庫存
+- **商品問答（Q&A）** - 買家可在商品頁直接詢問賣家，沿用聊天系統
+- **售後退貨／退款** - 完成訂單 7 天內可申請退貨，核准後自動回補庫存、依優惠券折扣比例退款
+- **平台抽成與賣家撥款** - 全平台統一費率，Admin 手動觸發撥款，逐筆訂單金額快照
+- **金流串接（綠界 ECPay）** - 買家導向 ECPay 收銀台付款，server 端 notify webhook 驗簽後才標記付款，退款走真實 API
+- **商品搜尋自動完成／熱門搜尋** - 商品搜尋列即時建議
+- **SEO 基礎建設** - sitemap.xml、robots.txt、商品／賣場／分類頁 OG meta
+- **平台治理三件套** - Admin 全站優惠券、操作稽核紀錄、賣家商品 CSV 匯入/匯出
 - **Dashboard 數據分析** - 賣家／管理員後台時段篩選、收益趨勢、Top 商品／店鋪
 - **商品篩選強化** - 價格區間、低庫存篩選
 - **低庫存警示** - 賣家儀表板 widget + 商品列表篩選
