@@ -14,6 +14,7 @@ return [
         'latest' => '最新',
         'price_asc' => '價格：低到高',
         'price_desc' => '價格：高到低',
+        'rating_desc' => '評分最高',
         'name' => '名稱 A–Z',
     ],
     'price_range' => '價格區間',

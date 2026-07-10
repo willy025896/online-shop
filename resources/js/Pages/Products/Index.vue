@@ -1,13 +1,14 @@
 <script setup>
-import { ref, computed } from 'vue';
-import { usePage, router } from '@inertiajs/vue3';
+import { computed } from 'vue';
+import { usePage } from '@inertiajs/vue3';
 import AppLayout from '@/Layouts/AppLayout.vue';
 import ProductCard from '@/Components/ProductCard.vue';
 import ProductCardSkeleton from '@/Components/ProductCardSkeleton.vue';
 import SearchBar from '@/Components/SearchBar.vue';
 import CategoryTree from '@/Components/CategoryTree.vue';
 import Pagination from '@/Components/Pagination.vue';
-import { useInFlightLoading } from '@/Composables/useInFlightLoading';
+import MinRatingFilter from '@/Components/MinRatingFilter.vue';
+import { useListingFilters } from '@/Composables/useListingFilters';
 
 const props = defineProps({
     products: Object,
@@ -18,33 +19,11 @@ const props = defineProps({
 const page = usePage();
 const lang = computed(() => page.props.lang || {});
 
-const { isLoading, start: startLoading, finish: finishLoading } = useInFlightLoading();
-
-const localMinPrice = ref(props.filters?.min_price ?? '');
-const localMaxPrice = ref(props.filters?.max_price ?? '');
-const hasPriceFilter = computed(() => localMinPrice.value || localMaxPrice.value);
-
-function updateFilters(partial) {
-    router.get(route('products.index'), { ...props.filters, ...partial }, {
-        preserveState: true,
-        only: ['products', 'filters'],
-        onStart: startLoading,
-        onFinish: finishLoading,
-    });
-}
-
-function applyPriceFilter() {
-    updateFilters({
-        min_price: localMinPrice.value || undefined,
-        max_price: localMaxPrice.value || undefined,
-    });
-}
-
-function clearPriceFilter() {
-    localMinPrice.value = '';
-    localMaxPrice.value = '';
-    applyPriceFilter();
-}
+const {
+    isLoading, startLoading, finishLoading,
+    localMinPrice, localMaxPrice, hasPriceFilter,
+    updateFilters, applyPriceFilter, clearPriceFilter,
+} = useListingFilters({ routeName: 'products.index', getFilters: () => props.filters });
 </script>
 
 <template>
@@ -107,36 +86,26 @@ function clearPriceFilter() {
                             {{ (lang.found || ':count product(s) found').replace(':count', products.total) }}
                         </p>
 
-                        <!-- Min rating chips -->
-                        <div class="flex gap-1">
-                            <button
-                                v-for="star in [4, 3]"
-                                :key="star"
-                                :class="[
-                                    'px-2 py-1 rounded-full text-xs font-medium border transition',
-                                    filters?.min_rating == star
-                                        ? 'bg-yellow-400 border-yellow-400 text-white'
-                                        : 'border-gray-300 text-gray-600 hover:border-yellow-400'
-                                ]"
-                                @click="updateFilters({ min_rating: filters?.min_rating == star ? undefined : star })"
-                            >
-                                {{ star }}★+
-                            </button>
-                        </div>
+                        <MinRatingFilter
+                            :model-value="filters?.min_rating"
+                            @update:model-value="value => updateFilters({ min_rating: value ?? undefined })"
+                        />
 
                         <select
+                            :value="filters?.sort || 'latest'"
                             @change="updateFilters({ sort: $event.target.value })"
                             class="text-sm rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 focus:border-indigo-500 focus:ring-indigo-500"
                         >
-                            <option value="">{{ lang.sort?.latest }}</option>
-                            <option value="price_asc" :selected="filters?.sort === 'price_asc'">{{ lang.sort?.price_asc }}</option>
-                            <option value="price_desc" :selected="filters?.sort === 'price_desc'">{{ lang.sort?.price_desc }}</option>
-                            <option value="rating_desc" :selected="filters?.sort === 'rating_desc'">評分最高</option>
+                            <option value="latest">{{ lang.sort?.latest }}</option>
+                            <option value="price_asc">{{ lang.sort?.price_asc }}</option>
+                            <option value="price_desc">{{ lang.sort?.price_desc }}</option>
+                            <option value="rating_desc">{{ lang.sort?.rating_desc }}</option>
+                            <option value="name">{{ lang.sort?.name }}</option>
                         </select>
                     </div>
 
                     <div v-if="isLoading" role="status" aria-busy="true" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-                        <span class="sr-only">載入中…</span>
+                        <span class="sr-only">{{ lang.loading }}</span>
                         <ProductCardSkeleton v-for="n in 8" :key="n" />
                     </div>
                     <div v-else-if="products.data.length" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">

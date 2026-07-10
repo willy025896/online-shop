@@ -9,6 +9,8 @@ return [
         'latest' => 'Latest',
         'price_asc' => 'Price: Low to High',
         'price_desc' => 'Price: High to Low',
+        'rating_desc' => 'Highest Rated',
+        'name' => 'Name A–Z',
     ],
     'no_products' => 'No products found.',
     'out_of_stock' => 'Out of stock',
@@ -28,5 +30,6 @@ return [
     'max_price' => 'Max',
     'apply' => 'Apply',
     'clear' => 'Clear',
+    'loading' => 'Loading…',
     'select_variant' => 'Please select options above',
 ];

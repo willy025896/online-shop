@@ -1,14 +1,14 @@
 <script setup>
-import { computed } from 'vue';
-import { usePage } from '@inertiajs/vue3';
+import { computed, ref, watch, nextTick } from 'vue';
+import { usePage, router } from '@inertiajs/vue3';
 import AppLayout from '@/Layouts/AppLayout.vue';
 import ProductCard from '@/Components/ProductCard.vue';
 import ProductCardSkeleton from '@/Components/ProductCardSkeleton.vue';
 import ImageWithFallback from '@/Components/ImageWithFallback.vue';
 import Pagination from '@/Components/Pagination.vue';
 import StarRating from '@/Components/StarRating.vue';
-import { router } from '@inertiajs/vue3';
-import { ref, watch } from 'vue';
+import MinRatingFilter from '@/Components/MinRatingFilter.vue';
+import { useInFlightLoading } from '@/Composables/useInFlightLoading';
 
 const props = defineProps({
     shop: Object,
@@ -20,22 +20,26 @@ const props = defineProps({
 const page = usePage();
 const lang = computed(() => page.props.lang || {});
 
+const { isLoading, start: startLoading, finish: finishLoading } = useInFlightLoading();
+
 const search = ref(props.filters?.search ?? '');
 const selectedCategory = ref(props.filters?.category ?? '');
 const sort = ref(props.filters?.sort ?? 'latest');
+const minRating = ref(props.filters?.min_rating ? Number(props.filters.min_rating) : null);
 const localMinPrice = ref(props.filters?.min_price ?? '');
 const localMaxPrice = ref(props.filters?.max_price ?? '');
 const hasPriceFilter = computed(() => localMinPrice.value || localMaxPrice.value);
-const isLoading = ref(false);
 const skeletonCount = computed(() => props.products.data.length || props.products.per_page || 8);
 
 let searchTimer = null;
+let syncingFromProps = false;
 
 const applyFilters = () => {
     const params = {};
     if (search.value) params.search = search.value;
     if (selectedCategory.value) params.category = selectedCategory.value;
     if (sort.value !== 'latest') params.sort = sort.value;
+    if (minRating.value) params.min_rating = minRating.value;
     if (localMinPrice.value) params.min_price = localMinPrice.value;
     if (localMaxPrice.value) params.max_price = localMaxPrice.value;
 
@@ -44,8 +48,8 @@ const applyFilters = () => {
         preserveScroll: true,
         replace: true,
         only: ['products', 'filters'],
-        onStart: () => { isLoading.value = true; },
-        onFinish: () => { isLoading.value = false; },
+        onStart: startLoading,
+        onFinish: finishLoading,
     });
 };
 
@@ -60,7 +64,23 @@ watch(search, () => {
     searchTimer = setTimeout(applyFilters, 400);
 });
 
-watch([selectedCategory, sort], applyFilters);
+watch([selectedCategory, sort, minRating], () => {
+    if (syncingFromProps) return;
+    applyFilters();
+});
+
+// Re-sync sort/category/rating from the server-confirmed filters (e.g. after
+// browser back/forward restores a cached page). search/price are intentionally
+// excluded: they're apply-gated draft inputs (debounced / explicit Apply
+// button), and resyncing them would silently wipe whatever the user is
+// mid-typing whenever any *other* filter changes.
+watch(() => props.filters, (filters) => {
+    syncingFromProps = true;
+    selectedCategory.value = filters?.category ?? '';
+    sort.value = filters?.sort ?? 'latest';
+    minRating.value = filters?.min_rating ? Number(filters.min_rating) : null;
+    nextTick(() => { syncingFromProps = false; });
+});
 </script>
 
 <template>
@@ -98,6 +118,8 @@ watch([selectedCategory, sort], applyFilters);
                         class="flex-1 rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 focus:border-indigo-500 focus:ring-indigo-500 text-sm"
                     />
                 </div>
+                <MinRatingFilter v-model="minRating" />
+
                 <select
                     v-model="sort"
                     class="rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 focus:border-indigo-500 focus:ring-indigo-500 text-sm"
@@ -105,6 +127,7 @@ watch([selectedCategory, sort], applyFilters);
                     <option value="latest">{{ lang.sort?.latest }}</option>
                     <option value="price_asc">{{ lang.sort?.price_asc }}</option>
                     <option value="price_desc">{{ lang.sort?.price_desc }}</option>
+                    <option value="rating_desc">{{ lang.sort?.rating_desc }}</option>
                     <option value="name">{{ lang.sort?.name }}</option>
                 </select>
             </div>
@@ -185,7 +208,7 @@ watch([selectedCategory, sort], applyFilters);
             </div>
 
             <div class="mt-8">
-                <Pagination :links="products.links" @start="isLoading = true" @finish="isLoading = false" />
+                <Pagination :links="products.links" @start="startLoading" @finish="finishLoading" />
             </div>
         </div>
     </AppLayout>

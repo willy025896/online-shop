@@ -9,6 +9,8 @@ return [
         'latest' => '最新',
         'price_asc' => '價格：低到高',
         'price_desc' => '價格：高到低',
+        'rating_desc' => '評分最高',
+        'name' => '名稱 A–Z',
     ],
     'no_products' => '找不到商品。',
     'out_of_stock' => '缺貨',
@@ -28,5 +30,6 @@ return [
     'max_price' => '最高',
     'apply' => '套用',
     'clear' => '清除',
+    'loading' => '載入中…',
     'select_variant' => '請先選擇上方規格',
 ];

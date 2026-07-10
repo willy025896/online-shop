@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Controllers\Concerns\FiltersProductListings;
 use App\Models\Category;
 use App\Models\Product;
 use App\Models\SearchQuery;
@@ -13,6 +14,8 @@ use Inertia\Inertia;
 
 class ProductController extends Controller
 {
+    use FiltersProductListings;
+
     public function index(Request $request)
     {
         $query = Product::active()
@@ -27,24 +30,7 @@ class ProductController extends Controller
             $query->where('category_id', $categoryId);
         }
 
-        // Rating filter: only show products with enough reviews and avg >= min_rating
-        if ($minRating = $request->integer('min_rating')) {
-            $query->where('reviews_count', '>', 0)
-                ->whereRaw('(rating_sum / reviews_count) >= ?', [$minRating]);
-        }
-
-        $query->priceRange($request->input('min_price'), $request->input('max_price'));
-
-        $sort = $request->input('sort', 'latest');
-        if ($sort === 'price_asc') {
-            $query->orderBy('price');
-        } elseif ($sort === 'price_desc') {
-            $query->orderByDesc('price');
-        } elseif ($sort === 'rating_desc') {
-            $query->orderByRating();
-        } else {
-            $query->latest();
-        }
+        $this->applyProductSortAndFilters($query, $request);
 
         return Inertia::render('Products/Index', [
             'products' => $query->paginate(12)->withQueryString(),

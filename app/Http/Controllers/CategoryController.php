@@ -2,28 +2,35 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Controllers\Concerns\FiltersProductListings;
 use App\Models\Category;
 use App\Models\Product;
+use Illuminate\Http\Request;
 use Inertia\Inertia;
 
 class CategoryController extends Controller
 {
-    public function show(Category $category)
+    use FiltersProductListings;
+
+    public function show(Category $category, Request $request)
     {
         abort_unless($category->is_active, 404);
 
         $categoryIds = collect([$category->id])
             ->merge($category->children->pluck('id'));
 
-        $products = Product::active()
+        $query = Product::active()
             ->whereIn('category_id', $categoryIds)
-            ->with(['shop', 'primaryImage'])
-            ->latest()
-            ->paginate(12);
+            ->with(['shop', 'primaryImage']);
+
+        $this->applyProductSortAndFilters($query, $request);
+
+        $products = $query->paginate(12)->withQueryString();
 
         return Inertia::render('Categories/Show', [
             'category' => $category->load('children', 'parent'),
             'products' => $products,
+            'filters' => $request->only(['sort', 'min_rating', 'min_price', 'max_price']),
             'seo' => [
                 'title' => $category->name,
                 'description' => "探索「{$category->name}」分類下的所有商品。",

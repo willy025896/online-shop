@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Controllers\Concerns\FiltersProductListings;
 use App\Models\Category;
 use App\Models\Product;
 use App\Models\Shop;
@@ -11,6 +12,8 @@ use Inertia\Inertia;
 
 class ShopController extends Controller
 {
+    use FiltersProductListings;
+
     public function index()
     {
         $shops = Shop::where('status', Shop::STATUS_APPROVED)
@@ -39,14 +42,7 @@ class ShopController extends Controller
             $query->where('category_id', $request->category);
         }
 
-        $query->priceRange($request->input('min_price'), $request->input('max_price'));
-
-        match ($request->get('sort', 'latest')) {
-            'price_asc' => $query->orderBy('price', 'asc'),
-            'price_desc' => $query->orderBy('price', 'desc'),
-            'name' => $query->orderBy('name', 'asc'),
-            default => $query->latest(),
-        };
+        $this->applyProductSortAndFilters($query, $request);
 
         $products = $query->paginate(12)->withQueryString();
 
@@ -57,7 +53,7 @@ class ShopController extends Controller
                 'id',
                 Product::where('shop_id', $shop->id)->where('status', Product::STATUS_ACTIVE)->select('category_id')
             )->active()->orderBy('sort_order')->get(['id', 'name']),
-            'filters' => $request->only(['search', 'category', 'sort', 'min_price', 'max_price']),
+            'filters' => $request->only(['search', 'category', 'sort', 'min_rating', 'min_price', 'max_price']),
             'seo' => [
                 'title' => $shop->name,
                 'description' => Str::limit(strip_tags($shop->description ?? ''), 155),

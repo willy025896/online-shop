@@ -14,6 +14,7 @@ return [
         'latest' => 'Latest',
         'price_asc' => 'Price: Low to High',
         'price_desc' => 'Price: High to Low',
+        'rating_desc' => 'Highest Rated',
         'name' => 'Name A–Z',
     ],
     'price_range' => 'Price Range',

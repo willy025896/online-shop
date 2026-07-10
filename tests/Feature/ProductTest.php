@@ -66,3 +66,15 @@ test('products index filters by max price', function () {
     $this->get(route('products.index', ['max_price' => 200]))
         ->assertInertia(fn ($page) => $page->has('products.data', 1));
 });
+
+test('products index sorts by name ascending', function () {
+    $shop = Shop::factory()->create();
+    $zebra = Product::factory()->create(['shop_id' => $shop->id, 'name' => 'Zebra']);
+    $apple = Product::factory()->create(['shop_id' => $shop->id, 'name' => 'Apple']);
+
+    $this->get(route('products.index', ['sort' => 'name']))
+        ->assertInertia(fn ($page) => $page
+            ->where('products.data.0.id', $apple->id)
+            ->where('products.data.1.id', $zebra->id)
+        );
+});
