@@ -1,7 +1,8 @@
 <script setup>
-import { computed } from 'vue';
+import { computed, ref } from 'vue';
 import { Link, router, usePage } from '@inertiajs/vue3';
 import AppLayout from '@/Layouts/AppLayout.vue';
+import Skeleton from '@/Components/Skeleton.vue';
 
 const props = defineProps({
     notifications: Object,
@@ -10,9 +11,15 @@ const props = defineProps({
 
 const page = usePage();
 const lang = computed(() => page.props.lang || {});
+const isLoading = ref(false);
+const skeletonCount = computed(() => props.notifications.data.length || 6);
 
 const setFilter = (filter) => {
-    router.get(route('notifications.index'), { filter }, { preserveScroll: true });
+    router.get(route('notifications.index'), { filter }, {
+        preserveScroll: true,
+        onStart: () => { isLoading.value = true; },
+        onFinish: () => { isLoading.value = false; },
+    });
 };
 
 const markRead = (id) => {
@@ -70,7 +77,18 @@ const formatDate = (iso) => new Date(iso).toLocaleString();
                         >{{ lang.mark_all_read }}</button>
                     </div>
 
-                    <div v-if="notifications.data.length === 0" class="px-6 py-12 text-center text-gray-500 dark:text-gray-400">
+                    <ul v-if="isLoading" role="status" aria-busy="true" class="divide-y divide-gray-100 dark:divide-gray-700">
+                        <li v-for="n in skeletonCount" :key="n" class="px-6 py-4 flex items-start gap-3">
+                            <Skeleton width="0.5rem" height="0.5rem" rounded="rounded-full" class="mt-2" />
+                            <div class="flex-1 min-w-0 space-y-2">
+                                <Skeleton width="40%" height="0.875rem" />
+                                <Skeleton width="70%" height="0.875rem" />
+                                <Skeleton width="25%" height="0.75rem" />
+                            </div>
+                        </li>
+                    </ul>
+
+                    <div v-else-if="notifications.data.length === 0" class="px-6 py-12 text-center text-gray-500 dark:text-gray-400">
                         <svg class="mx-auto h-12 w-12 text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
                         </svg>
@@ -123,6 +141,9 @@ const formatDate = (iso) => new Date(iso).toLocaleString();
                                     'px-3 py-1 text-sm rounded',
                                     link.active ? 'bg-indigo-600 text-white' : 'text-gray-600 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700'
                                 ]"
+                                preserve-scroll
+                                @start="isLoading = true"
+                                @finish="isLoading = false"
                             />
                             <span v-else v-html="link.label" class="px-3 py-1 text-sm text-gray-400" />
                         </template>

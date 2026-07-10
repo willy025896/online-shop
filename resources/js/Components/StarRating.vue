@@ -1,10 +1,18 @@
 <template>
-    <div class="flex items-center gap-0.5" :class="sizeClass">
+    <div
+        class="flex items-center gap-0.5"
+        :class="sizeClass"
+        :role="readonly ? 'img' : undefined"
+        :aria-label="readonly ? `評分 ${modelValue} 之 5 顆星` : undefined"
+    >
         <button
             v-for="star in 5"
             :key="star"
             type="button"
             :disabled="readonly"
+            :aria-hidden="readonly ? 'true' : undefined"
+            :aria-label="!readonly ? `評 ${star} 顆星` : undefined"
+            :aria-pressed="!readonly ? star <= modelValue : undefined"
             :class="[
                 'transition-colors',
                 readonly ? 'cursor-default' : 'cursor-pointer hover:scale-110',
