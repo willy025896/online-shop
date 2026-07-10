@@ -1,8 +1,9 @@
 <script setup>
 import { computed, ref } from 'vue';
-import { Link, router, usePage } from '@inertiajs/vue3';
+import { router, usePage } from '@inertiajs/vue3';
 import AppLayout from '@/Layouts/AppLayout.vue';
 import Skeleton from '@/Components/Skeleton.vue';
+import Pagination from '@/Components/Pagination.vue';
 
 const props = defineProps({
     notifications: Object,
@@ -11,14 +12,21 @@ const props = defineProps({
 
 const page = usePage();
 const lang = computed(() => page.props.lang || {});
-const isLoading = ref(false);
-const skeletonCount = computed(() => props.notifications.data.length || 6);
+
+// Counts in-flight requests rather than a single boolean, so an overlapping
+// filter click + pagination click can't clear the skeleton while the other is still loading.
+const inFlightCount = ref(0);
+const isLoading = computed(() => inFlightCount.value > 0);
+const startLoading = () => { inFlightCount.value += 1; };
+const finishLoading = () => { inFlightCount.value = Math.max(0, inFlightCount.value - 1); };
+
+const skeletonCount = computed(() => props.notifications.data.length || props.notifications.per_page || 6);
 
 const setFilter = (filter) => {
     router.get(route('notifications.index'), { filter }, {
         preserveScroll: true,
-        onStart: () => { isLoading.value = true; },
-        onFinish: () => { isLoading.value = false; },
+        onStart: startLoading,
+        onFinish: finishLoading,
     });
 };
 
@@ -131,22 +139,8 @@ const formatDate = (iso) => new Date(iso).toLocaleString();
                         </li>
                     </ul>
 
-                    <div v-if="notifications.last_page > 1" class="px-6 py-4 border-t border-gray-100 dark:border-gray-700 flex justify-center gap-1">
-                        <template v-for="link in notifications.links" :key="link.label">
-                            <Link
-                                v-if="link.url"
-                                :href="link.url"
-                                v-html="link.label"
-                                :class="[
-                                    'px-3 py-1 text-sm rounded',
-                                    link.active ? 'bg-indigo-600 text-white' : 'text-gray-600 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700'
-                                ]"
-                                preserve-scroll
-                                @start="isLoading = true"
-                                @finish="isLoading = false"
-                            />
-                            <span v-else v-html="link.label" class="px-3 py-1 text-sm text-gray-400" />
-                        </template>
+                    <div v-if="notifications.last_page > 1" class="px-6 py-4 border-t border-gray-100 dark:border-gray-700">
+                        <Pagination :links="notifications.links" @start="startLoading" @finish="finishLoading" />
                     </div>
                 </div>
             </div>

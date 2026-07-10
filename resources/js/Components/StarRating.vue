@@ -1,18 +1,11 @@
 <template>
-    <div
-        class="flex items-center gap-0.5"
-        :class="sizeClass"
-        :role="readonly ? 'img' : undefined"
-        :aria-label="readonly ? `評分 ${modelValue} 之 5 顆星` : undefined"
-    >
+    <div class="flex items-center gap-0.5" :class="sizeClass" v-bind="wrapperA11y">
         <button
             v-for="star in 5"
             :key="star"
             type="button"
             :disabled="readonly"
-            :aria-hidden="readonly ? 'true' : undefined"
-            :aria-label="!readonly ? `評 ${star} 顆星` : undefined"
-            :aria-pressed="!readonly ? star <= modelValue : undefined"
+            v-bind="starA11y(star)"
             :class="[
                 'transition-colors',
                 readonly ? 'cursor-default' : 'cursor-pointer hover:scale-110',
@@ -49,4 +42,17 @@ const hovered = ref(null)
 const sizeClass = computed(() => ({ sm: 'text-sm', md: 'text-base', lg: 'text-lg' }[props.size] ?? 'text-base'))
 const starSizeClass = computed(() => ({ sm: 'w-4 h-4', md: 'w-5 h-5', lg: 'w-6 h-6' }[props.size] ?? 'w-5 h-5'))
 const countSizeClass = computed(() => ({ sm: 'text-xs', md: 'text-sm', lg: 'text-base' }[props.size] ?? 'text-sm'))
+
+// Readonly renders as one labeled image; interactive renders as 5 labeled toggle buttons.
+// Centralizing both variants here keeps the readonly/interactive a11y split in one place.
+const wrapperA11y = computed(() => (
+    props.readonly
+        ? { role: 'img', 'aria-label': `評分 ${props.modelValue} 之 5 顆星` }
+        : {}
+))
+const starA11y = (star) => (
+    props.readonly
+        ? { 'aria-hidden': 'true' }
+        : { 'aria-label': `評 ${star} 顆星`, 'aria-pressed': star <= props.modelValue }
+)
 </script>
