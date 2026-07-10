@@ -103,7 +103,7 @@ class ProductController extends Controller
     {
         $items = [['name' => __('navigation.home'), 'url' => url('/')]];
 
-        if ($product->category && $product->category->is_active) {
+        if ($product->category) {
             $items = array_merge($items, $product->category->breadcrumbTrail());
         }
 

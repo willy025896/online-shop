@@ -223,12 +223,24 @@ test('category show page breadcrumb json-ld skips a deactivated ancestor', funct
         );
 });
 
-test('product show page breadcrumb json-ld omits the category segment when the product category is deactivated', function () {
+test('product show page breadcrumb json-ld omits the category segment when the deactivated product category has no active ancestor', function () {
     $category = Category::factory()->create(['name' => '停用分類', 'is_active' => false]);
     $product = Product::factory()->create(['category_id' => $category->id, 'name' => '測試商品']);
 
     $this->get(route('products.show', $product->slug))
         ->assertInertia(fn ($page) => $page
             ->where('seo.jsonLd.1.itemListElement.1.name', '測試商品')
+        );
+});
+
+test('product show page breadcrumb json-ld skips a deactivated product category but keeps its active ancestor', function () {
+    $activeParent = Category::factory()->create(['name' => '家電']);
+    $deactivatedCategory = Category::factory()->create(['name' => '停用分類', 'is_active' => false, 'parent_id' => $activeParent->id]);
+    $product = Product::factory()->create(['category_id' => $deactivatedCategory->id, 'name' => '測試商品']);
+
+    $this->get(route('products.show', $product->slug))
+        ->assertInertia(fn ($page) => $page
+            ->where('seo.jsonLd.1.itemListElement.1.name', '家電')
+            ->where('seo.jsonLd.1.itemListElement.2.name', '測試商品')
         );
 });

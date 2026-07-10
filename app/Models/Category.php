@@ -75,13 +75,21 @@ class Category extends Model
 
     /**
      * Breadcrumb-ready {name, url} pairs for this category's active ancestor
-     * chain plus itself (root-first). Shared by every controller that renders
-     * a category breadcrumb so the "walk ancestors, append self" shape only
-     * lives in one place.
+     * chain plus itself (root-first) — same "skip only what's deactivated,
+     * keep walking" policy as activeAncestors() applied to the leaf too, so a
+     * deactivated category never breaks the trail: it's just left out while
+     * any active ancestor above it still shows. Shared by every controller
+     * that renders a category breadcrumb so this shape only lives in one place.
      */
     public function breadcrumbTrail(): array
     {
-        return $this->activeAncestors()->push($this)
+        $chain = $this->activeAncestors();
+
+        if ($this->is_active) {
+            $chain = $chain->push($this);
+        }
+
+        return $chain
             ->map(fn (self $category) => ['name' => $category->name, 'url' => route('categories.show', $category->slug)])
             ->all();
     }
