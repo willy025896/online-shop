@@ -7,4 +7,5 @@ return [
     'add_to_cart' => 'Add to Cart',
     'out_of_stock' => 'Out of stock',
     'remove' => 'Remove',
+    'loading' => 'Loading…',
 ];

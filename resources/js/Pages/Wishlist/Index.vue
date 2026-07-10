@@ -4,11 +4,14 @@ import { router, Link, usePage } from '@inertiajs/vue3';
 import AppLayout from '@/Layouts/AppLayout.vue';
 import Spinner from '@/Components/Spinner.vue';
 import ImageWithFallback from '@/Components/ImageWithFallback.vue';
+import ProductCardSkeleton from '@/Components/ProductCardSkeleton.vue';
+import Pagination from '@/Components/Pagination.vue';
 import { useAsyncActionGroup } from '@/Composables/useAsyncAction';
 import { useToast } from '@/Composables/useToast';
+import { useInFlightLoading } from '@/Composables/useInFlightLoading';
 
 const props = defineProps({
-    products: Array,
+    products: Object,
 });
 
 const page = usePage();
@@ -17,6 +20,7 @@ const lang = computed(() => page.props.lang || {});
 const toast = useToast();
 const { isProcessing: isRemoving, run: runRemove } = useAsyncActionGroup();
 const { isProcessing: isAdding, run: runAdd } = useAsyncActionGroup();
+const { isLoading, start: startLoading, finish: finishLoading } = useInFlightLoading();
 
 const removeFromWishlist = (productId) => {
     runRemove(productId, (finish) => router.delete(route('wishlist.destroy', productId), {
@@ -45,19 +49,19 @@ const addToCart = (productId) => {
                 {{ lang.title || 'My Wishlist' }}
             </h1>
 
-            <div v-if="products.length === 0" class="text-center py-20">
-                <svg class="mx-auto h-16 w-16 text-gray-300 dark:text-gray-600 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12z" />
-                </svg>
-                <p class="text-gray-500 dark:text-gray-400 mb-4">{{ lang.empty || 'Your wishlist is empty.' }}</p>
-                <Link :href="route('products.index')" class="inline-block px-6 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition font-medium">
-                    {{ lang.browse_products || 'Browse Products' }}
-                </Link>
-            </div>
-
-            <div v-else class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+            <div
+                v-if="isLoading || products.data.length"
+                :role="isLoading ? 'status' : undefined"
+                :aria-busy="isLoading ? 'true' : undefined"
+                class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6"
+            >
+                <template v-if="isLoading">
+                    <span class="sr-only">{{ lang.loading }}</span>
+                    <ProductCardSkeleton v-for="n in 12" :key="n" />
+                </template>
                 <div
-                    v-for="product in products"
+                    v-else
+                    v-for="product in products.data"
                     :key="product.id"
                     class="bg-white dark:bg-gray-800 rounded-lg shadow-sm overflow-hidden flex flex-col"
                 >
@@ -105,6 +109,20 @@ const addToCart = (productId) => {
                         </div>
                     </div>
                 </div>
+            </div>
+
+            <div v-else class="text-center py-20">
+                <svg class="mx-auto h-16 w-16 text-gray-300 dark:text-gray-600 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12z" />
+                </svg>
+                <p class="text-gray-500 dark:text-gray-400 mb-4">{{ lang.empty || 'Your wishlist is empty.' }}</p>
+                <Link :href="route('products.index')" class="inline-block px-6 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition font-medium">
+                    {{ lang.browse_products || 'Browse Products' }}
+                </Link>
+            </div>
+
+            <div class="mt-8">
+                <Pagination :links="products.links" @start="startLoading" @finish="finishLoading" />
             </div>
         </div>
     </AppLayout>

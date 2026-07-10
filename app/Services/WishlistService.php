@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Models\Product;
 use App\Models\WishlistItem;
+use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\Auth;
 
 class WishlistService
@@ -37,17 +38,14 @@ class WishlistService
             ->delete();
     }
 
-    public function getItemsWithProducts()
+    public function getItemsWithProducts(): LengthAwarePaginator
     {
-        if (! Auth::check()) {
-            return collect();
-        }
-
         return Auth::user()
             ->favoritedProducts()
             ->with(['primaryImage', 'shop'])
             ->orderByPivot('created_at', 'desc')
-            ->get();
+            ->paginate(12)
+            ->withQueryString();
     }
 
     public function favoritedProductIds(): array

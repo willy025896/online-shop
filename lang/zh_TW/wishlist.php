@@ -7,4 +7,5 @@ return [
     'add_to_cart' => '加入購物車',
     'out_of_stock' => '缺貨',
     'remove' => '移除',
+    'loading' => '載入中…',
 ];

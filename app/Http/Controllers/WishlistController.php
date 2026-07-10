@@ -17,6 +17,14 @@ class WishlistController extends Controller
     {
         $products = $this->wishlistService->getItemsWithProducts();
 
+        // Removing the last item on a non-first page (via destroy()'s back()
+        // redirect) leaves the requested page beyond the recomputed last
+        // page; bounce back to the last valid page instead of rendering an
+        // empty list with no pagination nav to escape it.
+        if ($products->currentPage() > $products->lastPage()) {
+            return redirect()->route('wishlist.index', ['page' => $products->lastPage()]);
+        }
+
         return Inertia::render('Wishlist/Index', [
             'products' => $products,
         ]);

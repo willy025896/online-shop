@@ -105,7 +105,58 @@ test('wishlist index only shows own items', function () {
         ->assertStatus(200);
 
     $products = $response->original->getData()['page']['props']['products'];
-    expect($products)->toBeEmpty();
+    expect($products['data'])->toBeEmpty();
+});
+
+test('wishlist index paginates favorited products', function () {
+    $user = User::factory()->create();
+    $products = Product::factory()->count(13)->create(['status' => Product::STATUS_ACTIVE, 'stock' => 5]);
+
+    foreach ($products as $product) {
+        WishlistItem::create(['user_id' => $user->id, 'product_id' => $product->id]);
+    }
+
+    $response = $this->actingAs($user)
+        ->get(route('wishlist.index'))
+        ->assertStatus(200);
+
+    $wishlistProp = $response->original->getData()['page']['props']['products'];
+    expect($wishlistProp['data'])->toHaveCount(12);
+    expect($wishlistProp['total'])->toBe(13);
+});
+
+test('removing the last item on a non-first page no longer strands the user on an empty page', function () {
+    $user = User::factory()->create();
+    $products = Product::factory()->count(13)->create(['status' => Product::STATUS_ACTIVE, 'stock' => 5]);
+
+    foreach ($products as $product) {
+        WishlistItem::create(['user_id' => $user->id, 'product_id' => $product->id]);
+    }
+
+    $lastProduct = $products->last();
+
+    $this->actingAs($user)
+        ->delete(route('wishlist.destroy', $lastProduct));
+
+    $response = $this->actingAs($user)->get(route('wishlist.index', ['page' => 2]));
+    $response->assertRedirect(route('wishlist.index', ['page' => 1]));
+
+    $wishlistProp = $this->get($response->headers->get('Location'))
+        ->original->getData()['page']['props']['products'];
+    expect($wishlistProp['data'])->toHaveCount(12);
+});
+
+test('wishlist index redirects to last valid page when requested page is out of range', function () {
+    $user = User::factory()->create();
+    $products = Product::factory()->count(13)->create(['status' => Product::STATUS_ACTIVE, 'stock' => 5]);
+
+    foreach ($products as $product) {
+        WishlistItem::create(['user_id' => $user->id, 'product_id' => $product->id]);
+    }
+
+    $this->actingAs($user)
+        ->get(route('wishlist.index', ['page' => 5]))
+        ->assertRedirect(route('wishlist.index', ['page' => 2]));
 });
 
 test('adding to cart from wishlist keeps item in wishlist', function () {
