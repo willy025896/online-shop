@@ -37,6 +37,15 @@ status: Accepted
   - Sitemap 有最長 1 小時的資料延遲（新商品上架後最多 1 小時才會出現在 sitemap）。
   - 商品/賣場沒有獨立的 `meta_description` 欄位，目前用 `Str::limit(strip_tags($description), 155)` 從既有欄位動態產生；未來若要精修文案需另外加欄位。
 
+## Addendum (2026-07-10): JSON-LD 結構化資料
+
+沿用上述「Blade root 輸出、爬蟲讀初次回應 HTML」的理由，`seo` prop 新增可選的 `jsonLd` 鍵（節點陣列），`app.blade.php` 迭代輸出對應數量的 `<script type="application/ld+json">`，用 `JSON_HEX_TAG` 防止內容中的 `</script>` 跳脫破壞頁面。
+
+- `ProductController@show`：`Product`（含 `Offer`／有 variant 則用 `AggregateOffer`，`priceCurrency` 固定 `Product::CURRENCY`（`'TWD'`）；`reviews_count > 0` 才附 `AggregateRating`）+ `BreadcrumbList`。守門邏輯與既有 `seo` 一致，`$isAvailable` 為否時 `seo` 整體為 `null`。
+- `ShopController@show`：`Organization`（`reviews_count > 0` 才附 `AggregateRating`——但 Google 目前不支援泛用 `Organization` 的星等 rich snippet，這裡純粹是語意完整）+ `BreadcrumbList`。
+- `CategoryController@show`：僅 `BreadcrumbList`（不做 `ItemList`，分頁/篩選中的商品列表不適合宣告成 canonical 清單）。
+- 三個 controller 共用的 `BreadcrumbList` 節點組裝邏輯抽到 `App\Support\JsonLd::breadcrumbList()`（`app/Support/` 目錄下第一個檔案）；麵包屑的「祖先鏈」查找邏輯抽到 `Category::activeAncestors()`——分類巢狀深度不限（admin 端 `parent_id` 沒有限制只能掛根分類），此方法沿 `parent` 關聯往上走訪任意層數，並跳過已 `is_active = false` 的祖先，避免 `BreadcrumbList` 裡出現指向 404 頁面的連結（post-change-review 發現：只查一層 parent 且未過濾 is_active 會讓結構化資料裡混入死連結，比畫面上單純裝飾性的麵包屑連結嚴重，因為搜尋引擎爬蟲真的會照著走）。
+
 ## Alternatives Considered
 
 - **導入 Inertia SSR 讓 `<Head>` 元件在伺服器端渲染**：能讓所有頁面自動獲得正確 meta（含日後任何用 `<Head>` 加的標籤），但需要額外的 Node SSR process 部署與維運成本，對這個階段的需求（先讓 sitemap/OG 能動）是過度投資，之後流量規模需要更完整 SEO（例如全頁 SSR 首屏渲染）時可重新評估。

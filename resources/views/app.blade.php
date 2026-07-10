@@ -26,6 +26,12 @@
         <meta name="twitter:title" content="{{ $seoTitle }}">
         <meta name="twitter:description" content="{{ $seoDescription }}">
 
+        @if (!empty($seo['jsonLd']))
+            @foreach ($seo['jsonLd'] as $jsonLdNode)
+                <script type="application/ld+json">{!! json_encode($jsonLdNode, JSON_UNESCAPED_UNICODE | JSON_HEX_TAG | JSON_UNESCAPED_SLASHES) !!}</script>
+            @endforeach
+        @endif
+
         <!-- Dark mode: set before first paint to avoid a light->dark flash.
              Must run before the Vue bundle loads, so it duplicates the storage key
              and resolution logic from resources/js/Composables/useDarkMode.js — keep both in sync. -->

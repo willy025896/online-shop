@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Collection;
 
 class Category extends Model
 {
@@ -49,5 +50,26 @@ class Category extends Model
     public function scopeRoot($query)
     {
         return $query->whereNull('parent_id');
+    }
+
+    /**
+     * Walks the parent chain (root-first), skipping any ancestor that has
+     * been deactivated — used for breadcrumb trails so we never link to a
+     * category page that now 404s. Supports arbitrary nesting depth, unlike
+     * eager-loading a fixed number of `parent` levels.
+     */
+    public function activeAncestors(): Collection
+    {
+        $ancestors = collect();
+        $node = $this->parent;
+
+        while ($node) {
+            if ($node->is_active) {
+                $ancestors->prepend($node);
+            }
+            $node = $node->parent;
+        }
+
+        return $ancestors;
     }
 }

@@ -19,6 +19,8 @@ class Product extends Model
 
     public const STATUS_INACTIVE = 'inactive';
 
+    public const CURRENCY = 'TWD';
+
     protected $fillable = [
         'shop_id',
         'category_id',

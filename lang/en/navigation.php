@@ -2,6 +2,7 @@
 
 return [
     // Top navbar
+    'home' => 'Home',
     'products' => 'Products',
     'shops' => 'Shops',
     'member_center' => 'Member Center',

@@ -2,6 +2,7 @@
 
 return [
     // Top navbar
+    'home' => '首頁',
     'products' => '商品',
     'shops' => '商家',
     'member_center' => '會員中心',
