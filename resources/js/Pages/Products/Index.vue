@@ -7,6 +7,7 @@ import ProductCardSkeleton from '@/Components/ProductCardSkeleton.vue';
 import SearchBar from '@/Components/SearchBar.vue';
 import CategoryTree from '@/Components/CategoryTree.vue';
 import Pagination from '@/Components/Pagination.vue';
+import { useInFlightLoading } from '@/Composables/useInFlightLoading';
 
 const props = defineProps({
     products: Object,
@@ -16,7 +17,8 @@ const props = defineProps({
 
 const page = usePage();
 const lang = computed(() => page.props.lang || {});
-const isLoading = ref(false);
+
+const { isLoading, start: startLoading, finish: finishLoading } = useInFlightLoading();
 
 const localMinPrice = ref(props.filters?.min_price ?? '');
 const localMaxPrice = ref(props.filters?.max_price ?? '');
@@ -26,8 +28,8 @@ function updateFilters(partial) {
     router.get(route('products.index'), { ...props.filters, ...partial }, {
         preserveState: true,
         only: ['products', 'filters'],
-        onStart: () => { isLoading.value = true; },
-        onFinish: () => { isLoading.value = false; },
+        onStart: startLoading,
+        onFinish: finishLoading,
     });
 }
 
@@ -145,7 +147,7 @@ function clearPriceFilter() {
                     </div>
 
                     <div class="mt-8">
-                        <Pagination :links="products.links" @start="isLoading = true" @finish="isLoading = false" />
+                        <Pagination :links="products.links" @start="startLoading" @finish="finishLoading" />
                     </div>
                 </div>
             </div>

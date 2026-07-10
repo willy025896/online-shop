@@ -1,5 +1,5 @@
 <script setup>
-import { computed, ref } from 'vue';
+import { computed } from 'vue';
 import { Link, router, usePage } from '@inertiajs/vue3';
 import SellerLayout from '@/Layouts/SellerLayout.vue';
 import Pagination from '@/Components/Pagination.vue';
@@ -10,6 +10,7 @@ import DangerButton from '@/Components/DangerButton.vue';
 import { useDeleteConfirmation } from '@/Composables/useDeleteConfirmation';
 import ImageWithFallback from '@/Components/ImageWithFallback.vue';
 import TableSkeletonRows from '@/Components/TableSkeletonRows.vue';
+import { useInFlightLoading } from '@/Composables/useInFlightLoading';
 
 const props = defineProps({
     products: Object,
@@ -19,7 +20,9 @@ const props = defineProps({
 
 const page = usePage();
 const lang = computed(() => page.props.lang || {});
-const isLoading = ref(false);
+
+const { isLoading, start: startLoading, finish: finishLoading } = useInFlightLoading();
+
 const skeletonRows = computed(() => props.products.data.length || props.products.per_page || 5);
 
 const toggleLowStock = () => {
@@ -29,8 +32,8 @@ const toggleLowStock = () => {
         {
             preserveScroll: true,
             preserveState: true,
-            onStart: () => { isLoading.value = true; },
-            onFinish: () => { isLoading.value = false; },
+            onStart: startLoading,
+            onFinish: finishLoading,
         },
     );
 };
@@ -143,7 +146,7 @@ const {
         </div>
 
         <div class="mt-6">
-            <Pagination :links="products.links" @start="isLoading = true" @finish="isLoading = false" />
+            <Pagination :links="products.links" @start="startLoading" @finish="finishLoading" />
         </div>
 
         <ConfirmationModal :show="productPendingDelete !== null" @close="cancelDeleteProduct">

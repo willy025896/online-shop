@@ -1,9 +1,10 @@
 <script setup>
-import { computed, ref } from 'vue';
+import { computed } from 'vue';
 import { router, usePage } from '@inertiajs/vue3';
 import AppLayout from '@/Layouts/AppLayout.vue';
 import Skeleton from '@/Components/Skeleton.vue';
 import Pagination from '@/Components/Pagination.vue';
+import { useInFlightLoading } from '@/Composables/useInFlightLoading';
 
 const props = defineProps({
     notifications: Object,
@@ -13,12 +14,7 @@ const props = defineProps({
 const page = usePage();
 const lang = computed(() => page.props.lang || {});
 
-// Counts in-flight requests rather than a single boolean, so an overlapping
-// filter click + pagination click can't clear the skeleton while the other is still loading.
-const inFlightCount = ref(0);
-const isLoading = computed(() => inFlightCount.value > 0);
-const startLoading = () => { inFlightCount.value += 1; };
-const finishLoading = () => { inFlightCount.value = Math.max(0, inFlightCount.value - 1); };
+const { isLoading, start: startLoading, finish: finishLoading } = useInFlightLoading();
 
 const skeletonCount = computed(() => props.notifications.data.length || props.notifications.per_page || 6);
 
