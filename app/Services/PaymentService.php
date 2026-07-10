@@ -5,7 +5,6 @@ namespace App\Services;
 use App\Models\Order;
 use App\Notifications\OrderPaidNotification;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Log;
 
 class PaymentService
 {
@@ -60,15 +59,18 @@ class PaymentService
         // this callback until it gets "1|OK", so two near-simultaneous
         // retries must not both pass the isPaid() idempotency check. This is
         // also the only fetch of the order — nothing above needs it loaded.
-        return DB::transaction(function () use ($orderId, $tradeNo) {
+        // The closure returns [result, order-just-marked-paid-or-null] so the
+        // e-invoice call below can run after the transaction commits without
+        // a captured-by-reference variable.
+        [$result, $paidOrder] = DB::transaction(function () use ($orderId, $tradeNo) {
             $locked = Order::lockForUpdate()->find($orderId);
 
             if ($locked === null) {
-                return false;
+                return [false, null];
             }
 
             if ($locked->isPaid()) {
-                return true;
+                return [true, null];
             }
 
             if (! $locked->isPending()) {
@@ -84,16 +86,46 @@ class PaymentService
                     $this->refund($locked, (float) $locked->total);
                 }
 
-                return true;
+                return [true, null];
             }
 
-            $this->markAsPaid($locked, $tradeNo);
+            $this->markAsPaidWithoutInvoice($locked, $tradeNo);
 
-            return true;
+            return [true, $locked];
         });
+
+        // Issue the e-invoice only after the transaction above has committed
+        // and the order row lock released — ECPay's invoice API is a real
+        // outbound HTTP call, and must never extend how long this
+        // webhook-triggered row lock is held (see ADR-019).
+        if ($paidOrder !== null) {
+            $this->invoiceService->issueForOrder($paidOrder);
+        }
+
+        return $result;
     }
 
     public function markAsPaid(Order $order, ?string $gatewayTradeNo = null): bool
+    {
+        $this->markAsPaidWithoutInvoice($order, $gatewayTradeNo);
+
+        // Best-effort: e-invoice issuance is a side effect of "payment
+        // confirmed", not part of it — InvoiceService never rolls back an
+        // already real ECPay payment over a transient invoice-API failure
+        // (it catches and logs internally). See ADR-019.
+        $this->invoiceService->issueForOrder($order);
+
+        return true;
+    }
+
+    /**
+     * The actual "mark paid" DB mutation, split out so handleGatewayNotification
+     * can call it from inside its locked transaction while deferring the
+     * (potentially slow) e-invoice HTTP call until after that lock releases.
+     * Every caller of this method must follow it with `issueForOrder()` once
+     * its own transaction/lock has released — see both call sites above.
+     */
+    private function markAsPaidWithoutInvoice(Order $order, ?string $gatewayTradeNo): void
     {
         // Wrap in a transaction so the status-log insert fired by the Order
         // `updated` event commits atomically with the status change.
@@ -106,23 +138,7 @@ class PaymentService
 
             $order->loadMissing('shop.user');
             $order->shop?->user?->notify(new OrderPaidNotification($order));
-
-            // Best-effort: e-invoice issuance is a side effect of "payment
-            // confirmed", not part of it. It must never roll back an already
-            // real ECPay payment over a transient invoice-API failure — see
-            // ADR-019. A failure here just means the invoice needs a manual
-            // follow-up, logged for that purpose.
-            try {
-                $this->invoiceService->issueForOrder($order);
-            } catch (\Throwable $e) {
-                Log::warning('Failed to issue e-invoice for order', [
-                    'order_id' => $order->id,
-                    'error' => $e->getMessage(),
-                ]);
-            }
         });
-
-        return true;
     }
 
     /**

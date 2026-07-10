@@ -16,7 +16,6 @@ use App\Notifications\OrderCancelledBySellerNotification;
 use App\Notifications\OrderReturnRequestedNotification;
 use App\Notifications\OrderReturnRespondedNotification;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 
 class OrderService
@@ -276,24 +275,15 @@ class OrderService
         if ($wasPaid) {
             $this->paymentService->refund($order, $refundAmount);
 
-            // Void the invoice if it's still within the same calendar month it
-            // was issued (a rough stand-in for ECPay's actual "not yet reported
-            // to the tax authority" cutoff — see ADR-019, deliberately
-            // simplified for this side project); otherwise it's already past
-            // the point a straight void is allowed, so issue a full allowance
-            // instead. Best-effort: must not roll back the refund above.
-            try {
-                if ($order->invoice_issued_at !== null && $order->invoice_issued_at->isSameMonth(now())) {
-                    $this->invoiceService->voidForOrder($order, 'Order cancelled');
-                } else {
-                    $this->invoiceService->allowanceForOrder($order, $refundAmount, $this->itemsForInvoice($order->items));
-                }
-            } catch (\Throwable $e) {
-                Log::warning('Failed to void/allowance e-invoice for cancelled order', [
-                    'order_id' => $order->id,
-                    'error' => $e->getMessage(),
-                ]);
-            }
+            // Void-or-allowance policy (and its own best-effort failure
+            // handling) lives in InvoiceService::voidOrAllowanceForCancellation
+            // — never rolls back the refund above.
+            $this->invoiceService->voidOrAllowanceForCancellation(
+                $order,
+                $refundAmount,
+                $this->itemsForInvoice($order->items),
+                'Order cancelled'
+            );
         }
     }
 
@@ -436,20 +426,14 @@ class OrderService
         $this->paymentService->refund($order, $refundAmount);
 
         // Returns always get an allowance (never a straight void), regardless
-        // of month — see ADR-019. Best-effort: must not roll back the refund.
-        try {
-            $returnItems = $orderReturn->items->map(fn ($returnItem) => [
-                'name' => $returnItem->orderItem->product_name,
-                'count' => $returnItem->quantity,
-                'unit_price' => (float) $returnItem->orderItem->unit_price,
-            ])->all();
+        // of month — see ADR-019. InvoiceService::allowanceForOrder() is
+        // best-effort internally and never rolls back the refund above.
+        $returnItems = $orderReturn->items->map(fn ($returnItem) => [
+            'name' => $returnItem->orderItem->product_name,
+            'count' => $returnItem->quantity,
+            'unit_price' => (float) $returnItem->orderItem->unit_price,
+        ])->all();
 
-            $this->invoiceService->allowanceForOrder($order, $refundAmount, $returnItems);
-        } catch (\Throwable $e) {
-            Log::warning('Failed to issue e-invoice allowance for returned order', [
-                'order_id' => $order->id,
-                'error' => $e->getMessage(),
-            ]);
-        }
+        $this->invoiceService->allowanceForOrder($order, $refundAmount, $returnItems);
     }
 }

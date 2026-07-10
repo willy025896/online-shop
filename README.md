@@ -168,7 +168,7 @@ online-shop/
 
 - **`PaymentService::handleGatewayNotification()` 驗簽與退款政策決策耦合**——這個方法同時做「驗證 ECPay CheckMacValue 簽章」（gateway 機制層）跟「訂單若已離開 pending 狀態時該退多少錢」（業務政策層，目前退款金額用 `$locked->total` 內聯計算，跟其餘退款路徑的比例折扣邏輯形狀不同）。更深的修法是拆成「驗簽」與「決定 notify 結果」兩層，並把這個退款決策搬進 `OrderService`，跟其餘取消/退貨的退款邏輯放在同一處。目前只有一個呼叫點，暫不視為急迫（見 ADR-015）。
 - **「退款呼叫必須是 transaction 最後一步」只靠註解約定**——`OrderService::finalizeCancellation()`/`finalizeReturn()` 都手動把 `PaymentService::refund()` 放在方法最後一行，靠註解提醒之後不能再有會失敗的步驟，沒有結構化機制強制執行。可考慮做一個 `runWithTrailingRefund(callable $body): void` 之類的 helper；目前只有 2 個呼叫點，還沒到需要抽象化的門檻，先記錄、之後有第三個退款呼叫點再評估。
-- **電子發票（B2C）只做了核心路徑，尚未補測試與 review**——`InvoiceService`/`EcpayInvoiceGateway`（開立掛在 `PaymentService::markAsPaid()`，作廢/折讓掛在 `OrderService::finalizeCancellation()`/`finalizeReturn()`）已經可以運作，但**沒有任何 Pest 測試覆蓋，也還沒跑過 `post-change-review`（code-review + security-review）**，AES 加解密邏輯目前只驗證過內部一致性（加解密 round-trip），沒有對 ECPay stage 環境送過任何真實 HTTP 請求。上線前務必補齊這三項再使用。詳見 ADR-019。
+- **電子發票（B2C）已補上 Pest 測試並跑過 `post-change-review`，發現的問題已修正**——`InvoiceService`/`EcpayInvoiceGateway`（開立掛在 `PaymentService::markAsPaid()`，作廢/折讓掛在 `OrderService::finalizeCancellation()`/`finalizeReturn()`）有 `tests/Feature/EinvoiceTest.php`（25 個測試）覆蓋開立/作廢/折讓的冪等性、金流串接點的 best-effort 失敗行為（`InvoiceService` 三個方法現在都內部 catch+log，永不對外拋出）、取消依月份走作廢/折讓分流（規則收進 `InvoiceService::voidOrAllowanceForCancellation()`）、以及折讓/開立金額跟品項總和的自動沖平（訂單有優惠券折扣或總額出現小數時，`EcpayInvoiceGateway` 會自動補一行調整品項）。`markAsPaid()` 的發票開立呼叫也已搬到 `handleGatewayNotification()` 的交易 commit 之後才執行，避免拖長訂單 row lock 的持有時間。AES 加解密邏輯目前仍只驗證過內部一致性（加解密 round-trip），**沒有對 ECPay stage 環境送過任何真實 HTTP 請求**，上線前務必補齊這項端對端驗證。詳見 ADR-019（含尚未做的 queue 化優化構想）。
 
 ## License
 

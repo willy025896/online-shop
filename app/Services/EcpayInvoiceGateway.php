@@ -40,6 +40,15 @@ class EcpayInvoiceGateway
     {
         $order->loadMissing('items', 'user');
 
+        $salesAmount = (int) round((float) $order->total);
+
+        // buildIssueItems()'s line amounts are exact (unrounded) floats that
+        // sum to $order->total; SalesAmount must be a whole TWD amount, so
+        // any rounding drift (e.g. a percentage coupon producing a
+        // fractional total) is reconciled as its own line rather than
+        // silently sending a mismatched total to ECPay.
+        $items = $this->reconcileItemsToTotal($this->buildIssueItems($order), $salesAmount, '零頭調整');
+
         $data = [
             'MerchantID' => $this->merchantId,
             'RelateNumber' => 'INV'.$order->id,
@@ -53,9 +62,9 @@ class EcpayInvoiceGateway
             'Donation' => '0',
             'TaxType' => '1',
             'InvType' => '07',
-            'SalesAmount' => (int) round((float) $order->total),
+            'SalesAmount' => $salesAmount,
             'InvoiceRemark' => '',
-            'Items' => $this->buildIssueItems($order),
+            'Items' => $items,
         ];
 
         $result = $this->request('issue', $data);
@@ -104,13 +113,28 @@ class EcpayInvoiceGateway
             ];
         }
 
+        $allowanceAmount = (int) round($amount);
+
+        // $items are always priced at their full, undiscounted unit_price
+        // (see OrderService::itemsForInvoice()/finalizeReturn()) — whenever
+        // the order used a coupon, $amount (the actual refunded amount) is
+        // already discount-adjusted and smaller than the item total. ECPay
+        // requires sum(Items.ItemAmount) === AllowanceAmount, so reconcile
+        // the difference as its own line rather than pushing the discount
+        // math onto every caller (mirrors issue()'s reconciliation line for
+        // the same reason). The drift isn't always discount-driven (a
+        // non-discounted partial return can still land off by a rounding
+        // cent), so the line is labeled as a generic amount adjustment
+        // rather than assuming "discount".
+        $allowanceItems = $this->reconcileItemsToTotal($allowanceItems, $allowanceAmount, '金額調整');
+
         $result = $this->request('allowance', [
             'MerchantID' => $this->merchantId,
             'InvoiceNo' => $order->invoice_number,
             'InvoiceDate' => $order->invoice_issued_at->format('Y-m-d'),
             'AllowanceNotify' => 'N',
             'CustomerName' => (string) $order->shipping_name,
-            'AllowanceAmount' => (int) round($amount),
+            'AllowanceAmount' => $allowanceAmount,
             'Reason' => 'Order return',
             'Items' => $allowanceItems,
         ]);
@@ -141,30 +165,55 @@ class EcpayInvoiceGateway
         // Items must sum to SalesAmount (order->total) — shipping and the
         // coupon discount each need their own line so the totals reconcile.
         if ((float) $order->shipping_fee > 0) {
-            $items[] = [
-                'ItemSeq' => $seq++,
-                'ItemName' => '運費',
-                'ItemCount' => 1,
-                'ItemWord' => '式',
-                'ItemPrice' => (float) $order->shipping_fee,
-                'ItemTaxType' => '1',
-                'ItemAmount' => (float) $order->shipping_fee,
-            ];
+            $items[] = $this->buildAdjustmentLineItem($seq++, '運費', (float) $order->shipping_fee);
         }
 
         if ((float) $order->discount > 0) {
-            $items[] = [
-                'ItemSeq' => $seq++,
-                'ItemName' => '折扣',
-                'ItemCount' => 1,
-                'ItemWord' => '式',
-                'ItemPrice' => -(float) $order->discount,
-                'ItemTaxType' => '1',
-                'ItemAmount' => -(float) $order->discount,
-            ];
+            $items[] = $this->buildAdjustmentLineItem($seq++, '折扣', -(float) $order->discount);
         }
 
         return $items;
+    }
+
+    /**
+     * Appends a single adjustment line (if needed) so `sum(Items.ItemAmount)`
+     * matches `$target` exactly — used by both issue() and allowance(), whose
+     * item totals can drift from their respective SalesAmount/AllowanceAmount
+     * due to a coupon discount or plain rounding.
+     *
+     * @param  array<int, array{ItemSeq: int, ItemName: string, ItemCount: int|float, ItemWord: string, ItemPrice: float, ItemTaxType: string, ItemAmount: float}>  $items
+     * @return array<int, array{ItemSeq: int, ItemName: string, ItemCount: int|float, ItemWord: string, ItemPrice: float, ItemTaxType: string, ItemAmount: float}>
+     */
+    private function reconcileItemsToTotal(array $items, float $target, string $adjustmentLabel): array
+    {
+        $itemsSum = round((float) array_sum(array_column($items, 'ItemAmount')), 2);
+        $adjustment = round($target - $itemsSum, 2);
+
+        if ($adjustment !== 0.0) {
+            $items[] = $this->buildAdjustmentLineItem(count($items) + 1, $adjustmentLabel, $adjustment);
+        }
+
+        return $items;
+    }
+
+    /**
+     * A single-count, whole-line adjustment item (used for shipping,
+     * discount, and the SalesAmount/AllowanceAmount rounding-reconciliation
+     * lines) — the item's price and amount are always the same signed value.
+     *
+     * @return array{ItemSeq: int, ItemName: string, ItemCount: int, ItemWord: string, ItemPrice: float, ItemTaxType: string, ItemAmount: float}
+     */
+    private function buildAdjustmentLineItem(int $seq, string $name, float $amount): array
+    {
+        return [
+            'ItemSeq' => $seq,
+            'ItemName' => $name,
+            'ItemCount' => 1,
+            'ItemWord' => '式',
+            'ItemPrice' => $amount,
+            'ItemTaxType' => '1',
+            'ItemAmount' => $amount,
+        ];
     }
 
     /**
@@ -214,23 +263,31 @@ class EcpayInvoiceGateway
 
     /**
      * Symmetric inverse of encrypt(): base64 decode, AES-128-CBC decrypt,
-     * urldecode, JSON decode.
+     * urldecode, JSON decode. Throws its own `decrypt_failed` reason (rather
+     * than returning an empty array that `request()` would report as
+     * `gateway_rejected`) so a misconfigured HashKey/HashIV — a local
+     * config bug — is distinguishable in logs from ECPay genuinely rejecting
+     * the business request.
      */
     private function decrypt(string $data): array
     {
         if ($data === '') {
-            return [];
+            throw new EinvoiceException('decrypt_failed', 'ECPay invoice response had no Data field.');
         }
 
         $plain = openssl_decrypt(base64_decode($data), 'AES-128-CBC', $this->hashKey, OPENSSL_RAW_DATA, $this->hashIv);
 
         if ($plain === false) {
-            return [];
+            throw new EinvoiceException('decrypt_failed', 'Failed to AES-decrypt the ECPay invoice response.');
         }
 
         $decoded = json_decode(urldecode($plain), true);
 
-        return is_array($decoded) ? $decoded : [];
+        if (! is_array($decoded)) {
+            throw new EinvoiceException('decrypt_failed', 'ECPay invoice response was not valid JSON after decryption.');
+        }
+
+        return $decoded;
     }
 
     private function baseUrl(string $key): string
