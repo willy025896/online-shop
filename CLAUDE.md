@@ -139,234 +139,26 @@ Key design point — **per-request `onStart`/`onFinish`, never a global listener
 
 All skeleton components carry `aria-hidden="true"` (or `role="status" aria-busy="true"` on the wrapping container) so screen readers don't announce placeholder content.
 
-### Wishlist (收藏 / 願望清單)
-
-`WishlistService` (`app/Services/WishlistService.php`) is the single entry point for wishlist mutations. All operations are scoped to `Auth::id()`.
-
-**Wishlist state** is stored in the `wishlist_items` pivot table with `unique(user_id, product_id)`.
-
-Key design points:
-- **Auth-only** — wishlist routes are inside the auth middleware group; guests clicking the heart icon are redirected to login, not silently ignored.
-- **`toggle(Product)`** — uses `firstOrCreate` on the add path to avoid a `QueryException` on concurrent/double-clicked requests.
-- **`remove(Product)`** — a dedicated remove method used by `WishlistController::destroy()`; never uses `toggle()` to avoid the semantic bug where DELETE on an un-favorited product would add it.
-- **`getItemsWithProducts()`** — returns products via the `User::favoritedProducts()` `BelongsToMany` relation, ordered by `pivot.created_at DESC` (most-recently favorited first).
-- **`wishlistProductIds` shared prop** — shipped on every authenticated request as a lazy closure; `FavoriteButton` reads it to determine fill state. The navbar badge derives count via `.length` — no separate count query.
-- **`FavoriteButton.vue`** uses Inertia partial reload (`only: ['wishlistProductIds', 'flash']`) so toggling a heart reloads only those two props, not the full page.
-- Adding a wishlist item to cart (`cart.store`) does **not** remove it from the wishlist — the two are independent.
-
-### Product / Shop Listing Filters
-
-Both `ProductController::index` and `ShopController::show` apply optional query-string filters to their product listings. Two conventions apply everywhere:
-
-- **`$request->filled()`** — use this to test "present and not empty-string" for optional filters. Never use `!== null && !== ''` manually.
-- **Partial reloads** — filter/sort navigations use `only: ['products', 'filters']` so the server skips the category query on every keystroke. The `categories` prop in both controllers is a **lazy closure** (`fn() => ...`) so Inertia's partial-reload mechanism skips evaluating it entirely when it is not in the `only` list.
-
-Filters currently supported on `/products`:
-`search` (full-text), `category`, `min_rating`, `min_price`, `max_price`, `sort`
-
-Filters currently supported on `/shops/{shop}`:
-`search` (LIKE), `category`, `min_price`, `max_price`, `sort`
-
-### Cart
-
-Cart supports both guests and authenticated users. `CartService` identifies a cart by `user_id` for authenticated users and `session_id` for guests. On login, `CartService::mergeGuestCart()` merges the guest cart into the user's cart. Policies in `app/Policies/` govern seller/admin resource authorization.
-
-### Shipping
-
-`ShippingService` (`app/Services/ShippingService.php`) is the single source of truth for shipping fees. The rule is a **flat fee with a free-shipping threshold**, configured globally in `config/shipping.php` (`flat_fee`, `free_threshold`; both overridable via `SHIPPING_FLAT_FEE` / `SHIPPING_FREE_THRESHOLD` env vars). Set `free_threshold` to `null` to disable free shipping.
-
-Key design points:
-- **Per-shop calculation** — shipping is evaluated **per shop**, mirroring the per-shop order split in `OrderService::createOrdersFromCart` (one `Order` per shop). Each shop's subtotal independently qualifies for free shipping or pays the flat fee.
-- **`feeForSubtotal($subtotal)`** — the core rule: `subtotal >= free_threshold ? 0 : flat_fee`. Used by `OrderService` when creating each order.
-- **`breakdownForItems($items)`** — groups a cart/order item collection into one row per shop (`shop_id`, `shop_name`, `subtotal`, `shipping_fee`), skipping soft-deleted products (null `product` relation). Used by `CheckoutController::index` (per-shop display) and `CartService::calculateTotals` (aggregate). This is the **only** place that knows the per-shop grouping rule — don't re-implement it in controllers.
-- **`publicConfig()`** — the rule as a plain array (`flat_fee`, `free_threshold`) shipped to the front-end (`shippingConfig` prop) so the cart/checkout pages can **estimate** fees client-side. The **back-end is the source of truth**; the client value is display-only and never trusted when creating orders.
-
-### Coupons (折扣碼)
-
-`CouponService` (`app/Services/CouponService.php`) is the single source of truth for coupon validation, discount math and redemption — controllers and `OrderService` never re-implement these rules. See ADR-008.
-
-Ownership & scope:
-- **Seller-owned, per-shop** — `coupons.shop_id` points at the owning shop. It is **nullable**: `null` = platform-wide (future admin coupons; the data layer already supports it, no migration needed later), non-null = a seller's shop coupon (v1). `CouponPolicy` gates update/delete to the owning seller or an admin.
-- **Applied per shop at checkout** — one code per shop, discounting only that shop's sub-order (mirrors the per-shop order split). `Coupon::TYPE_PERCENTAGE` / `TYPE_FIXED` are model constants — never raw strings.
-
-Discount rule:
-- Discount applies to the **shop goods subtotal only** — `total = subtotal - discount + shipping_fee`. Shipping is never discounted, and the **free-shipping threshold is still evaluated on the pre-discount subtotal**.
-- `discountFor($coupon, $subtotal)` — percentage respects the optional `max_discount` cap; the result is clamped to never exceed the subtotal.
-
-Key design points:
-- **Back-end is authoritative** — `POST /checkout/coupon/preview` (`CouponController`, a JSON endpoint like `LangController::getComponents`) is **display-only**; it computes the shop subtotal from the real cart (never trusts the client). `OrderService::createOrdersFromCart($cart, $shippingData, $itemIds, $appliedCoupons)` **re-validates and recomputes** the discount inside the order transaction; a stale/exhausted code throws `CouponException` and rolls back the whole checkout (same as insufficient stock).
-- **Redemption is atomic & locked** — `CouponService::redeem()` runs inside the order transaction, takes `Coupon::lockForUpdate()`, re-checks `usage_limit` / `per_user_limit`, increments `used_count` and writes a `coupon_redemptions` row (mirrors the `Product::lockForUpdate()` stock decrement).
-- **Code snapshot** — `orders.coupon_code` stores the code string at order time (like `order_items.product_name`), so later editing/deleting the coupon never changes historical orders.
-- **Cancellation releases the coupon** — `OrderService::finalizeCancellation` calls `CouponService::releaseForOrder()` (the inverse of `redeem()` — deletes the `coupon_redemptions` row and decrements `used_count`) alongside restoring stock, so a cancelled order never permanently burns the buyer's `per_user_limit` or the total budget. Every `used_count`/redemption mutation stays inside `CouponService`.
-- **Uniqueness** — active-code uniqueness is enforced in `Seller\CouponController` via `Rule::unique(...)->whereNull('deleted_at')`; the `coupons.code` column is only **indexed**, not DB-unique, so a soft-deleted code can be reused (MySQL can't express a partial unique index).
-- **Error messages** — `CouponException` carries a machine `reason`; boundaries translate via `lang/{locale}/coupons.php` → `errors.{reason}` (`translatedMessage()`).
-
-### Dashboard Analytics (Seller + Admin)
-
-Both `Seller\DashboardController` and `Admin\DashboardController` render period-scoped analytics. The period-window logic is **not duplicated** — it lives in the `ResolvesDashboardPeriod` trait (`app/Http/Controllers/Concerns/ResolvesDashboardPeriod.php`), the single source of truth for both dashboards. Don't re-implement period math in a controller; `use` the trait.
-
-Key design points:
-- **Periods** — `today` / `week` / `month` / `all`, resolved via `resolvePeriod($request)` (invalid input falls back to `month`). `periodRange()` / `prevPeriodRange()` return the current and preceding windows; `'all'` has no comparison window (returns `[null, null]`), so growth is null for `'all'`.
-- **Timestamp convention** — **revenue is keyed on `paid_at`** (when payment cleared); **order-activity counts are keyed on `created_at`** (when the order was placed). The trait owns only the period math, not the choice of column — each query picks the right timestamp.
-- **`periodGrowth($current, $prev)`** — percent change vs the previous period (1dp); returns `null` when there is no baseline and `100.0` when growing from zero.
-- **`dailyRevenueSeries($base, $period, $start, $end)`** — zero-filled daily revenue buckets for the line chart. `$base` is a **fresh** `Order` query already scoped to the caller (`Order::query()` for admin, `Order::where('shop_id', ...)` for a seller); the method mutates the builder, so never pass one you intend to reuse. For `'all'` it shows the last 30 days.
-- **Scope difference** — the seller dashboard scopes every query to its own shop; the admin dashboard is platform-wide (all shops) and adds a **Top Shops by revenue** table (the platform analog of the seller's top-products). Admin also keeps period-independent all-time totals (users/shops/products/orders/revenue) as a header row.
-- **Front-end** — the `PeriodTabs` component (`resources/js/Components/Dashboard/PeriodTabs.vue`) renders the shared period selector for both pages; each page keeps its own `setPeriod` because their partial-reload `only:` lists differ. Charts/cards reuse `RevenueLineChart`, `StatCard`, `OrderStatusGrid`. Period navigations use `only: [...]` partial reloads (same convention as listing filters).
-
-### Low Stock Alert
-
-`Product::scopeLowStock($query, ?int $threshold = null)` is the **single source of truth** for "what counts as low stock" — `stock <= threshold` (includes out-of-stock at 0), defaulting to `config('inventory.low_stock_threshold')`. The threshold lives in `config/inventory.php` (overridable via `INVENTORY_LOW_STOCK_THRESHOLD` env), same config-driven pattern as Shipping. Don't hard-code a stock cutoff anywhere — call the scope.
-
-Surfaced in two places, both scoped to the seller's own shop:
-- **Seller dashboard** — a toggleable `low_stock` widget (part of `DEFAULT_WIDGETS`; whitelist it in `PreferenceController` when adding widget keys) showing a count badge + the 5 lowest-stock products, rendered by `LowStockAlert.vue`. It is **period-independent** (current inventory, not a time window), so its data is not in the period `only:` partial-reload list — but `low_stock_count` rides inside the `stats` prop which *is* reloaded, and stays correct because the controller recomputes it every request.
-- **Products list** — a `low_stock` boolean filter (`ProductController::index`, tested with `$request->boolean()` since it is a flag, not a value filter) plus an amber/red stock badge on each row.
-
-### Order Status Transitions & Logging
-
-Seller status changes go through `Seller\OrderController::updateStatus`, guarded by `Order::canTransitionStatusTo()`. The rule is **forward-only** (by the `Order::STATUS_RANK` map) and rejects terminal sources (`completed`/`cancelled`) and orders with a pending cancellation — but it deliberately allows legitimate skips such as `pending → shipped` (cash-on-delivery) and `paid → completed` (virtual goods). Invalid transitions `abort(422)`.
-
-**Every status change is logged** to the `order_status_logs` table. Logging is **event-based**: the `Order` model's `updated` event (registered in `Order::booted()`) writes a row whenever `status` changes, capturing `from_status` / `to_status` / `changed_by`. This auto-captures all paths (payment, seller update, cancellation finalize) without per-call-site code.
-
-Two consequences to keep in mind when changing order status:
-
-- **Atomicity** — the log insert fires inside the `updated` event, so it only commits atomically with the status change if the `$order->update()` runs inside a `DB::transaction`. All current status-mutating paths (`updateStatus`, `PaymentService::markAsPaid`, `OrderService` cancellation methods) are wrapped in a transaction for this reason. Wrap any new one too.
-- **Bulk-update caveat** — Eloquent's `updated` event does **not** fire on query-builder bulk updates (`Order::where(...)->update(['status' => ...])`), so those would silently bypass the log. Always change order status via a model instance (`$order->update(...)`), never a bulk query.
-
-### Payment Gateway (ECPay 綠界)
-
-`PaymentService` (`app/Services/PaymentService.php`) orchestrates payment/refund; all ECPay wire-format details (CheckMacValue signing/verification, HTTP calls) live in `EcpayGateway` (`app/Services/EcpayGateway.php`) — callers never touch raw ECPay params. Credentials/mode are config-driven (`config/ecpay.php`, `ECPAY_*` env vars), defaulting to ECPay's officially published stage/test merchant credentials so local dev works with zero setup. See ADR-015.
-
-Key design points:
-- **Notify webhook is the only source of truth for "paid"** — the buyer's "Pay" button (`OrderController::pay`) redirects to an auto-submitting form (`resources/views/payments/ecpay-redirect.blade.php`) that POSTs straight to ECPay's hosted checkout page; it does **not** mark the order paid. Only ECPay's server-to-server notify callback (`POST /api/payments/ecpay/notify` → `EcpayController::notify` → `PaymentService::handleGatewayNotification()`), after verifying `CheckMacValue` and `RtnCode == 1`, calls `PaymentService::markAsPaid()`. The notify route lives on `routes/api.php` (no CSRF, no session auth) since it's ECPay's server calling it, not a logged-in user.
-- **`pay()` only accepts a still-`STATUS_PENDING` order** (not just "not yet paid") — otherwise a cancelled/completed order could still generate a fresh, validly-signed checkout session.
-- **Idempotent + status-checked notify, under a row lock** — `handleGatewayNotification()` locks the order (`Order::lockForUpdate()`) before deciding: `isPaid()` already true is a no-op success (ECPay retries until it gets `"1|OK"`, so replays must not double-notify); if the order is no longer `STATUS_PENDING` (e.g. the buyer cancelled it while payment was in flight at ECPay), it does **not** resurrect the order to `paid` — it captures the `TradeNo` this notify carries and immediately refunds the full charged amount instead, since nothing was fulfilled.
-- **`MerchantTradeNo` is derived from the order id**, not `order_number` (ECPay requires alnum-only, ≤20 chars) — `EcpayGateway::merchantTradeNoFor()` / `tradeNoToOrderId()` are the only two places that encode/decode this mapping.
-- **`orders.gateway_trade_no`** stores ECPay's own `TradeNo` (captured from the notify payload), distinct from our `MerchantTradeNo`/`order_number`. It's required to issue a refund — `EcpayGateway::refund()` throws `EcpayException` if it's missing.
-- **Refund failures roll back the whole transaction** — `EcpayGateway::refund()` throws `EcpayException` on any network failure or non-`1` `RtnCode`. Both refund call sites (`OrderService::finalizeReturn`, `finalizeCancellation`) call `PaymentService::refund()` as the **last statement** in their transaction (so nothing afterward can fail and roll back a refund ECPay already sent), from inside their existing `DB::transaction` — a gateway failure rolls back stock/coupon/status changes together, leaving the return/cancellation request retryable rather than half-applied. `EcpayException` defines `render()` (mirroring `CouponException`'s `translatedMessage()` via `lang/{locale}/orders.php` → `payment_errors.{reason}`), so Laravel auto-flashes a translated error — controllers don't need their own try/catch.
-- **`PaymentService::refund()` rounds once** (ECPay only accepts whole-TWD amounts) and uses that same rounded figure for both the gateway call and the local `refunded_amount` increment, so the internal ledger never drifts from what ECPay actually refunded.
-- **CheckMacValue is hand-implemented** (no third-party SDK dependency, matching this project's zero-dependency convention) — `EcpayGateway::generateCheckMacValue()` mirrors ECPay's own official SDK algorithm: case-insensitive key sort (`uksort`+`strcasecmp`, not a plain `ksort`), `urlencode` + lowercase + the documented PHP→.NET character fixups, SHA256, uppercase.
-
-### Electronic Invoice (電子發票, B2C)
-
-> ⚠️ **Pest coverage added (`tests/Feature/EinvoiceTest.php`, 25 tests) and `post-change-review` run — findings fixed.** AES round-trip is still only verified for internal consistency; no real HTTP request has been sent to ECPay's stage environment. See ADR-019 (including a queuing idea intentionally deferred, not yet implemented).
-
-`InvoiceService` (`app/Services/InvoiceService.php`) decides *whether* an order's e-invoice state should change; `EcpayInvoiceGateway` (`app/Services/EcpayInvoiceGateway.php`) is the wire-format layer (AES-128-CBC encryption, ECPay's B2C invoice HTTP calls). This is a **separate integration from the payment gateway above** — different credentials (`config/ecpay_invoice.php`, `ECPAY_INVOICE_*` env vars) and a different crypto scheme (AES over the whole JSON payload, not a SHA256 `CheckMacValue`). See ADR-019 for the full design rationale, including why 字軌/配號 (invoice number track allocation) is an ECPay-backend administrative setup step, not something this codebase decides.
-
-Key design points:
-- **Issued on payment confirmation, after the row lock releases** — `PaymentService::markAsPaid()` calls `InvoiceService::issueForOrder()` right after its own DB mutation (order status + `OrderPaidNotification`), since that's currently the only "payment received" moment in the system (no real cash-on-delivery path exists yet). When the caller is `handleGatewayNotification()` (the production path — it holds `Order::lockForUpdate()` for the whole decide-and-mutate step), the DB mutation runs via a private `markAsPaidWithoutInvoice()` **inside** that locked transaction, and `issueForOrder()` is called **after** the transaction commits and the lock releases — ECPay's invoice endpoint is a real outbound HTTP call and must never extend how long a webhook-triggered row lock is held. `markAsPaid()` itself (the public method, used directly by anything that isn't `handleGatewayNotification`) still issues the invoice as part of the same call for convenience.
-- **Cancellation voids or allowances depending on the invoice's age** — `OrderService::finalizeCancellation()` calls `InvoiceService::voidOrAllowanceForCancellation()`, which internally decides: void if the invoice was issued in the current calendar month, otherwise allowance (a deliberately simplified stand-in for ECPay's actual reporting-cutoff rule — this is a side project, not a real business, so the exact statutory boundary wasn't chased down; see ADR-019). This decision — and its best-effort failure handling — is centralized inside `InvoiceService`, not duplicated at the call site, so any future cancellation entry point (e.g. a COD path) gets the same rule for free.
-- **Returns always allowance, never void** — `OrderService::finalizeReturn()` always calls `InvoiceService::allowanceForOrder()` with the returned items' amount, regardless of month.
-- **Invoice failures are best-effort and must never roll back a real payment/refund** — `InvoiceService`'s three public methods (`issueForOrder`/`voidForOrder`/`allowanceForOrder`) each wrap their own gateway call in `try/catch(\Throwable)` and only `Log::warning` on failure — **they never throw**, so callers (`PaymentService`, `OrderService`) never need their own try/catch. This is the opposite of `PaymentService::refund()`'s "throw and roll back the whole transaction" policy — deliberately so, because by the time these calls run, ECPay has already moved real money; rolling back the transaction would desync our DB state from ECPay's actual state, which is worse than a manually-fixable missing invoice.
-- **`orders.invoice_status`** (`Order::INVOICE_ISSUED` / `INVOICE_VOIDED` / `INVOICE_ALLOWANCED`, `null` = not yet issued) is what every `InvoiceService` method checks before acting, making all three methods idempotent — callers never need their own guard. `issueForOrder()` also validates that ECPay actually returned an invoice number before persisting `INVOICE_ISSUED` — an `RtnCode=1` response missing `InvoiceNo` is treated as a failure (logged, `invoice_status` left `null` so a retry remains possible) rather than silently wedging the order in a phantom-issued state.
-- **`EinvoiceException`** (`app/Exceptions/EinvoiceException.php`) carries a machine `reason`, mirroring `EcpayException`'s shape, but does **not** define `render()` — unlike `EcpayException`, it's always caught internally by `InvoiceService` and never bubbles up to a controller. `EcpayInvoiceGateway::request()`/`decrypt()` distinguish `network_error` (HTTP/transport failure), `decrypt_failed` (AES decryption or JSON-parsing failure — usually a misconfigured `HashKey`/`HashIV`), and `gateway_rejected` (ECPay understood the request and said no) as separate reasons, so a local config bug doesn't look like ECPay rejecting the business request in the logs.
-- **Allowance/issue amounts are reconciled against their item lists** — ECPay requires `sum(Items[].ItemAmount) === SalesAmount` (issue) / `AllowanceAmount` (allowance). Because the items passed in are always priced at their full, undiscounted `unit_price` while the order/refund total can be smaller (coupon discount) or fractional (a percentage coupon producing a non-integer total), both `EcpayInvoiceGateway::issue()` and `::allowance()` compute the item-list sum, compare it against the target total, and append a single adjustment line item (`零頭調整` / `折讓折扣`) for the difference — built via the shared private `buildAdjustmentLineItem()` helper (also used for the `運費`/`折扣` lines).
-
-### Order Returns/Refunds (售後退貨/退款)
-
-`OrderService` owns return mutations (`requestReturn`, `approveReturn`, `rejectReturn`, private `finalizeReturn`) — same single-entry-point, lock+idempotent-guard convention as cancellations. See ADR-013.
-
-Key design points:
-- **Window** — a buyer may request a return within `config('returns.window_days')` (default 7, overridable via `ORDER_RETURN_WINDOW_DAYS`) days after `completed_at`. `Order::canRequestReturn()`.
-- **One pending return at a time** — `Order::pendingReturn()` gates new requests; since only one return can be pending at once, `pendingReturn()` uses the already eager-loaded `latestReturn` relation (`hasOne(...)->latestOfMany()`) as a fast path instead of firing an extra query when it's loaded, falling back to a fresh query otherwise.
-- **Partial + repeated returns over time** — `OrderReturn`/`OrderReturnItem` (one row per returned line item per request). `OrderItem::returnedQuantity()` / `remainingReturnableQuantity()` sum only **approved** return items, so a line item can be returned across several separate approved requests. `Order::isFullyReturned()` checks every item has caught up to its ordered quantity.
-- **Refund math lives in `CouponService`** — `CouponService::refundableAmount($order, $itemsSubtotal)` applies the same discount ratio used at checkout (`discount / subtotal`) to the returned items' subtotal (proportional deduction); shipping is never refunded. Coupon usage (`used_count` / `CouponRedemption`) is only released via `releaseForOrder()` once `isFullyReturned()` — a partial return does not free up the buyer's coupon allowance.
-- **Stock restock is shared** — `OrderService::restockOrderItem()` (used by both `finalizeCancellation` and `finalizeReturn`) resolves the stock owner (variant or plain product) with `withTrashed()` so a since-removed listing still gets its stock restored.
-- **`orders.refunded_amount`** — a denormalized running total, incremented via `PaymentService::refund()` (calls ECPay's real credit card refund API — see the Payment Gateway section above; throws and rolls back on failure). Refunding does **not** change `orders.status` — a refunded order stays `completed`.
-- **Duplicate-row validation guard** — `OrderController::requestReturn`'s cross-field validator groups requested quantities **by `order_item_id`** before comparing against the remaining returnable quantity, so splitting one line item across two request rows can't bypass the per-item cap; `order_return_items` also has a DB-level `unique(order_return_id, order_item_id)` as a second line of defense.
-- **Cancelling an already-paid order now refunds too** (closes the gap ADR-013 originally left open) — `OrderService::finalizeCancellation()` calls `PaymentService::refund()` for the full goods amount (net of any coupon discount, shipping excluded) whenever `$order->isPaid()`, before the status flips to `cancelled`. See ADR-015.
-
-### Notifications
-
-Uses Laravel's built-in `Notifiable` pipeline. Each Notification's `via()` returns `['database', 'broadcast']`, plus `'mail'` for the 9 order-lifecycle-critical events listed below (see ADR-016):
-
-- **database** — written to the `notifications` table; the `NotificationBell` dropdown and `/notifications` index page read from it via `$request->user()->notifications()` / `unreadNotifications()`.
-- **broadcast** — pushed over Reverb to Laravel's default `private-App.Models.User.{id}` channel (authorization is registered in `routes/channels.php`). The front-end `NotificationBell.vue` subscribes via `Echo.private(...).notification(cb)` and prepends new entries without a page reload.
-- **mail** — via `toMail()` from the `MailsAsArray` trait (mirrors `BroadcastsAsArray`, see below). Only added to notifications representing events a recipient shouldn't miss while logged out: `OrderPaidNotification`, `OrderStatusChangedNotification`, `OrderCancellationRequestedNotification`, `OrderCancellationRespondedNotification`, `OrderCancelledBySellerNotification`, `OrderReturnRequestedNotification`, `OrderReturnRespondedNotification`, `PayoutCompletedNotification`, `ShopStatusChangedNotification`. Chat (`NewMessageNotification`) and review-flow notifications deliberately stay database+broadcast only, to avoid mail spam. `MAIL_MAILER=log` by default — no real SMTP is configured out of the box (see ADR-016).
-
-These same 9 classes `implements ShouldQueue` — required so the mail send actually happens asynchronously on the queue rather than blocking the request/webhook thread that triggered it. Several dispatch sites hold a `DB::transaction` + `lockForUpdate()` while calling `->notify()` (`PaymentService::markAsPaid`, `OrderService`'s cancellation/return methods, `Order::booted()`'s `updated` event, `PayoutService::generateForShop`); without `ShouldQueue`, a slow/failed mail send would extend the row lock and could roll back an already-correct business transaction over a transient SMTP hiccup. This means local dev needs a running queue worker for these 9 to actually deliver — `npm run dev:full` starts `php artisan queue:listen` alongside Vite/Reverb for this reason. The other 5 classes (chat, review-flow) are **not** `ShouldQueue` — they're cheap local writes (no external I/O) and, for `NewMessageNotification` specifically, need to land synchronously alongside the immediate chat broadcast.
-
-Notification classes live in `app/Notifications/`. Each `toArray()` returns a uniform payload — `{ type, title, body, url, meta }` — so the bell renders any type from a single template.
-
-**Trigger map:**
-
-| Event | Triggered in | Notification | Recipient |
-|-------|--------------|--------------|-----------|
-| Payment success | `PaymentService::markAsPaid` (called from `EcpayController::notify` after signature verification) | `OrderPaidNotification` | Seller |
-| Status changes to `paid`/`shipped`/`completed` | `Order::booted()` `updated` event (whitelist `BUYER_NOTIFY_STATUSES`) | `OrderStatusChangedNotification` | Buyer |
-| Buyer requests cancellation | `OrderService::requestCancellation` | `OrderCancellationRequestedNotification` | Seller |
-| Seller approves/rejects cancellation | `OrderService::approveCancellation` / `rejectCancellation` | `OrderCancellationRespondedNotification` | Buyer |
-| Seller directly cancels | `OrderService::cancelBySeller` | `OrderCancelledBySellerNotification` | Buyer |
-| Shop `approved`/`suspended` | `Admin\ShopController::updateStatus` | `ShopStatusChangedNotification` | Seller |
-| New chat message (order chat or product Q&A) | `ConversationService::sendMessage` | `NewMessageNotification` | The other participant |
-| Buyer requests a return | `OrderService::requestReturn` | `OrderReturnRequestedNotification` | Seller |
-| Seller approves/rejects a return | `OrderService::approveReturn` / `rejectReturn` | `OrderReturnRespondedNotification` | Buyer |
-| Payout generated | `PayoutService::generateForShop` | `PayoutCompletedNotification` | Seller |
-
-`cancelled` is intentionally **excluded** from `Order::BUYER_NOTIFY_STATUSES` — every cancellation path already fires a path-specific notification, so including it would double-notify the buyer (or self-notify when they cancel their own order). If you add a new cancellation path, dispatch the relevant notification explicitly inside the same `DB::transaction`.
-
-Channel auth is in `routes/channels.php`: `App.Models.User.{id}` accepts only the channel owner. Don't add unscoped channels.
-
-The `MessageSent` event (`Conversation` chat) is a **separate broadcast channel** (`private-conversation.{id}`) from the notification pipeline's `App.Models.User.{id}` channel — chat keeps its own `unreadMessageCount` badge and real-time bubble rendering via `MessageSent`; don't merge the two channels. They are not mutually exclusive, though: `ConversationService::sendMessage()` fires **both** — `broadcast(new MessageSent($message))->toOthers()` for the open chat thread, **and** `NewMessageNotification` (database + bell) so the recipient is told about a new message even when they aren't on the Messages page.
-
-All Notification classes share the `BroadcastsAsArray` trait (`app/Notifications/Concerns/BroadcastsAsArray.php`), which implements `toBroadcast()` as `new BroadcastMessage($this->toArray($notifiable))`. This enforces the project-wide convention that broadcast payload = database payload. New Notification classes must `use BroadcastsAsArray, Queueable;` and must NOT add a custom `toBroadcast()`. The 9 mail-enabled classes additionally `use MailsAsArray;` (`app/Notifications/Concerns/MailsAsArray.php`), which implements **both** `toMail()` (built entirely from `toArray()`'s `title`/`body`/`url`) **and** `via()` (`['database', 'broadcast', 'mail']` — since none of the 9 classes vary this per-notifiable, it lives once in the trait rather than being copy-pasted into each class). Adding mail to a new event is therefore just `use MailsAsArray;` + `implements ShouldQueue` — no custom `toMail()` or `via()` needed. Any class NOT using `MailsAsArray` must still declare its own `via()` (typically `['database', 'broadcast']`).
-
-**Locale for queued sends** — the 9 mail-enabled notifications are genuinely queued (`QUEUE_CONNECTION=database`, `ShouldQueue`), so by the time a queue worker renders one, the HTTP session that triggered it is long gone. `User implements HasLocalePreference` (`preferredLocale()` returns the `users.locale` column, persisted by `LocaleController::store()` whenever an authenticated user switches language, and seeded at registration by `CreateNewUser`) — Laravel's `NotificationSender::sendNow()` automatically wraps the entire send (`toArray()`/`toBroadcast()`/`toMail()`) in the recipient's preferred locale when this contract is implemented. This is a general fix, not mail-specific: it also corrects the same latent locale bug for the database/broadcast channels on these 9 classes. See ADR-016.
-
-**Review notification trigger map (additions):**
-
-| Event | Triggered in | Notification | Recipient |
-|-------|--------------|--------------|-----------|
-| Both parties reviewed → cooling starts | `ReviewService::checkAndStartCooling` | `ReviewCoolingStartedNotification` | Buyer + Seller |
-| Edit/delete during cooling → cooling reset | `ReviewService::resetCoolingIfActive` | `ReviewCoolingResetNotification` | Counterparty |
-| Cooling expires or 14-day timeout → release | `ReviewService::releaseOrder` | `ReviewReleasedNotification` | Buyer + Seller |
-| Seller replies to product review | `ReviewService::addSellerReply` | `SellerReplyNotification` | Buyer |
-
-### Conversations (Chat) & Product Q&A (商品問答)
-
-`ConversationService` (`app/Services/ConversationService.php`) is the single entry point for creating conversations and sending messages; `ConversationController` / `ConversationPolicy` cover authorization (a `Conversation` is only visible to its `buyer_id` / `seller_user_id`).
-
-A `Conversation` is created one of two ways:
-
-- **Order chat** — `getOrCreateForOrder(Order $order)`. `order_id` is set and **unique** (one conversation per order).
-- **Product Q&A (pre-purchase, no order needed)** — `getOrCreateForProduct(Product $product, User $buyer)`. `order_id` is **nullable**; a Q&A conversation has `order_id = null`. One buyer asking one seller about *any* of that seller's products reuses the **same** `order_id IS NULL` conversation (found via `firstOrCreate(['buyer_id', 'seller_user_id', 'order_id' => null])`) — product differences are expressed at the **message** level (see below), not by opening a new conversation per product. See ADR-010.
-
-Key design points:
-
-- **`messages.product_id`** (nullable, `nullOnDelete`) attaches a product "card" to a message — thumbnail + name + price, clickable through to the product page. `ConversationService::sendMessage()` accepts an optional `?Product $product`; a message is valid if it has `body`, `image`, **or** `product` (at least one). Clicking "Ask Seller" on a product page (`POST /products/{product:slug}/ask` → `ConversationController::askAboutProduct`) gets/creates the Q&A conversation and immediately sends a `product`-only message (no body), then redirects to `messages.show`. A seller cannot ask about their own product (`abort_if($product->shop->user_id === auth()->id(), 403)`).
-- **Soft-deleted products render as unavailable, not an error** — `Product` uses `SoftDeletes`, so its global scope makes `Message::product()` resolve to `null` for a since-removed product even though `messages.product_id` is still set. The front-end keys off `message.product_id` (always present) to decide "was this a product card message", and separately checks `message.product` (nullable) to render either the card or a "product no longer available" fallback (`ProductInquiryCard.vue`).
-- **Shop name is sourced from the seller, not the order** — `$conversation->seller->shop->name` (via `Conversation::seller()` → `User::shop()`), not `$conversation->order->shop`, since Q&A conversations have no order. `order` in the front-end payload only carries order-specific fields (`order_number`/`status`/`total`); `OrderCardBanner.vue` takes `shop-name` as a separate prop and only renders `v-if="conversation.order"`.
-- **No DB-level dedup for Q&A conversations** — unlike `order_id` (unique, NOT NULL originally), there's no unique index preventing two `order_id IS NULL` rows for the same buyer/seller pair (MySQL can't express a partial unique index — same limitation noted for coupon codes in ADR-008). `firstOrCreate` covers the normal case; a duplicate under concurrent double-click is a cosmetic risk, not a data-integrity one.
-- **Every message notifies the other participant** — `NewMessageNotification` (see Notifications trigger map above) fires for both order chat and product Q&A, since chat previously had no bell/database notification at all (only the in-thread real-time bubble and the navbar unread badge).
-
-### Review System (雙向盲評)
-
-`ReviewService` (`app/Services/ReviewService.php`) is the single entry point for all review mutations. **All methods wrap in `DB::transaction` with `Order::lockForUpdate()`** to prevent race conditions.
-
-**Review state** is tracked on the `orders` table via three columns:
-- `completed_at` — set automatically by `Order::booted() updating` hook when `status → completed`
-- `review_cooling_until` — set when both parties submit; cleared if either edits/deletes during cooling
-- `review_released_at` — set at release; **NOT NULL = permanently locked, no further writes allowed**
-
-Rule: `isReviewWindowOpen()` = `review_released_at === null`. `isInCoolingPeriod()` = cooling_until set & future & window open.
-
-**Release is handled by `php artisan reviews:release`** (registered in `routes/console.php`, runs every 10 minutes via `Schedule::command(...)->everyTenMinutes()`). It uses `chunkById(100)` to prevent OOM. Two trigger conditions:
-1. `review_cooling_until <= now()` — normal path after 24h cooling
-2. `completed_at <= now()-14d` — 14-day timeout (fires regardless of whether reviews exist, to prevent long-tail retaliation)
-
-**Aggregate columns** (`reviews_count`, `rating_sum` on `products`/`shops`; `buyer_reviews_count`, `buyer_rating_sum` on `users`) are updated **only at release time** in `updateAggregates()`. Before release, aggregates never change — this preserves the blind-reveal guarantee. `updateAggregates` uses grouped updates (one `UPDATE` per product, one for the shop) rather than N individual UPDATEs.
-
-**Bulk-update caveat (same as order status logging)**: `completed_at` is set by a model `updating` event hook, which does **not** fire on query-builder bulk updates. Any code that bulk-updates `orders.status` to `completed` must also manually set `completed_at`. Use `$order->update(...)` on model instances, never `Order::where(...)->update(...)`.
-
-**`Order::productReviews()` relation** uses `hasManyThrough(ProductReview::class, OrderItem::class)` and is scoped to `STATUS_PUBLISHED`. Do not use this relation when you need all reviews (including hidden) — query `ProductReview` directly.
-
-**Review ownership rules:**
-- Buyer can review an `OrderItem` only if `$order->user_id === $user->id && status === COMPLETED && isReviewWindowOpen()`
-- Seller can review a Buyer only if `$order->shop_id === $seller->shop->id && status === COMPLETED && isReviewWindowOpen()`
-- Both checks are enforced in `ReviewService` (Service layer), not just Policy layer — defense in depth
-
-**PII protection in review responses:**
-- Public product page: `->with(['user:id,name,profile_photo_path'])` only — no email/phone/role
-- Seller buyer-credit page: `->with(['shop:id,name'])` with explicit `select(...)` — no order shipping data
+### Feature Reference Docs
+
+單一功能的實作細節已拆到 `.claude/docs/`，**異動以下功能前必須先讀取對應文件**：
+
+| 功能 | 文件 | 一句話摘要 |
+|------|------|-----------|
+| 收藏 / 願望清單 | `.claude/docs/wishlist.md` | `WishlistService` 唯一入口；`toggle` 用 `firstOrCreate` 防重複 |
+| 商品/店鋪列表篩選 | `.claude/docs/product-shop-filters.md` | `$request->filled()` + partial reload `only:` 慣例 |
+| 購物車 | `.claude/docs/cart.md` | `CartService` 依 `user_id`/`session_id` 識別，登入時合併 guest cart |
+| 運費 | `.claude/docs/shipping.md` | `ShippingService` 唯一真相來源，per-shop 計算 flat fee + 免運門檻 |
+| 優惠券 (折扣碼) | `.claude/docs/coupons.md` | `CouponService` 唯一入口；折扣只套用商品小計，運費不打折 |
+| 賣家/平台儀表板分析 | `.claude/docs/dashboard-analytics.md` | `ResolvesDashboardPeriod` trait 為期間邏輯唯一來源 |
+| 低庫存警示 | `.claude/docs/low-stock-alert.md` | `Product::scopeLowStock()` 唯一判斷來源，勿硬編庫存門檻 |
+| 訂單狀態轉換與紀錄 | `.claude/docs/order-status-logging.md` | 只能用 model instance `update()`，不可 bulk update（會漏 log） |
+| 金流 (綠界 ECPay) | `.claude/docs/payment-ecpay.md` | notify webhook 才是「已付款」唯一真相來源；退款失敗要整個 rollback |
+| 電子發票 (B2C) | `.claude/docs/einvoice.md` | `InvoiceService` 決定時機，失敗 best-effort，不可 rollback 已付款交易 |
+| 售後退貨/退款 | `.claude/docs/order-returns-refunds.md` | `OrderService` 唯一入口，鎖 + 冪等；退款金額算法在 `CouponService` |
+| 通知系統 | `.claude/docs/notifications.md` | database+broadcast(+9 類 mail) 統一 payload，新增通知先看 trait 慣例 |
+| 聊天室 / 商品問答 | `.claude/docs/conversations-qna.md` | `ConversationService` 唯一入口；Q&A 對話 `order_id` 為 null |
+| 雙向盲評 | `.claude/docs/reviews.md` | `ReviewService` 唯一入口，全部包在鎖 transaction；聚合欄位只在 release 時更新 |
 
 ### Adding New Pages
 
@@ -381,7 +173,7 @@ Rule: `isReviewWindowOpen()` = `review_released_at === null`. `isInCoolingPeriod
 
 ```
 online-shop/
-├── .claude/                    # AI 操作規範、implementation records、decisions ADR
+├── .claude/                    # AI 操作規範、docs/（單一功能參考文件）、records/decisions（ADR）
 ├── app/
 │   ├── Console/Commands/       # ReleaseReviews
 │   ├── Events/                 # MessageSent (chat broadcast)
