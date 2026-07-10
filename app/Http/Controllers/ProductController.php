@@ -46,7 +46,7 @@ class ProductController extends Controller
         // skips the nested queries entirely when a product has no variant rows);
         // options.values is only needed once we already know variants exist, so
         // that check is done in-memory instead of an extra hasVariants() query.
-        $product->load(['shop', 'images', 'category.parent', 'variants.optionValues.option']);
+        $product->load(['shop', 'images', 'category', 'variants.optionValues.option']);
 
         if ($product->variants->isNotEmpty()) {
             $product->load('options.values');
@@ -78,7 +78,7 @@ class ProductController extends Controller
                 'image' => $product->images->first() ? asset('storage/'.$product->images->first()->path) : null,
                 'url' => route('products.show', $product->slug),
                 'jsonLd' => [
-                    $this->buildProductJsonLd($product, $description),
+                    JsonLd::product($product, $description),
                     JsonLd::breadcrumbList($this->buildProductBreadcrumbItems($product)),
                 ],
             ];
@@ -99,71 +99,12 @@ class ProductController extends Controller
         ]);
     }
 
-    private function buildProductJsonLd(Product $product, string $description): array
-    {
-        $node = [
-            '@context' => 'https://schema.org',
-            '@type' => 'Product',
-            'name' => $product->name,
-            'description' => $description,
-            'url' => route('products.show', $product->slug),
-            'brand' => [
-                '@type' => 'Brand',
-                'name' => $product->shop->name,
-            ],
-        ];
-
-        if ($product->category) {
-            $node['category'] = $product->category->name;
-        }
-
-        if ($product->images->isNotEmpty()) {
-            $node['image'] = $product->images->map(fn ($image) => asset('storage/'.$image->path))->all();
-        }
-
-        if ($product->variants->isNotEmpty()) {
-            $node['offers'] = [
-                '@type' => 'AggregateOffer',
-                'priceCurrency' => Product::CURRENCY,
-                'lowPrice' => (float) $product->variants->min('price'),
-                'highPrice' => (float) $product->variants->max('price'),
-                'offerCount' => $product->variants->count(),
-                'availability' => $product->variants->contains(fn ($variant) => $variant->inStock())
-                    ? 'https://schema.org/InStock'
-                    : 'https://schema.org/OutOfStock',
-            ];
-        } else {
-            $node['offers'] = [
-                '@type' => 'Offer',
-                'priceCurrency' => Product::CURRENCY,
-                'price' => (float) $product->price,
-                'availability' => $product->inStock()
-                    ? 'https://schema.org/InStock'
-                    : 'https://schema.org/OutOfStock',
-            ];
-        }
-
-        if ($product->reviews_count > 0) {
-            $node['aggregateRating'] = [
-                '@type' => 'AggregateRating',
-                'ratingValue' => $product->averageRating(),
-                'reviewCount' => $product->reviews_count,
-            ];
-        }
-
-        return $node;
-    }
-
     private function buildProductBreadcrumbItems(Product $product): array
     {
         $items = [['name' => __('navigation.home'), 'url' => url('/')]];
 
         if ($product->category && $product->category->is_active) {
-            foreach ($product->category->activeAncestors() as $ancestor) {
-                $items[] = ['name' => $ancestor->name, 'url' => route('categories.show', $ancestor->slug)];
-            }
-
-            $items[] = ['name' => $product->category->name, 'url' => route('categories.show', $product->category->slug)];
+            $items = array_merge($items, $product->category->breadcrumbTrail());
         }
 
         $items[] = ['name' => $product->name, 'url' => route('products.show', $product->slug)];

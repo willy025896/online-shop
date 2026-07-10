@@ -47,34 +47,6 @@ class ShopController extends Controller
 
         $products = $query->paginate(12)->withQueryString();
 
-        $description = Str::limit(strip_tags($shop->description ?? ''), 155);
-
-        $organizationNode = [
-            '@context' => 'https://schema.org',
-            '@type' => 'Organization',
-            'name' => $shop->name,
-            'description' => $description,
-            'url' => route('shops.show', $shop->slug),
-        ];
-
-        if ($shop->logo_path) {
-            $organizationNode['logo'] = asset('storage/'.$shop->logo_path);
-        }
-
-        if ($shop->reviews_count > 0) {
-            $organizationNode['aggregateRating'] = [
-                '@type' => 'AggregateRating',
-                'ratingValue' => $shop->averageRating(),
-                'reviewCount' => $shop->reviews_count,
-            ];
-        }
-
-        $breadcrumbItems = [
-            ['name' => __('navigation.home'), 'url' => url('/')],
-            ['name' => __('navigation.shops'), 'url' => route('shops.index')],
-            ['name' => $shop->name, 'url' => route('shops.show', $shop->slug)],
-        ];
-
         return Inertia::render('Shop/Show', [
             'shop' => $shop,
             'products' => $products,
@@ -83,13 +55,27 @@ class ShopController extends Controller
                 Product::where('shop_id', $shop->id)->where('status', Product::STATUS_ACTIVE)->select('category_id')
             )->active()->orderBy('sort_order')->get(['id', 'name']),
             'filters' => $request->only(['search', 'category', 'sort', 'min_rating', 'min_price', 'max_price']),
-            'seo' => [
-                'title' => $shop->name,
-                'description' => $description,
-                'image' => $shop->logo_path ? asset('storage/'.$shop->logo_path) : null,
-                'url' => route('shops.show', $shop->slug),
-                'jsonLd' => [$organizationNode, JsonLd::breadcrumbList($breadcrumbItems)],
-            ],
+            // Lazy: sort/filter clicks partial-reload with only:['products','filters']
+            // (useListingFilters.js) and never touch seo, so skip the route()/JsonLd
+            // work below unless this is a full page load.
+            'seo' => function () use ($shop) {
+                $description = Str::limit(strip_tags($shop->description ?? ''), 155);
+
+                return [
+                    'title' => $shop->name,
+                    'description' => $description,
+                    'image' => $shop->logo_path ? asset('storage/'.$shop->logo_path) : null,
+                    'url' => route('shops.show', $shop->slug),
+                    'jsonLd' => [
+                        JsonLd::organization($shop, $description),
+                        JsonLd::breadcrumbList([
+                            ['name' => __('navigation.home'), 'url' => url('/')],
+                            ['name' => __('navigation.shops'), 'url' => route('shops.index')],
+                            ['name' => $shop->name, 'url' => route('shops.show', $shop->slug)],
+                        ]),
+                    ],
+                ];
+            },
         ]);
     }
 }

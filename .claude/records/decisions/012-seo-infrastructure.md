@@ -44,7 +44,9 @@ status: Accepted
 - `ProductController@show`：`Product`（含 `Offer`／有 variant 則用 `AggregateOffer`，`priceCurrency` 固定 `Product::CURRENCY`（`'TWD'`）；`reviews_count > 0` 才附 `AggregateRating`）+ `BreadcrumbList`。守門邏輯與既有 `seo` 一致，`$isAvailable` 為否時 `seo` 整體為 `null`。
 - `ShopController@show`：`Organization`（`reviews_count > 0` 才附 `AggregateRating`——但 Google 目前不支援泛用 `Organization` 的星等 rich snippet，這裡純粹是語意完整）+ `BreadcrumbList`。
 - `CategoryController@show`：僅 `BreadcrumbList`（不做 `ItemList`，分頁/篩選中的商品列表不適合宣告成 canonical 清單）。
-- 三個 controller 共用的 `BreadcrumbList` 節點組裝邏輯抽到 `App\Support\JsonLd::breadcrumbList()`（`app/Support/` 目錄下第一個檔案）；麵包屑的「祖先鏈」查找邏輯抽到 `Category::activeAncestors()`——分類巢狀深度不限（admin 端 `parent_id` 沒有限制只能掛根分類），此方法沿 `parent` 關聯往上走訪任意層數，並跳過已 `is_active = false` 的祖先，避免 `BreadcrumbList` 裡出現指向 404 頁面的連結（post-change-review 發現：只查一層 parent 且未過濾 is_active 會讓結構化資料裡混入死連結，比畫面上單純裝飾性的麵包屑連結嚴重，因為搜尋引擎爬蟲真的會照著走）。
+- 三種 schema 節點的組裝統一收斂到 `App\Support\JsonLd`（`app/Support/` 目錄下第一個檔案）：`JsonLd::product()`、`JsonLd::organization()`、`JsonLd::breadcrumbList()`，三個 controller 都只呼叫這層，不再各自內聯組陣列（/simplify 2026-07-10 發現最初版本只抽出了 `breadcrumbList()`，Product/Organization 節點還留在 controller 裡，三種寫法不一致）。
+- 麵包屑的「祖先鏈」查找邏輯抽到 `Category::activeAncestors()`——分類巢狀深度不限（admin 端 `parent_id` 沒有限制只能掛根分類），此方法沿 `parent` 關聯往上走訪任意層數，並跳過已 `is_active = false` 的祖先，避免 `BreadcrumbList` 裡出現指向 404 頁面的連結（post-change-review 發現：只查一層 parent 且未過濾 is_active 會讓結構化資料裡混入死連結，比畫面上單純裝飾性的麵包屑連結嚴重，因為搜尋引擎爬蟲真的會照著走）。「走訪祖先 + 附加自己」這段組裝再收斂到 `Category::breadcrumbTrail()`，`CategoryController`/`ProductController` 都呼叫它，不再各自重寫一份迴圈（/simplify 2026-07-10）。
+- `CategoryController@show`／`ShopController@show` 的 `seo` 改成 lazy closure（`fn () => [...]`）：分類頁/賣場頁的排序篩選走 `useListingFilters.js`，partial reload 帶 `only: ['products', 'filters']`，`seo`（含 `route()`/`activeAncestors()` DB 走訪）本來就不會出現在回應裡，改成閉包後這些計算在 partial reload 時直接跳過，不做白工（/simplify 2026-07-10 發現，同一 controller 的 `categories` prop早就是這個 lazy pattern，這裡只是補齊一致性）。`ProductController@show` 沒有對應的 partial reload 情境（評論分頁是整頁導覽），`seo` 維持原本的即時陣列。
 
 ## Alternatives Considered
 

@@ -72,4 +72,17 @@ class Category extends Model
 
         return $ancestors;
     }
+
+    /**
+     * Breadcrumb-ready {name, url} pairs for this category's active ancestor
+     * chain plus itself (root-first). Shared by every controller that renders
+     * a category breadcrumb so the "walk ancestors, append self" shape only
+     * lives in one place.
+     */
+    public function breadcrumbTrail(): array
+    {
+        return $this->activeAncestors()->push($this)
+            ->map(fn (self $category) => ['name' => $category->name, 'url' => route('categories.show', $category->slug)])
+            ->all();
+    }
 }
