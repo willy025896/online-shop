@@ -4,7 +4,9 @@ import { router, useForm, usePage } from '@inertiajs/vue3';
 import AppLayout from '@/Layouts/AppLayout.vue';
 import OrderStatusBadge from '@/Components/OrderStatusBadge.vue';
 import StarRating from '@/Components/StarRating.vue';
+import Spinner from '@/Components/Spinner.vue';
 import { useReviewCountdown } from '@/Composables/useReviewCountdown';
+import { useAsyncAction } from '@/Composables/useAsyncAction';
 import DialogModal from '@/Components/DialogModal.vue';
 import DangerButton from '@/Components/DangerButton.vue';
 import SecondaryButton from '@/Components/SecondaryButton.vue';
@@ -87,6 +89,15 @@ const pay = (orderId) => {
 
 const askSeller = (orderId) => {
     router.post(route('orders.conversation', orderId));
+};
+
+const { processing: reordering, run: runReorder } = useAsyncAction();
+
+const reorder = (orderId) => {
+    runReorder((finish) => router.post(route('orders.reorder', orderId), {}, {
+        preserveScroll: true,
+        onFinish: finish,
+    }));
 };
 </script>
 
@@ -238,6 +249,14 @@ const askSeller = (orderId) => {
                 </div>
 
                 <div class="flex gap-3 mt-6 flex-wrap">
+                    <button
+                        @click="reorder(order.id)"
+                        :disabled="reordering"
+                        class="flex items-center gap-2 bg-gray-600 text-white py-2 px-6 rounded-lg hover:bg-gray-700 transition text-sm font-medium disabled:opacity-50"
+                    >
+                        <Spinner v-if="reordering" class="h-4 w-4" />
+                        {{ lang.reorder || 'Buy Again' }}
+                    </button>
                     <button
                         v-if="order.status === 'pending' && !order.paid_at"
                         @click="pay(order.id)"

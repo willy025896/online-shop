@@ -39,6 +39,7 @@ return [
     'free' => '免運費',
     'pay_now' => '立即付款',
     'ask_seller' => '詢問賣家',
+    'reorder' => '再次購買',
     'reply_customer' => '回覆客戶',
     'request_cancellation' => '申請取消',
     'cancel_reason' => '取消理由',

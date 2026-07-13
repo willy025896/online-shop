@@ -77,6 +77,7 @@ Route::middleware([
     Route::post('/orders/{order}/cancel', [OrderController::class, 'cancel'])->name('orders.cancel');
     Route::post('/orders/{order}/returns', [OrderController::class, 'requestReturn'])->name('orders.returns.store');
     Route::post('/orders/{order}/conversation', [OrderController::class, 'startConversation'])->name('orders.conversation');
+    Route::post('/orders/{order}/reorder', [OrderController::class, 'reorder'])->name('orders.reorder');
 
     // Conversations
     Route::post('/products/{product:slug}/ask', [ConversationController::class, 'askAboutProduct'])->name('products.ask');

@@ -39,6 +39,7 @@ return [
     'free' => 'Free',
     'pay_now' => 'Pay Now',
     'ask_seller' => 'Ask Seller',
+    'reorder' => 'Buy Again',
     'reply_customer' => 'Reply Customer',
     'request_cancellation' => 'Request Cancellation',
     'cancel_reason' => 'Reason',

@@ -5,6 +5,7 @@ use App\Models\CartItem;
 use App\Models\Order;
 use App\Models\OrderCancellation;
 use App\Models\Product;
+use App\Models\ProductVariant;
 use App\Models\Shop;
 use App\Models\User;
 
@@ -550,6 +551,145 @@ test('non-admin users cannot access admin order show', function () {
 
     $this->actingAs($seller)
         ->get(route('admin.orders.show', $order))
+        ->assertForbidden();
+});
+
+// ---- Reorder ----
+
+test('buyer can reorder an order whose products are still available', function () {
+    ['buyer' => $buyer, 'product' => $product, 'order' => $order] = makeOrderWithItem(['status' => Order::STATUS_COMPLETED], stock: 5, qty: 2);
+
+    $this->actingAs($buyer)
+        ->post(route('orders.reorder', $order))
+        ->assertRedirect(route('cart.index'));
+
+    $cart = Cart::where('user_id', $buyer->id)->first();
+
+    expect($cart)->not->toBeNull();
+    expect($cart->items()->count())->toBe(1);
+    expect($cart->items()->first()->product_id)->toBe($product->id);
+    expect($cart->items()->first()->quantity)->toBe(2);
+});
+
+test('reorder merges into an existing cart item quantity', function () {
+    ['buyer' => $buyer, 'product' => $product, 'order' => $order] = makeOrderWithItem(['status' => Order::STATUS_COMPLETED], stock: 10, qty: 2);
+
+    $cart = Cart::create(['user_id' => $buyer->id]);
+    CartItem::create(['cart_id' => $cart->id, 'product_id' => $product->id, 'quantity' => 3, 'unit_price' => 100]);
+
+    $this->actingAs($buyer)
+        ->post(route('orders.reorder', $order))
+        ->assertRedirect(route('cart.index'));
+
+    expect($cart->fresh()->items()->count())->toBe(1);
+    expect($cart->fresh()->items()->first()->quantity)->toBe(5);
+});
+
+test('reorder skips a product that has been deactivated', function () {
+    ['buyer' => $buyer, 'product' => $product, 'order' => $order] = makeOrderWithItem(['status' => Order::STATUS_COMPLETED], stock: 5, qty: 2);
+    $product->update(['status' => Product::STATUS_INACTIVE]);
+
+    $this->actingAs($buyer)
+        ->post(route('orders.reorder', $order))
+        ->assertRedirect()
+        ->assertSessionHas('error');
+
+    $cart = Cart::where('user_id', $buyer->id)->first();
+    expect($cart === null || $cart->items()->count() === 0)->toBeTrue();
+});
+
+test('reorder skips a product that has been soft-deleted', function () {
+    ['buyer' => $buyer, 'product' => $product, 'order' => $order] = makeOrderWithItem(['status' => Order::STATUS_COMPLETED], stock: 5, qty: 2);
+    $product->delete();
+
+    $this->actingAs($buyer)
+        ->post(route('orders.reorder', $order))
+        ->assertRedirect()
+        ->assertSessionHas('error');
+
+    $cart = Cart::where('user_id', $buyer->id)->first();
+    expect($cart === null || $cart->items()->count() === 0)->toBeTrue();
+});
+
+test('reorder skips a variant that has been soft-deleted but keeps other items', function () {
+    ['shop' => $shop, 'buyer' => $buyer, 'product' => $availableProduct, 'order' => $order] =
+        makeOrderWithItem(['status' => Order::STATUS_COMPLETED], stock: 5, qty: 1);
+
+    $variantProduct = Product::factory()->create(['shop_id' => $shop->id, 'stock' => 5]);
+    $variant = ProductVariant::factory()->create(['product_id' => $variantProduct->id, 'stock' => 5]);
+    $order->items()->create([
+        'product_id' => $variantProduct->id,
+        'product_variant_id' => $variant->id,
+        'product_name' => $variantProduct->name,
+        'variant_label' => 'Size: M',
+        'quantity' => 1,
+        'unit_price' => 100,
+        'subtotal' => 100,
+    ]);
+
+    $variant->delete();
+
+    $this->actingAs($buyer)
+        ->post(route('orders.reorder', $order))
+        ->assertRedirect(route('cart.index'));
+
+    $cart = Cart::where('user_id', $buyer->id)->first();
+    expect($cart->items()->count())->toBe(1);
+    expect($cart->items()->first()->product_id)->toBe($availableProduct->id);
+});
+
+test('reorder skips a variant-less item when the product has since gained variants', function () {
+    ['buyer' => $buyer, 'product' => $product, 'order' => $order] = makeOrderWithItem(['status' => Order::STATUS_COMPLETED], stock: 5, qty: 2);
+    ProductVariant::factory()->create(['product_id' => $product->id, 'stock' => 5]);
+
+    $this->actingAs($buyer)
+        ->post(route('orders.reorder', $order))
+        ->assertRedirect()
+        ->assertSessionHas('error');
+
+    $cart = Cart::where('user_id', $buyer->id)->first();
+    expect($cart === null || $cart->items()->count() === 0)->toBeTrue();
+});
+
+test('reorder skips a product that is completely out of stock', function () {
+    ['buyer' => $buyer, 'product' => $product, 'order' => $order] = makeOrderWithItem(['status' => Order::STATUS_COMPLETED], stock: 5, qty: 2);
+    $product->update(['stock' => 0]);
+
+    $this->actingAs($buyer)
+        ->post(route('orders.reorder', $order))
+        ->assertRedirect()
+        ->assertSessionHas('error');
+
+    $cart = Cart::where('user_id', $buyer->id)->first();
+    expect($cart === null || $cart->items()->count() === 0)->toBeTrue();
+});
+
+test('reorder clamps quantity to remaining stock instead of skipping the item', function () {
+    ['buyer' => $buyer, 'product' => $product, 'order' => $order] = makeOrderWithItem(['status' => Order::STATUS_COMPLETED], stock: 5, qty: 5);
+    $product->update(['stock' => 2]);
+
+    $this->actingAs($buyer)
+        ->post(route('orders.reorder', $order))
+        ->assertRedirect(route('cart.index'));
+
+    $cart = Cart::where('user_id', $buyer->id)->first();
+    expect($cart->items()->first()->quantity)->toBe(2);
+});
+
+test('a different buyer cannot reorder someone elses order', function () {
+    ['order' => $order] = makeOrderWithItem(['status' => Order::STATUS_COMPLETED]);
+    $other = User::factory()->create();
+
+    $this->actingAs($other)
+        ->post(route('orders.reorder', $order))
+        ->assertForbidden();
+});
+
+test('seller cannot reorder a buyers order', function () {
+    ['seller' => $seller, 'order' => $order] = makeOrderWithItem(['status' => Order::STATUS_COMPLETED]);
+
+    $this->actingAs($seller)
+        ->post(route('orders.reorder', $order))
         ->assertForbidden();
 });
 

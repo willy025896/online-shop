@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Order;
+use App\Services\CartService;
 use App\Services\ConversationService;
 use App\Services\OrderService;
 use App\Services\PaymentService;
@@ -16,6 +17,7 @@ class OrderController extends Controller
         private OrderService $orderService,
         private PaymentService $paymentService,
         private ConversationService $conversationService,
+        private CartService $cartService,
     ) {}
 
     public function index()
@@ -149,5 +151,22 @@ class OrderController extends Controller
         $conversation = $this->conversationService->getOrCreateForOrder($order);
 
         return redirect()->route('messages.show', $conversation);
+    }
+
+    public function reorder(Order $order)
+    {
+        $this->authorize('reorder', $order);
+
+        ['added' => $added, 'total' => $total] = $this->cartService->reorder($order);
+
+        if ($added === 0) {
+            return back()->with('error', 'None of the items in this order are currently available to purchase.');
+        }
+
+        $message = $added === $total
+            ? 'Added all items to your cart.'
+            : "Added {$added} of {$total} item(s) to your cart — the rest are no longer available.";
+
+        return redirect()->route('cart.index')->with('success', $message);
     }
 }

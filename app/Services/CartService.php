@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Models\Cart;
 use App\Models\CartItem;
+use App\Models\Order;
 use App\Models\Product;
 use App\Models\ProductVariant;
 use Illuminate\Support\Facades\Auth;
@@ -148,5 +149,55 @@ class CartService
     public function clear(Cart $cart): void
     {
         $cart->items()->delete();
+    }
+
+    /**
+     * Re-adds every still-purchasable item from a past order to the current
+     * cart. An item is skipped (not the whole order) when its product is
+     * inactive/deleted, its variant is deleted, or the product has since
+     * gained variants it didn't have at order time (product-level price/stock
+     * are no longer authoritative once Product::hasVariants() is true — see
+     * ADR-011). Quantity is clamped to current stock rather than skipping the
+     * item when stock has fallen below the original order quantity.
+     *
+     * @return array{added: int, total: int}
+     */
+    public function reorder(Order $order): array
+    {
+        $order->loadMissing('items');
+
+        $added = 0;
+
+        foreach ($order->items as $item) {
+            $product = Product::active()->find($item->product_id);
+
+            if (! $product) {
+                continue;
+            }
+
+            $variant = null;
+            if ($item->product_variant_id) {
+                $variant = $product->variants()->find($item->product_variant_id);
+
+                if (! $variant) {
+                    continue;
+                }
+            } elseif ($product->hasVariants()) {
+                continue;
+            }
+
+            $stockSource = $variant ?? $product;
+
+            if (! $stockSource->inStock()) {
+                continue;
+            }
+
+            $quantity = min($item->quantity, $stockSource->stock);
+
+            $this->addItem($product, $quantity, $variant);
+            $added++;
+        }
+
+        return ['added' => $added, 'total' => $order->items->count()];
     }
 }

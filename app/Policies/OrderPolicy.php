@@ -56,4 +56,9 @@ class OrderPolicy
         return ($user->isSeller() && $user->shop?->id === $order->shop_id)
             && $order->pendingReturn() !== null;
     }
+
+    public function reorder(User $user, Order $order): bool
+    {
+        return $user->id === $order->user_id;
+    }
 }
