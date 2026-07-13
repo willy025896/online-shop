@@ -3,9 +3,11 @@
 namespace App\Models;
 
 use App\Models\Concerns\HasStock;
+use App\Services\WishlistService;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
@@ -20,6 +22,29 @@ class Product extends Model
     public const STATUS_INACTIVE = 'inactive';
 
     public const CURRENCY = 'TWD';
+
+    protected static function booted(): void
+    {
+        static::updated(function (Product $product) {
+            if ($product->trashed() || $product->status !== self::STATUS_ACTIVE) {
+                return;
+            }
+
+            $priceDropped = $product->wasChanged('price')
+                && (float) $product->price < (float) $product->getOriginal('price');
+            $backInStock = $product->wasChanged('stock')
+                && (int) $product->getOriginal('stock') <= 0
+                && (int) $product->stock > 0;
+
+            if ($priceDropped) {
+                app(WishlistService::class)->notifyPriceDrop($product, $product->getOriginal('price'));
+            }
+
+            if ($backInStock) {
+                app(WishlistService::class)->notifyBackInStock($product);
+            }
+        });
+    }
 
     protected $fillable = [
         'shop_id',
@@ -112,6 +137,11 @@ class Product extends Model
     public function wishlistItems(): HasMany
     {
         return $this->hasMany(WishlistItem::class);
+    }
+
+    public function favoritedByUsers(): BelongsToMany
+    {
+        return $this->belongsToMany(User::class, 'wishlist_items')->withTimestamps();
     }
 
     public function options(): HasMany

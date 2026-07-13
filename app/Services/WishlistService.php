@@ -4,8 +4,11 @@ namespace App\Services;
 
 use App\Models\Product;
 use App\Models\WishlistItem;
+use App\Notifications\WishlistBackInStockNotification;
+use App\Notifications\WishlistPriceDropNotification;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Notification;
 
 class WishlistService
 {
@@ -57,5 +60,15 @@ class WishlistService
         return WishlistItem::where('user_id', Auth::id())
             ->pluck('product_id')
             ->toArray();
+    }
+
+    public function notifyPriceDrop(Product $product, string $oldPrice): void
+    {
+        Notification::send($product->favoritedByUsers, new WishlistPriceDropNotification($product, $oldPrice));
+    }
+
+    public function notifyBackInStock(Product $product): void
+    {
+        Notification::send($product->favoritedByUsers, new WishlistBackInStockNotification($product));
     }
 }

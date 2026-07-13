@@ -9,6 +9,7 @@ use App\Models\Product;
 use App\Models\ProductReview;
 use App\Models\Shop;
 use App\Models\User;
+use App\Models\WishlistItem;
 use App\Notifications\NewMessageNotification;
 use App\Notifications\OrderCancellationRequestedNotification;
 use App\Notifications\OrderCancellationRespondedNotification;
@@ -23,6 +24,8 @@ use App\Notifications\ReviewCoolingStartedNotification;
 use App\Notifications\ReviewReleasedNotification;
 use App\Notifications\SellerReplyNotification;
 use App\Notifications\ShopStatusChangedNotification;
+use App\Notifications\WishlistBackInStockNotification;
+use App\Notifications\WishlistPriceDropNotification;
 use Illuminate\Support\Facades\Notification;
 
 function makeOrderForNotificationTest(array $orderState = [], int $stock = 5, int $qty = 2): array
@@ -378,4 +381,107 @@ test('Inertia share exposes unread count and recent notifications', function () 
             ->where('unreadNotificationCount', 1)
             ->has('recentNotifications', 1)
         );
+});
+
+// ---- Wishlist price-drop / back-in-stock tests ----
+
+test('lowering an active products price notifies wishlisted users', function () {
+    Notification::fake();
+
+    $product = Product::factory()->create(['status' => Product::STATUS_ACTIVE, 'price' => 100]);
+    $wishlister = User::factory()->create();
+    WishlistItem::create(['user_id' => $wishlister->id, 'product_id' => $product->id]);
+
+    $product->update(['price' => 80]);
+
+    Notification::assertSentTo($wishlister, WishlistPriceDropNotification::class);
+});
+
+test('raising a products price does NOT notify wishlisted users', function () {
+    Notification::fake();
+
+    $product = Product::factory()->create(['status' => Product::STATUS_ACTIVE, 'price' => 100]);
+    $wishlister = User::factory()->create();
+    WishlistItem::create(['user_id' => $wishlister->id, 'product_id' => $product->id]);
+
+    $product->update(['price' => 120]);
+
+    Notification::assertNotSentTo($wishlister, WishlistPriceDropNotification::class);
+});
+
+test('a price drop on an inactive product does NOT notify wishlisted users', function () {
+    Notification::fake();
+
+    $product = Product::factory()->create(['status' => Product::STATUS_INACTIVE, 'price' => 100]);
+    $wishlister = User::factory()->create();
+    WishlistItem::create(['user_id' => $wishlister->id, 'product_id' => $product->id]);
+
+    $product->update(['price' => 80]);
+
+    Notification::assertNotSentTo($wishlister, WishlistPriceDropNotification::class);
+});
+
+test('a user who has not favorited the product is not notified of its price drop', function () {
+    Notification::fake();
+
+    $product = Product::factory()->create(['status' => Product::STATUS_ACTIVE, 'price' => 100]);
+    $other = User::factory()->create();
+
+    $product->update(['price' => 80]);
+
+    Notification::assertNotSentTo($other, WishlistPriceDropNotification::class);
+});
+
+test('restocking a product directly notifies wishlisted users', function () {
+    Notification::fake();
+
+    $product = Product::factory()->create(['status' => Product::STATUS_ACTIVE, 'stock' => 0]);
+    $wishlister = User::factory()->create();
+    WishlistItem::create(['user_id' => $wishlister->id, 'product_id' => $product->id]);
+
+    $product->update(['stock' => 5]);
+
+    Notification::assertSentTo($wishlister, WishlistBackInStockNotification::class);
+});
+
+test('stock moving between two positive values does NOT notify wishlisted users', function () {
+    Notification::fake();
+
+    $product = Product::factory()->create(['status' => Product::STATUS_ACTIVE, 'stock' => 5]);
+    $wishlister = User::factory()->create();
+    WishlistItem::create(['user_id' => $wishlister->id, 'product_id' => $product->id]);
+
+    $product->update(['stock' => 3]);
+
+    Notification::assertNotSentTo($wishlister, WishlistBackInStockNotification::class);
+});
+
+test('a soft-deleted product does not notify wishlisted users even though its status column is still active', function () {
+    Notification::fake();
+
+    $product = Product::factory()->create(['status' => Product::STATUS_ACTIVE, 'stock' => 0]);
+    $wishlister = User::factory()->create();
+    WishlistItem::create(['user_id' => $wishlister->id, 'product_id' => $product->id]);
+    $product->delete();
+
+    Product::withTrashed()->find($product->id)->update(['stock' => 5]);
+
+    Notification::assertNotSentTo($wishlister, WishlistBackInStockNotification::class);
+});
+
+test('cancelling an order restocks the product and notifies wishlisted users', function () {
+    Notification::fake();
+
+    ['seller' => $seller, 'order' => $order, 'product' => $product] = makeOrderForNotificationTest(
+        ['status' => Order::STATUS_PROCESSING],
+        stock: 0,
+        qty: 2,
+    );
+    $wishlister = User::factory()->create();
+    WishlistItem::create(['user_id' => $wishlister->id, 'product_id' => $product->id]);
+
+    app(App\Services\OrderService::class)->cancelBySeller($order, $seller, 'Out of stock');
+
+    expect($product->fresh()->stock)->toBe(2);
+    Notification::assertSentTo($wishlister, WishlistBackInStockNotification::class);
 });

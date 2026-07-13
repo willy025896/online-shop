@@ -98,6 +98,17 @@ return [
         ],
     ],
 
+    'wishlist' => [
+        'price_drop' => [
+            'title' => '收藏商品降價了',
+            'body' => '「:product」已從 $:old 降至 $:new。',
+        ],
+        'back_in_stock' => [
+            'title' => '收藏商品已補貨',
+            'body' => '「:product」已重新補貨上架。',
+        ],
+    ],
+
     'mail' => [
         'view_details' => '查看詳情',
     ],

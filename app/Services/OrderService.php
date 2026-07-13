@@ -313,11 +313,15 @@ class OrderService
      */
     private function restockOrderItem(OrderItem $orderItem, int $quantity): void
     {
-        $stockOwnerQuery = $orderItem->product_variant_id
-            ? ProductVariant::withTrashed()->where('id', $orderItem->product_variant_id)
-            : Product::withTrashed()->where('id', $orderItem->product_id);
+        if ($orderItem->product_variant_id) {
+            ProductVariant::withTrashed()->where('id', $orderItem->product_variant_id)->increment('stock', $quantity);
 
-        $stockOwnerQuery->increment('stock', $quantity);
+            return;
+        }
+
+        // Resolves an instance (not a query builder) so Product::booted()'s `updated`
+        // event fires — needed for wishlist back-in-stock notifications.
+        Product::withTrashed()->find($orderItem->product_id)?->increment('stock', $quantity);
     }
 
     /**

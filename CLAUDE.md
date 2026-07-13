@@ -181,7 +181,7 @@ online-shop/
 │   ├── Http/
 │   │   ├── Controllers/        # public + utility + seller + admin (incl. NotificationController, EcpayController, Review controllers)
 │   │   └── Middleware/         # EnsureRole, SetLocale, HandleInertiaRequests
-│   ├── Notifications/          # 14 Notification classes (Order*, Shop*, Review*, Payout*); all use BroadcastsAsArray trait, 9 also use MailsAsArray (mail channel)
+│   ├── Notifications/          # 16 Notification classes (Order*, Shop*, Review*, Payout*, Wishlist*); all use BroadcastsAsArray trait, 9 also use MailsAsArray (mail channel); the 2 Wishlist* ones are ShouldQueue without mail (transactional rollback-safety, see notifications.md)
 │   │   └── Concerns/           # BroadcastsAsArray, MailsAsArray traits
 │   ├── Policies/               # 6 policies (Product, Order, Shop, ProductReview, Coupon, ...)
 │   ├── Models/                 # 27 models (User, Shop, Product, Order, OrderReturn, ProductVariant, ProductReview, BuyerReview, WishlistItem, Coupon, Payout, PayoutItem, ...)

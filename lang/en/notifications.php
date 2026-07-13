@@ -98,6 +98,17 @@ return [
         ],
     ],
 
+    'wishlist' => [
+        'price_drop' => [
+            'title' => 'Price drop on a wishlisted item',
+            'body' => '":product" dropped from $:old to $:new.',
+        ],
+        'back_in_stock' => [
+            'title' => 'Back in stock',
+            'body' => '":product" is back in stock.',
+        ],
+    ],
+
     'mail' => [
         'view_details' => 'View Details',
     ],
