@@ -62,6 +62,7 @@ Route::middleware([
     Route::patch('/addresses/{address}/default', [App\Http\Controllers\AddressController::class, 'setDefault'])->name('addresses.default');
 
     // Checkout
+    Route::post('/checkout/selection', [CheckoutController::class, 'storeSelection'])->name('checkout.selection.store');
     Route::get('/checkout', [CheckoutController::class, 'index'])->name('checkout.index');
     Route::post('/checkout', [CheckoutController::class, 'store'])->name('checkout.store');
     Route::post('/checkout/coupon/preview', [App\Http\Controllers\CouponController::class, 'preview'])->name('checkout.coupon.preview');

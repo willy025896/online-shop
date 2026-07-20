@@ -19,6 +19,18 @@ class CheckoutController extends Controller
         private AddressService $addressService,
     ) {}
 
+    public function storeSelection(Request $request)
+    {
+        $validated = $request->validate([
+            'item_ids' => 'array',
+            'item_ids.*' => 'integer',
+        ]);
+
+        session(['checkout_selected_item_ids' => $validated['item_ids'] ?? []]);
+
+        return redirect()->route('checkout.index');
+    }
+
     public function index()
     {
         $cart = $this->cartService->getCartWithItems();
@@ -28,7 +40,7 @@ class CheckoutController extends Controller
                 ->with('error', 'Your cart is empty.');
         }
 
-        $itemIds = array_map('intval', request()->input('item_ids', []));
+        $itemIds = array_map('intval', session('checkout_selected_item_ids', []));
         $selectedItems = $itemIds
             ? $cart->items->whereIn('id', $itemIds)->values()
             : $cart->items;
@@ -106,6 +118,8 @@ class CheckoutController extends Controller
                 report($e);
             }
         }
+
+        session()->forget('checkout_selected_item_ids');
 
         return redirect()->route('orders.index')
             ->with('success', count($orders).' order(s) created successfully.');

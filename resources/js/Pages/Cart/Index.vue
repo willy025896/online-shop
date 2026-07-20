@@ -1,6 +1,7 @@
 <script setup>
 import { computed, ref } from 'vue';
 import { router, usePage } from '@inertiajs/vue3';
+import { useToast } from '@/Composables/useToast';
 import AppLayout from '@/Layouts/AppLayout.vue';
 import CartItemRow from '@/Components/CartItemRow.vue';
 import CartSummary from '@/Components/CartSummary.vue';
@@ -20,6 +21,7 @@ const shippingFeeFor = (shopSubtotal) => {
 
 const page = usePage();
 const lang = computed(() => page.props.lang || {});
+const toast = useToast();
 
 const allItems = computed(() => props.cart?.items ?? []);
 
@@ -96,7 +98,9 @@ const selectedTotals = computed(() => {
 });
 
 const checkoutSelected = () => {
-    router.get(route('checkout.index'), { item_ids: selectedIds.value });
+    router.post(route('checkout.selection.store'), { item_ids: selectedIds.value }, {
+        onError: (errors) => toast.error(errors.item_ids),
+    });
 };
 
 // Custom directive for indeterminate checkbox state

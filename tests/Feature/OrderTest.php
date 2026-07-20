@@ -189,7 +189,8 @@ test('checkout page shows only items matching item_ids', function () {
     CartItem::create(['cart_id' => $cart->id, 'product_id' => $product2->id, 'quantity' => 1, 'unit_price' => 200]);
 
     $this->actingAs($user)
-        ->get(route('checkout.index', ['item_ids' => [$item1->id]]))
+        ->withSession(['checkout_selected_item_ids' => [$item1->id]])
+        ->get(route('checkout.index'))
         ->assertStatus(200)
         ->assertInertia(fn ($page) => $page
             ->component('Checkout/Index')
@@ -206,8 +207,23 @@ test('checkout redirects to cart when no valid item_ids given', function () {
     CartItem::create(['cart_id' => $cart->id, 'product_id' => $product->id, 'quantity' => 1, 'unit_price' => 50]);
 
     $this->actingAs($user)
-        ->get(route('checkout.index', ['item_ids' => [99999]]))
+        ->withSession(['checkout_selected_item_ids' => [99999]])
+        ->get(route('checkout.index'))
         ->assertRedirect(route('cart.index'));
+});
+
+test('checkout selection store persists item_ids into session and redirects to checkout', function () {
+    $user = User::factory()->create();
+    $product = Product::factory()->create(['stock' => 10]);
+
+    $cart = Cart::create(['user_id' => $user->id]);
+    $item = CartItem::create(['cart_id' => $cart->id, 'product_id' => $product->id, 'quantity' => 1, 'unit_price' => 50]);
+
+    $this->actingAs($user)
+        ->post(route('checkout.selection.store'), ['item_ids' => [$item->id]])
+        ->assertRedirect(route('checkout.index'));
+
+    expect(session('checkout_selected_item_ids'))->toBe([$item->id]);
 });
 
 test('partial checkout only removes selected items from cart', function () {

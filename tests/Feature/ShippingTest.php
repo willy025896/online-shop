@@ -119,7 +119,8 @@ test('cart totals and checkout page survive a soft-deleted product in the cart',
 
     // Checkout page renders without a 500 even with the dead item selected.
     $this->actingAs($buyer)
-        ->get(route('checkout.index', ['item_ids' => [$liveItem->id, $goneItem->id]]))
+        ->withSession(['checkout_selected_item_ids' => [$liveItem->id, $goneItem->id]])
+        ->get(route('checkout.index'))
         ->assertStatus(200);
 });
 
@@ -132,7 +133,8 @@ test('checkout page exposes per-shop breakdown and shipping totals', function ()
     $item = CartItem::create(['cart_id' => $cart->id, 'product_id' => $product->id, 'quantity' => 2, 'unit_price' => 100]);
 
     $this->actingAs($buyer)
-        ->get(route('checkout.index', ['item_ids' => [$item->id]]))
+        ->withSession(['checkout_selected_item_ids' => [$item->id]])
+        ->get(route('checkout.index'))
         ->assertStatus(200)
         ->assertInertia(fn ($page) => $page
             ->component('Checkout/Index')
