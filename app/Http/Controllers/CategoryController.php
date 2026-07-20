@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Controllers\Concerns\BuildsCanonicalListingUrl;
 use App\Http\Controllers\Concerns\FiltersProductListings;
 use App\Models\Category;
 use App\Models\Product;
@@ -11,7 +12,7 @@ use Inertia\Inertia;
 
 class CategoryController extends Controller
 {
-    use FiltersProductListings;
+    use BuildsCanonicalListingUrl, FiltersProductListings;
 
     public function show(Category $category, Request $request)
     {
@@ -40,7 +41,7 @@ class CategoryController extends Controller
             'seo' => fn () => [
                 'title' => $category->name,
                 'description' => "探索「{$category->name}」分類下的所有商品。",
-                'url' => route('categories.show', $category->slug),
+                'url' => $this->canonicalListingUrl('categories.show', ['category' => $category->slug], $request),
                 'jsonLd' => [JsonLd::breadcrumbList(array_merge(
                     [['name' => __('navigation.home'), 'url' => url('/')]],
                     $category->breadcrumbTrail()

@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Controllers\Concerns\BuildsCanonicalListingUrl;
 use App\Http\Controllers\Concerns\FiltersProductListings;
 use App\Models\Category;
 use App\Models\Product;
@@ -13,9 +14,9 @@ use Inertia\Inertia;
 
 class ShopController extends Controller
 {
-    use FiltersProductListings;
+    use BuildsCanonicalListingUrl, FiltersProductListings;
 
-    public function index()
+    public function index(Request $request)
     {
         $shops = Shop::where('status', Shop::STATUS_APPROVED)
             ->withCount('products')
@@ -24,6 +25,11 @@ class ShopController extends Controller
 
         return Inertia::render('Shop/Index', [
             'shops' => $shops,
+            'seo' => fn () => [
+                'title' => __('navigation.shops'),
+                'description' => '瀏覽平台上所有已核准的商家。',
+                'url' => $this->canonicalListingUrl('shops.index', [], $request),
+            ],
         ]);
     }
 
@@ -58,14 +64,14 @@ class ShopController extends Controller
             // Lazy: sort/filter clicks partial-reload with only:['products','filters']
             // (useListingFilters.js) and never touch seo, so skip the route()/JsonLd
             // work below unless this is a full page load.
-            'seo' => function () use ($shop) {
+            'seo' => function () use ($shop, $request) {
                 $description = Str::limit(strip_tags($shop->description ?? ''), 155);
 
                 return [
                     'title' => $shop->name,
                     'description' => $description,
                     'image' => $shop->logo_path ? asset('storage/'.$shop->logo_path) : null,
-                    'url' => route('shops.show', $shop->slug),
+                    'url' => $this->canonicalListingUrl('shops.show', ['shop' => $shop->slug], $request),
                     'jsonLd' => [
                         JsonLd::organization($shop, $description),
                         JsonLd::breadcrumbList([

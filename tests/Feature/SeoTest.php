@@ -108,6 +108,49 @@ test('category show page exposes seo prop for og meta', function () {
         );
 });
 
+test('canonical url drops filter query params but keeps page', function (string $routeName, Closure $routeParams) {
+    $params = $routeParams();
+
+    $this->get(route($routeName, [...$params, 'search' => 'foo', 'sort' => 'price_asc', 'page' => 2]))
+        ->assertInertia(fn ($page) => $page
+            ->where('seo.url', route($routeName, [...$params, 'page' => 2]))
+        );
+})->with([
+    'products index' => ['products.index', function () {
+        Product::factory()->count(20)->create();
+
+        return [];
+    }],
+    'shop show' => ['shops.show', function () {
+        $shop = Shop::factory()->create(['name' => '測試賣場']);
+        Product::factory()->count(20)->create(['shop_id' => $shop->id]);
+
+        return ['shop' => $shop->slug];
+    }],
+    'category show' => ['categories.show', function () {
+        $category = Category::factory()->create(['name' => '測試分類']);
+        Product::factory()->count(20)->create(['category_id' => $category->id]);
+
+        return ['category' => $category->slug];
+    }],
+]);
+
+test('products index canonical url collapses explicit page=1 to the bare url', function () {
+    Product::factory()->count(20)->create();
+
+    $this->get(route('products.index', ['page' => 1]))
+        ->assertInertia(fn ($page) => $page
+            ->where('seo.url', route('products.index'))
+        );
+});
+
+test('shops index canonical url is stable regardless of page', function () {
+    $this->get(route('shops.index'))
+        ->assertInertia(fn ($page) => $page
+            ->where('seo.url', route('shops.index'))
+        );
+});
+
 test('product show page exposes product and breadcrumb json-ld for a simple product', function () {
     $category = Category::factory()->create(['name' => '3C 用品']);
     $shop = Shop::factory()->create(['name' => '測試賣場']);

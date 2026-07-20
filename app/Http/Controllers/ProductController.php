@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Controllers\Concerns\BuildsCanonicalListingUrl;
 use App\Http\Controllers\Concerns\FiltersProductListings;
 use App\Models\Category;
 use App\Models\Product;
@@ -15,7 +16,7 @@ use Inertia\Inertia;
 
 class ProductController extends Controller
 {
-    use FiltersProductListings;
+    use BuildsCanonicalListingUrl, FiltersProductListings;
 
     public function index(Request $request)
     {
@@ -37,6 +38,14 @@ class ProductController extends Controller
             'products' => $query->paginate(12)->withQueryString(),
             'categories' => fn () => Category::active()->root()->with('children')->orderBy('sort_order')->get(),
             'filters' => $request->only(['search', 'category', 'sort', 'min_rating', 'min_price', 'max_price']),
+            // Lazy: sort/filter clicks partial-reload with only:['products','filters']
+            // (useListingFilters.js) and never touch seo, so skip the route() work
+            // below unless this is a full page load.
+            'seo' => fn () => [
+                'title' => __('navigation.products'),
+                'description' => '瀏覽平台上所有商家上架的商品。',
+                'url' => $this->canonicalListingUrl('products.index', [], $request),
+            ],
         ]);
     }
 

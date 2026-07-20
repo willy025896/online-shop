@@ -14,6 +14,7 @@
             $seoImage = $seo['image'] ?? null;
         @endphp
         <meta name="description" content="{{ $seoDescription }}">
+        <link rel="canonical" href="{{ $seoUrl }}">
         <meta property="og:type" content="website">
         <meta property="og:site_name" content="{{ config('app.name', 'Laravel') }}">
         <meta property="og:title" content="{{ $seoTitle }}">
