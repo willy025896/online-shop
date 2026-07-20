@@ -152,7 +152,7 @@ online-shop/
 - **平台抽成與賣家撥款** - 全平台統一費率，Admin 手動觸發撥款，逐筆訂單金額快照
 - **金流串接（綠界 ECPay）** - 買家導向 ECPay 收銀台付款，server 端 notify webhook 驗簽後才標記付款，退款走真實 API
 - **商品搜尋自動完成／熱門搜尋** - 商品搜尋列即時建議
-- **SEO 基礎建設** - sitemap.xml、robots.txt、商品／賣場／分類頁 OG meta
+- **SEO 基礎建設** - sitemap.xml、robots.txt、商品／賣場／分類頁 OG meta 與 canonical URL
 - **平台治理三件套** - Admin 全站優惠券、操作稽核紀錄、賣家商品 CSV 匯入/匯出
 - **Dashboard 數據分析** - 賣家／管理員後台時段篩選、收益趨勢、Top 商品／店鋪
 - **商品篩選強化** - 價格區間、低庫存篩選
