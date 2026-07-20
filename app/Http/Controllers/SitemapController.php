@@ -28,26 +28,26 @@ class SitemapController extends Controller
 
         Product::active()
             ->whereHas('shop', fn ($query) => $query->where('status', Shop::STATUS_APPROVED))
-            ->select('slug', 'updated_at')->get()->each(
+            ->select('id', 'slug', 'updated_at')->chunkById(500, fn ($products) => $products->each(
                 fn ($product) => $urls->push([
                     'loc' => route('products.show', $product->slug),
                     'lastmod' => $product->updated_at,
                 ])
-            );
+            ));
 
-        Shop::where('status', Shop::STATUS_APPROVED)->select('slug', 'updated_at')->get()->each(
+        Shop::where('status', Shop::STATUS_APPROVED)->select('id', 'slug', 'updated_at')->chunkById(500, fn ($shops) => $shops->each(
             fn ($shop) => $urls->push([
                 'loc' => route('shops.show', $shop->slug),
                 'lastmod' => $shop->updated_at,
             ])
-        );
+        ));
 
-        Category::active()->select('slug', 'updated_at')->get()->each(
+        Category::active()->select('id', 'slug', 'updated_at')->chunkById(500, fn ($categories) => $categories->each(
             fn ($category) => $urls->push([
                 'loc' => route('categories.show', $category->slug),
                 'lastmod' => $category->updated_at,
             ])
-        );
+        ));
 
         return $urls;
     }
