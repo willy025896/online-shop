@@ -106,11 +106,10 @@ const markAllRead = () => {
 <template>
     <div v-if="userId" class="relative">
         <Dropdown align="right" width="80">
-            <template #trigger="{ open }">
+            <template #trigger="{ triggerAttrs }">
                 <button
                     :aria-label="fallbackText('title', 'Notifications')"
-                    aria-haspopup="true"
-                    :aria-expanded="open"
+                    v-bind="triggerAttrs"
                     class="relative p-2 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 dark:focus:ring-offset-gray-800"
                 >
                     <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">

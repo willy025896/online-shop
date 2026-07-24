@@ -5,6 +5,7 @@ import AdminLayout from '@/Layouts/AdminLayout.vue';
 import Pagination from '@/Components/Pagination.vue';
 import TableSkeletonRows from '@/Components/TableSkeletonRows.vue';
 import { useInFlightLoading } from '@/Composables/useInFlightLoading';
+import { skeletonRowCount } from '@/Utils/skeletonRowCount';
 
 const props = defineProps({
     logs: Object,
@@ -16,7 +17,7 @@ const props = defineProps({
 const page = usePage();
 const t = computed(() => page.props.lang?.audit_logs || {});
 const { isLoading, start: startLoading, finish: finishLoading } = useInFlightLoading();
-const skeletonRows = computed(() => props.logs.data.length || props.logs.per_page || 5);
+const skeletonRows = computed(() => skeletonRowCount(props.logs));
 
 const actionFilter = ref(props.filters.action || '');
 const adminFilter = ref(props.filters.admin_id || '');

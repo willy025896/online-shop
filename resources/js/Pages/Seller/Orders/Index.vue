@@ -5,6 +5,7 @@ import SellerLayout from '@/Layouts/SellerLayout.vue';
 import OrderStatusBadge from '@/Components/OrderStatusBadge.vue';
 import Pagination from '@/Components/Pagination.vue';
 import TableSkeletonRows from '@/Components/TableSkeletonRows.vue';
+import { skeletonRowCount } from '@/Utils/skeletonRowCount';
 
 const props = defineProps({
     orders: Object,
@@ -13,7 +14,7 @@ const props = defineProps({
 const page = usePage();
 const lang = computed(() => page.props.lang || {});
 const isLoading = ref(false);
-const skeletonRows = computed(() => props.orders.data.length || props.orders.per_page || 5);
+const skeletonRows = computed(() => skeletonRowCount(props.orders));
 </script>
 
 <template>

@@ -11,6 +11,7 @@ import { useDeleteConfirmation } from '@/Composables/useDeleteConfirmation';
 import ImageWithFallback from '@/Components/ImageWithFallback.vue';
 import TableSkeletonRows from '@/Components/TableSkeletonRows.vue';
 import { useInFlightLoading } from '@/Composables/useInFlightLoading';
+import { skeletonRowCount } from '@/Utils/skeletonRowCount';
 
 const props = defineProps({
     products: Object,
@@ -23,7 +24,7 @@ const lang = computed(() => page.props.lang || {});
 
 const { isLoading, start: startLoading, finish: finishLoading } = useInFlightLoading();
 
-const skeletonRows = computed(() => props.products.data.length || props.products.per_page || 5);
+const skeletonRows = computed(() => skeletonRowCount(props.products));
 
 const toggleLowStock = () => {
     router.get(

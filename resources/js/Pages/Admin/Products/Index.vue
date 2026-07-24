@@ -5,6 +5,7 @@ import AdminLayout from '@/Layouts/AdminLayout.vue';
 import Pagination from '@/Components/Pagination.vue';
 import ImageWithFallback from '@/Components/ImageWithFallback.vue';
 import TableSkeletonRows from '@/Components/TableSkeletonRows.vue';
+import { skeletonRowCount } from '@/Utils/skeletonRowCount';
 
 const props = defineProps({
     products: Object,
@@ -13,7 +14,7 @@ const props = defineProps({
 const page = usePage();
 const lang = computed(() => page.props.lang || {});
 const isLoading = ref(false);
-const skeletonRows = computed(() => props.products.data.length || props.products.per_page || 5);
+const skeletonRows = computed(() => skeletonRowCount(props.products));
 </script>
 
 <template>

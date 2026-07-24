@@ -9,6 +9,7 @@ import SecondaryButton from '@/Components/SecondaryButton.vue';
 import DangerButton from '@/Components/DangerButton.vue';
 import { useDeleteConfirmation } from '@/Composables/useDeleteConfirmation';
 import TableSkeletonRows from '@/Components/TableSkeletonRows.vue';
+import { skeletonRowCount } from '@/Utils/skeletonRowCount';
 
 const props = defineProps({
     coupons: Object,
@@ -17,7 +18,7 @@ const props = defineProps({
 const page = usePage();
 const c = computed(() => page.props.lang?.coupons || {});
 const isLoading = ref(false);
-const skeletonRows = computed(() => props.coupons.data.length || props.coupons.per_page || 5);
+const skeletonRows = computed(() => skeletonRowCount(props.coupons));
 
 const formatValue = (coupon) =>
     coupon.type === 'percentage' ? `${Number(coupon.value)}%` : `$${Number(coupon.value).toFixed(2)}`;

@@ -105,11 +105,10 @@ const navItems = computed(() => [
                             <div class="flex items-center gap-1">
                                 <NotificationBell />
                                 <Dropdown align="right" width="48" position="top">
-                                    <template #trigger="{ open }">
+                                    <template #trigger="{ triggerAttrs }">
                                         <button
                                             :aria-label="nav.manage_account"
-                                            aria-haspopup="true"
-                                            :aria-expanded="open"
+                                            v-bind="triggerAttrs"
                                             class="text-gray-400 hover:text-gray-600"
                                         >
                                             <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">

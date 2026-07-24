@@ -58,12 +58,19 @@ const alignmentClasses = computed(() => {
 const positionClass = computed(() => {
     return props.position === 'top' ? 'bottom-full mb-2' : 'mt-2';
 });
+
+// Spread onto the trigger's button so every Dropdown consumer gets correct
+// a11y wiring without repeating aria-haspopup/aria-expanded by hand.
+const triggerAttrs = computed(() => ({
+    'aria-haspopup': 'true',
+    'aria-expanded': open.value,
+}));
 </script>
 
 <template>
     <div class="relative">
         <div @click="open = ! open">
-            <slot name="trigger" :open="open" />
+            <slot name="trigger" :open="open" :trigger-attrs="triggerAttrs" />
         </div>
 
         <!-- Full Screen Dropdown Overlay -->

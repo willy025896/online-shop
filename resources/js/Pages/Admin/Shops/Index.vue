@@ -7,6 +7,7 @@ import RowActions from '@/Components/RowActions.vue';
 import TableSkeletonRows from '@/Components/TableSkeletonRows.vue';
 import { useAsyncActionGroup } from '@/Composables/useAsyncAction';
 import { useToast } from '@/Composables/useToast';
+import { skeletonRowCount } from '@/Utils/skeletonRowCount';
 
 const props = defineProps({
     shops: Object,
@@ -15,7 +16,7 @@ const props = defineProps({
 const page = usePage();
 const lang = computed(() => page.props.lang || {});
 const isLoading = ref(false);
-const skeletonRows = computed(() => props.shops.data.length || props.shops.per_page || 5);
+const skeletonRows = computed(() => skeletonRowCount(props.shops));
 const toast = useToast();
 
 const { isProcessing: isUpdating, run } = useAsyncActionGroup();
