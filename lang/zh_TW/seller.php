@@ -239,4 +239,18 @@ return [
         'shipping_amount' => '運費',
         'net_amount' => '實付金額',
     ],
+
+    'reviews' => [
+        'title' => '商品評論',
+        'all_ratings' => '全部星等',
+        'star' => '星',
+        'all' => '全部',
+        'unreplied' => '未回覆',
+        'replied' => '已回覆',
+        'shop_rating' => '賣場整體評分',
+        'review_count' => ':count 則評論',
+        'no_reviews' => '目前沒有符合條件的評論。',
+        'loading' => '載入中…',
+        'filter_failed' => '篩選失敗，請稍後再試。',
+    ],
 ];

@@ -239,4 +239,18 @@ return [
         'shipping_amount' => 'Shipping',
         'net_amount' => 'Net Amount',
     ],
+
+    'reviews' => [
+        'title' => 'Product Reviews',
+        'all_ratings' => 'All ratings',
+        'star' => 'star',
+        'all' => 'All',
+        'unreplied' => 'Unreplied',
+        'replied' => 'Replied',
+        'shop_rating' => 'Shop Overall Rating',
+        'review_count' => ':count review(s)',
+        'no_reviews' => 'No reviews match the current filters.',
+        'loading' => 'Loading…',
+        'filter_failed' => 'Failed to apply filters. Please try again.',
+    ],
 ];

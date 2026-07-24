@@ -7,6 +7,7 @@ import ReviewCard from '@/Components/ReviewCard.vue'
 import Pagination from '@/Components/Pagination.vue'
 import Skeleton from '@/Components/Skeleton.vue'
 import { useInFlightLoading } from '@/Composables/useInFlightLoading'
+import { useToast } from '@/Composables/useToast'
 
 const props = defineProps({
     reviews: Object,
@@ -15,7 +16,8 @@ const props = defineProps({
 })
 
 const page = usePage()
-const lang = computed(() => page.props.lang || {})
+const t = computed(() => page.props.lang?.reviews || {})
+const toast = useToast()
 
 const filterRating = ref(props.filters?.rating ?? '')
 const filterReplied = ref(props.filters?.replied ?? '')
@@ -26,14 +28,20 @@ function applyFilters() {
     router.get(route('seller.reviews.index'), {
         rating: filterRating.value || undefined,
         replied: filterReplied.value || undefined,
-    }, { preserveScroll: true, replace: true, onStart: startLoading, onFinish: finishLoading })
+    }, {
+        preserveScroll: true,
+        replace: true,
+        onStart: startLoading,
+        onFinish: finishLoading,
+        onError: () => toast.error(t.value.filter_failed),
+    })
 }
 </script>
 
 <template>
-    <SellerLayout title="商品評論">
+    <SellerLayout :title="t.title">
         <template #header>
-            <h2 class="text-xl font-semibold text-gray-800 dark:text-gray-200">商品評論</h2>
+            <h2 class="text-xl font-semibold text-gray-800 dark:text-gray-200">{{ t.title }}</h2>
         </template>
 
         <div class="max-w-4xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
@@ -44,10 +52,10 @@ function applyFilters() {
                         {{ shopRating.count > 0 ? shopRating.average.toFixed(1) : '—' }}
                     </div>
                     <StarRating :model-value="Math.round(shopRating.average)" :readonly="true" size="md" />
-                    <div class="text-sm text-gray-500 dark:text-gray-400 mt-1">{{ shopRating.count }} 則評論</div>
+                    <div class="text-sm text-gray-500 dark:text-gray-400 mt-1">{{ (t.review_count || '').replace(':count', shopRating.count) }}</div>
                 </div>
                 <div class="h-12 w-px bg-gray-200 dark:bg-gray-700"></div>
-                <div class="text-sm text-gray-600 dark:text-gray-400">賣場整體評分</div>
+                <div class="text-sm text-gray-600 dark:text-gray-400">{{ t.shop_rating }}</div>
             </div>
 
             <!-- Filters -->
@@ -57,23 +65,23 @@ function applyFilters() {
                     class="border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 rounded-md text-sm px-3 py-1.5"
                     @change="applyFilters"
                 >
-                    <option value="">全部星等</option>
-                    <option v-for="n in [5,4,3,2,1]" :key="n" :value="n">{{ n }} 星</option>
+                    <option value="">{{ t.all_ratings }}</option>
+                    <option v-for="n in [5,4,3,2,1]" :key="n" :value="n">{{ n }} {{ t.star }}</option>
                 </select>
                 <select
                     v-model="filterReplied"
                     class="border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 rounded-md text-sm px-3 py-1.5"
                     @change="applyFilters"
                 >
-                    <option value="">全部</option>
-                    <option value="no">未回覆</option>
-                    <option value="yes">已回覆</option>
+                    <option value="">{{ t.all }}</option>
+                    <option value="no">{{ t.unreplied }}</option>
+                    <option value="yes">{{ t.replied }}</option>
                 </select>
             </div>
 
             <!-- Reviews list -->
             <div v-if="isLoading" role="status" aria-busy="true" class="space-y-4">
-                <span class="sr-only">載入中…</span>
+                <span class="sr-only">{{ t.loading }}</span>
                 <div v-for="n in (reviews.data.length || reviews.per_page || 5)" :key="n" class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-4 space-y-3" aria-hidden="true">
                     <Skeleton width="30%" height="0.875rem" />
                     <Skeleton width="90%" height="0.875rem" />
@@ -82,7 +90,7 @@ function applyFilters() {
             </div>
 
             <div v-else-if="reviews.data.length === 0" class="text-center py-12 text-gray-400 dark:text-gray-500">
-                目前沒有符合條件的評論。
+                {{ t.no_reviews }}
             </div>
 
             <div v-else class="space-y-4">
