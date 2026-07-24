@@ -11,4 +11,5 @@ return [
     'product_inquiry' => '商品詢問',
     'view_product' => '查看商品',
     'product_unavailable' => '此商品已下架',
+    'unread_label' => '則未讀',
 ];

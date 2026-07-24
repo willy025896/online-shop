@@ -155,6 +155,10 @@ const onBlur = () => {
                 placeholder="Search products..."
                 class="flex-1 rounded-l-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 focus:border-indigo-500 focus:ring-indigo-500 text-sm"
                 aria-label="Search products"
+                role="combobox"
+                aria-haspopup="listbox"
+                :aria-expanded="showDropdown"
+                aria-autocomplete="list"
             />
             <button type="submit" class="px-4 bg-indigo-600 text-white rounded-r-lg hover:bg-indigo-700 transition">
                 <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">

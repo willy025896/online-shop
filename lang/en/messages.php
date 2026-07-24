@@ -11,4 +11,5 @@ return [
     'product_inquiry' => 'Product inquiry',
     'view_product' => 'View product',
     'product_unavailable' => 'This product is no longer available',
+    'unread_label' => 'unread',
 ];

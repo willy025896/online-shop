@@ -18,6 +18,7 @@ return [
     'manage_account' => 'Manage Account',
     'seller_panel' => 'Seller Panel',
     'admin_panel' => 'Admin Panel',
+    'menu' => 'Menu',
 
     // Seller sidebar
     'seller_title' => 'Seller Panel',

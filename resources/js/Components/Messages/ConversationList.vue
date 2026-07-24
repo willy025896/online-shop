@@ -43,6 +43,7 @@ const formatTime = (iso) => {
             :key="conv.id"
             :href="route('messages.show', conv.id)"
             preserve-scroll
+            :aria-current="activeId === conv.id ? 'page' : undefined"
             :class="[
                 'flex items-center gap-3 px-4 py-3 border-b border-gray-100 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition',
                 activeId === conv.id ? 'bg-indigo-50 dark:bg-indigo-900/20' : ''
@@ -67,6 +68,7 @@ const formatTime = (iso) => {
             </div>
             <span
                 v-if="conv.unread_count > 0"
+                :aria-label="`${conv.unread_count} ${lang.unread_label || 'unread'}`"
                 class="flex-shrink-0 inline-flex items-center justify-center px-2 py-0.5 text-xs font-bold leading-none text-white bg-red-600 rounded-full min-w-[20px]"
             >
                 {{ conv.unread_count > 99 ? '99+' : conv.unread_count }}

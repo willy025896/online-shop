@@ -18,6 +18,7 @@ return [
     'manage_account' => '帳號管理',
     'seller_panel' => '賣家後台',
     'admin_panel' => '管理後台',
+    'menu' => '選單',
 
     // Seller sidebar
     'seller_title' => '賣家後台',
