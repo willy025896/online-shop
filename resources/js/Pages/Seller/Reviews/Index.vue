@@ -5,6 +5,8 @@ import SellerLayout from '@/Layouts/SellerLayout.vue'
 import StarRating from '@/Components/StarRating.vue'
 import ReviewCard from '@/Components/ReviewCard.vue'
 import Pagination from '@/Components/Pagination.vue'
+import Skeleton from '@/Components/Skeleton.vue'
+import { useInFlightLoading } from '@/Composables/useInFlightLoading'
 
 const props = defineProps({
     reviews: Object,
@@ -18,11 +20,13 @@ const lang = computed(() => page.props.lang || {})
 const filterRating = ref(props.filters?.rating ?? '')
 const filterReplied = ref(props.filters?.replied ?? '')
 
+const { isLoading, start: startLoading, finish: finishLoading } = useInFlightLoading()
+
 function applyFilters() {
     router.get(route('seller.reviews.index'), {
         rating: filterRating.value || undefined,
         replied: filterReplied.value || undefined,
-    }, { preserveScroll: true, replace: true })
+    }, { preserveScroll: true, replace: true, onStart: startLoading, onFinish: finishLoading })
 }
 </script>
 
@@ -68,7 +72,16 @@ function applyFilters() {
             </div>
 
             <!-- Reviews list -->
-            <div v-if="reviews.data.length === 0" class="text-center py-12 text-gray-400 dark:text-gray-500">
+            <div v-if="isLoading" role="status" aria-busy="true" class="space-y-4">
+                <span class="sr-only">載入中…</span>
+                <div v-for="n in (reviews.data.length || reviews.per_page || 5)" :key="n" class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-4 space-y-3" aria-hidden="true">
+                    <Skeleton width="30%" height="0.875rem" />
+                    <Skeleton width="90%" height="0.875rem" />
+                    <Skeleton width="60%" height="0.875rem" />
+                </div>
+            </div>
+
+            <div v-else-if="reviews.data.length === 0" class="text-center py-12 text-gray-400 dark:text-gray-500">
                 目前沒有符合條件的評論。
             </div>
 
@@ -84,7 +97,7 @@ function applyFilters() {
                 </div>
             </div>
 
-            <Pagination v-if="reviews.last_page > 1" :links="reviews.links" class="mt-6" />
+            <Pagination v-if="reviews.last_page > 1" :links="reviews.links" class="mt-6" @start="startLoading" @finish="finishLoading" />
         </div>
     </SellerLayout>
 </template>
