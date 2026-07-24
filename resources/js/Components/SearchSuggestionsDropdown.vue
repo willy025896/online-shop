@@ -41,6 +41,8 @@ const selectQuery = (query) => {
     <transition name="fade">
         <div
             v-if="visible"
+            id="search-suggestions-listbox"
+            role="listbox"
             class="absolute z-20 mt-2 w-full rounded-xl border border-gray-200 bg-white dark:border-gray-700 dark:bg-gray-900 shadow-lg overflow-hidden max-h-96 overflow-y-auto"
         >
             <div class="divide-y divide-gray-200 dark:divide-gray-800">

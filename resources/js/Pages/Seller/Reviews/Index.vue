@@ -8,6 +8,7 @@ import Pagination from '@/Components/Pagination.vue'
 import Skeleton from '@/Components/Skeleton.vue'
 import { useInFlightLoading } from '@/Composables/useInFlightLoading'
 import { useToast } from '@/Composables/useToast'
+import { skeletonRowCount } from '@/Utils/skeletonRowCount'
 
 const props = defineProps({
     reviews: Object,
@@ -18,6 +19,7 @@ const props = defineProps({
 const page = usePage()
 const t = computed(() => page.props.lang?.reviews || {})
 const toast = useToast()
+const skeletonRows = computed(() => skeletonRowCount(props.reviews))
 
 const filterRating = ref(props.filters?.rating ?? '')
 const filterReplied = ref(props.filters?.replied ?? '')
@@ -82,7 +84,7 @@ function applyFilters() {
             <!-- Reviews list -->
             <div v-if="isLoading" role="status" aria-busy="true" class="space-y-4">
                 <span class="sr-only">{{ t.loading }}</span>
-                <div v-for="n in (reviews.data.length || reviews.per_page || 5)" :key="n" class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-4 space-y-3" aria-hidden="true">
+                <div v-for="n in skeletonRows" :key="n" class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-4 space-y-3" aria-hidden="true">
                     <Skeleton width="30%" height="0.875rem" />
                     <Skeleton width="90%" height="0.875rem" />
                     <Skeleton width="60%" height="0.875rem" />

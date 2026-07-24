@@ -159,6 +159,7 @@ const onBlur = () => {
                 aria-haspopup="listbox"
                 :aria-expanded="showDropdown"
                 aria-autocomplete="list"
+                aria-controls="search-suggestions-listbox"
             />
             <button type="submit" class="px-4 bg-indigo-600 text-white rounded-r-lg hover:bg-indigo-700 transition">
                 <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">

@@ -1,11 +1,13 @@
 <script setup>
-import { computed, ref } from 'vue';
+import { computed } from 'vue';
 import { router, usePage } from '@inertiajs/vue3';
 import AdminLayout from '@/Layouts/AdminLayout.vue';
 import Pagination from '@/Components/Pagination.vue';
 import TableSkeletonRows from '@/Components/TableSkeletonRows.vue';
 import { useAsyncAction } from '@/Composables/useAsyncAction';
+import { useInFlightLoading } from '@/Composables/useInFlightLoading';
 import { useToast } from '@/Composables/useToast';
+import { skeletonRowCount } from '@/Utils/skeletonRowCount';
 
 const props = defineProps({
     payouts: Object,
@@ -15,8 +17,8 @@ const props = defineProps({
 const page = usePage();
 const t = computed(() => page.props.lang?.payouts || {});
 const toast = useToast();
-const isLoading = ref(false);
-const skeletonRows = computed(() => props.payouts.data.length || props.payouts.per_page || 5);
+const { isLoading, start: startLoading, finish: finishLoading } = useInFlightLoading();
+const skeletonRows = computed(() => skeletonRowCount(props.payouts));
 
 const { processing: running, run } = useAsyncAction();
 
@@ -104,7 +106,7 @@ const formatDateTime = (value) => {
         </div>
 
         <div class="mt-6">
-            <Pagination :links="payouts.links" @start="isLoading = true" @finish="isLoading = false" />
+            <Pagination :links="payouts.links" @start="startLoading" @finish="finishLoading" />
         </div>
     </AdminLayout>
 </template>
