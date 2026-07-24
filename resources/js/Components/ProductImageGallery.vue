@@ -33,7 +33,7 @@ const selectedIndex = ref(0);
                 @click="selectedIndex = index"
                 :class="[
                     'aspect-square rounded-md overflow-hidden border-2',
-                    index === selectedIndex ? 'border-indigo-500' : 'border-transparent'
+                    index === selectedIndex ? 'border-accent-500' : 'border-transparent'
                 ]"
             >
                 <ImageWithFallback :src="`/storage/${image.path}`" :alt="`${productName} ${index + 1}`" icon-class="h-6 w-6" loading="lazy" class="w-full h-full object-cover" />

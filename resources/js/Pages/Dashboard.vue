@@ -32,7 +32,7 @@ const user = computed(() => page.props.auth?.user);
                     <Link v-if="userRole === 'buyer'"
                           :href="route('seller.register')"
                           class="block bg-white dark:bg-gray-800 shadow-xl sm:rounded-lg p-6 hover:bg-gray-50 dark:hover:bg-gray-700 transition">
-                        <h3 class="text-lg font-semibold text-indigo-600 dark:text-indigo-400">
+                        <h3 class="text-lg font-semibold text-brand-500 dark:text-brand-300">
                             {{ lang.become_seller }}
                         </h3>
                     </Link>

@@ -76,7 +76,7 @@ const addToCart = (productId) => {
 
                     <div class="p-4 flex flex-col flex-1">
                         <p class="text-xs text-gray-500 dark:text-gray-400 mb-1">{{ product.shop?.name }}</p>
-                        <Link :href="route('products.show', product.slug)" class="text-sm font-medium text-gray-900 dark:text-gray-100 line-clamp-2 mb-2 hover:text-indigo-600">
+                        <Link :href="route('products.show', product.slug)" class="text-sm font-medium text-gray-900 dark:text-gray-100 line-clamp-2 mb-2 hover:text-brand-500">
                             {{ product.name }}
                         </Link>
                         <span class="text-lg font-bold text-red-600 mb-4">${{ product.price }}</span>
@@ -86,7 +86,7 @@ const addToCart = (productId) => {
                                 v-if="product.stock > 0"
                                 @click="addToCart(product.id)"
                                 :disabled="isAdding(product.id)"
-                                class="flex-1 flex items-center justify-center gap-1.5 text-sm bg-indigo-600 text-white py-2 px-3 rounded-lg hover:bg-indigo-700 transition font-medium disabled:opacity-50"
+                                class="flex-1 flex items-center justify-center gap-1.5 text-sm bg-brand-500 text-white py-2 px-3 rounded-lg hover:bg-brand-600 transition font-medium disabled:opacity-50"
                             >
                                 <Spinner v-if="isAdding(product.id)" class="h-3.5 w-3.5" />
                                 {{ lang.add_to_cart || 'Add to Cart' }}
@@ -116,7 +116,7 @@ const addToCart = (productId) => {
                     <path stroke-linecap="round" stroke-linejoin="round" d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12z" />
                 </svg>
                 <p class="text-gray-500 dark:text-gray-400 mb-4">{{ lang.empty || 'Your wishlist is empty.' }}</p>
-                <Link :href="route('products.index')" class="inline-block px-6 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition font-medium">
+                <Link :href="route('products.index')" class="inline-block px-6 py-2 bg-brand-500 text-white rounded-lg hover:bg-brand-600 transition font-medium">
                     {{ lang.browse_products || 'Browse Products' }}
                 </Link>
             </div>

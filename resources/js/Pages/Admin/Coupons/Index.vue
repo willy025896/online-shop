@@ -41,7 +41,7 @@ const {
         <template #header>
             <div class="flex justify-between items-center">
                 <h2 class="text-xl font-semibold text-gray-800 dark:text-gray-200">{{ c.title }}</h2>
-                <Link :href="route('admin.coupons.create')" class="inline-flex items-center px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-md hover:bg-indigo-700">
+                <Link :href="route('admin.coupons.create')" class="inline-flex items-center px-4 py-2 bg-brand-500 text-white text-sm font-medium rounded-md hover:bg-brand-600">
                     {{ c.add }}
                 </Link>
             </div>
@@ -76,7 +76,7 @@ const {
                         </td>
                         <td class="px-6 py-4 text-right text-sm space-x-2">
                             <RowActions :loading="isDeleting(coupon.id)">
-                                <Link :href="route('admin.coupons.edit', coupon.id)" class="text-indigo-600 hover:text-indigo-900">{{ c.action_edit }}</Link>
+                                <Link :href="route('admin.coupons.edit', coupon.id)" class="text-brand-500 hover:text-brand-700">{{ c.action_edit }}</Link>
                                 <button @click="confirmDeleteCoupon(coupon)" class="text-red-600 hover:text-red-900">{{ c.action_delete }}</button>
                             </RowActions>
                         </td>
@@ -84,7 +84,7 @@ const {
                 </tbody>
             </table>
             <div v-else class="px-6 py-12 text-center text-gray-500">
-                {{ c.no_coupons }} <Link :href="route('admin.coupons.create')" class="text-indigo-600 hover:underline">{{ c.create_first }}</Link>.
+                {{ c.no_coupons }} <Link :href="route('admin.coupons.create')" class="text-brand-500 hover:underline">{{ c.create_first }}</Link>.
             </div>
         </div>
 

@@ -35,7 +35,7 @@ const time = computed(() => {
                 :class="[
                     'rounded-2xl px-4 py-2 break-words',
                     isSelf
-                        ? 'bg-indigo-600 text-white rounded-br-sm'
+                        ? 'bg-brand-500 text-white rounded-br-sm'
                         : 'bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-gray-100 rounded-bl-sm',
                 ]"
             >
@@ -53,7 +53,7 @@ const time = computed(() => {
             </div>
             <div class="flex items-center gap-1.5 mt-0.5 text-[10px] text-gray-500 px-1">
                 <span>{{ time }}</span>
-                <span v-if="isSelf && message.read_at" class="text-indigo-500">✓ Read</span>
+                <span v-if="isSelf && message.read_at" class="text-brand-400">✓ Read</span>
             </div>
         </div>
     </div>

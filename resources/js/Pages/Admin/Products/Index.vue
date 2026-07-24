@@ -46,7 +46,7 @@ const skeletonRows = computed(() => skeletonRowCount(props.products));
                                     <ImageWithFallback :src="product.primary_image ? `/storage/${product.primary_image.path}` : null" :alt="product.name" icon-class="h-5 w-5" loading="lazy" class="h-full w-full object-cover" />
                                 </div>
                                 <div class="ml-3">
-                                    <Link :href="route('products.show', product.slug)" class="text-sm font-medium text-gray-900 dark:text-gray-100 hover:text-indigo-600">
+                                    <Link :href="route('products.show', product.slug)" class="text-sm font-medium text-gray-900 dark:text-gray-100 hover:text-brand-500">
                                         {{ product.name }}
                                     </Link>
                                 </div>

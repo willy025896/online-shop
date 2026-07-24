@@ -17,7 +17,7 @@ const c = computed(() => page.props.lang?.coupons || {});
 const isPercentage = computed(() => props.form.type === 'percentage');
 
 const selectClass =
-    'mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500';
+    'mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-300 shadow-sm focus:border-brand-400 focus:ring-accent-400';
 
 const emit = defineEmits(['submit']);
 </script>
@@ -88,7 +88,7 @@ const emit = defineEmits(['submit']);
         </div>
 
         <div class="flex items-center">
-            <input id="is_active" v-model="form.is_active" type="checkbox" class="rounded border-gray-300 text-indigo-600 shadow-sm focus:ring-indigo-500" />
+            <input id="is_active" v-model="form.is_active" type="checkbox" class="rounded border-gray-300 text-brand-500 shadow-sm focus:ring-accent-400" />
             <label for="is_active" class="ml-2 text-sm text-gray-600 dark:text-gray-400">{{ c.is_active }}</label>
         </div>
 

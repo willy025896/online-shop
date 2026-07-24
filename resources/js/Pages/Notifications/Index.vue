@@ -62,22 +62,22 @@ const formatDate = (iso) => new Date(iso).toLocaleString();
                         <div class="flex gap-2 text-sm">
                             <button
                                 @click="setFilter('all')"
-                                :class="filter === 'all' ? 'text-indigo-600 font-semibold' : 'text-gray-500 hover:text-gray-700'"
+                                :class="filter === 'all' ? 'text-brand-500 font-semibold' : 'text-gray-500 hover:text-gray-700'"
                             >{{ lang.all }}</button>
                             <span class="text-gray-300">|</span>
                             <button
                                 @click="setFilter('unread')"
-                                :class="filter === 'unread' ? 'text-indigo-600 font-semibold' : 'text-gray-500 hover:text-gray-700'"
+                                :class="filter === 'unread' ? 'text-brand-500 font-semibold' : 'text-gray-500 hover:text-gray-700'"
                             >{{ lang.unread }}</button>
                             <span class="text-gray-300">|</span>
                             <button
                                 @click="setFilter('read')"
-                                :class="filter === 'read' ? 'text-indigo-600 font-semibold' : 'text-gray-500 hover:text-gray-700'"
+                                :class="filter === 'read' ? 'text-brand-500 font-semibold' : 'text-gray-500 hover:text-gray-700'"
                             >{{ lang.read }}</button>
                         </div>
                         <button
                             @click="markAllRead"
-                            class="text-sm text-indigo-600 dark:text-indigo-400 hover:underline"
+                            class="text-sm text-brand-500 dark:text-brand-300 hover:underline"
                         >{{ lang.mark_all_read }}</button>
                     </div>
 
@@ -105,10 +105,10 @@ const formatDate = (iso) => new Date(iso).toLocaleString();
                             :key="n.id"
                             :class="[
                                 'px-6 py-4 flex items-start gap-3 hover:bg-gray-50 dark:hover:bg-gray-700/40',
-                                !n.read_at ? 'bg-indigo-50/40 dark:bg-indigo-900/20' : ''
+                                !n.read_at ? 'bg-brand-50/40 dark:bg-brand-900/20' : ''
                             ]"
                         >
-                            <span v-if="!n.read_at" class="mt-2 h-2 w-2 rounded-full bg-indigo-500 shrink-0"></span>
+                            <span v-if="!n.read_at" class="mt-2 h-2 w-2 rounded-full bg-accent-500 shrink-0"></span>
                             <span v-else class="mt-2 h-2 w-2 shrink-0"></span>
 
                             <div class="flex-1 min-w-0 cursor-pointer" @click="visit(n)">

@@ -71,7 +71,7 @@ const changesLabel = (log) => {
             <select
                 v-model="actionFilter"
                 @change="applyFilters"
-                class="rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-300 shadow-sm text-sm focus:border-indigo-500 focus:ring-indigo-500"
+                class="rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-300 shadow-sm text-sm focus:border-brand-400 focus:ring-accent-400"
             >
                 <option value="">{{ t.all_actions }}</option>
                 <option v-for="action in actionOptions" :key="action" :value="action">{{ actionLabel(action) }}</option>
@@ -80,7 +80,7 @@ const changesLabel = (log) => {
             <select
                 v-model="adminFilter"
                 @change="applyFilters"
-                class="rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-300 shadow-sm text-sm focus:border-indigo-500 focus:ring-indigo-500"
+                class="rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-300 shadow-sm text-sm focus:border-brand-400 focus:ring-accent-400"
             >
                 <option value="">{{ t.all_admins }}</option>
                 <option v-for="admin in adminOptions" :key="admin.id" :value="admin.id">{{ admin.name }}</option>

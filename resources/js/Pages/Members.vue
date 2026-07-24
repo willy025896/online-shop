@@ -17,7 +17,7 @@ const userRole = computed(() => page.props.userRole);
 const roleBadgeClass = computed(() => {
     const map = {
         admin:    'bg-red-100 text-red-800',
-        seller:   'bg-indigo-100 text-indigo-800',
+        seller:   'bg-brand-100 text-brand-700',
         customer: 'bg-green-100 text-green-800',
     };
     return map[userRole.value] || 'bg-gray-100 text-gray-800';
@@ -46,7 +46,7 @@ const roleBadgeClass = computed(() => {
                 </div>
                 <Link
                     :href="route('profile.show')"
-                    class="shrink-0 text-sm text-indigo-600 hover:text-indigo-800 dark:text-indigo-400"
+                    class="shrink-0 text-sm text-brand-500 hover:text-brand-700 dark:text-brand-300"
                 >
                     {{ lang.edit_profile }}
                 </Link>
@@ -68,7 +68,7 @@ const roleBadgeClass = computed(() => {
                     </Link>
                     <Link :href="route('orders.index')" class="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-5 hover:shadow-md transition">
                         <p class="text-sm text-gray-500 dark:text-gray-400">{{ lang.stats?.in_progress }}</p>
-                        <p class="text-2xl font-bold text-indigo-600 mt-1">{{ stats.in_progress }}</p>
+                        <p class="text-2xl font-bold text-brand-500 mt-1">{{ stats.in_progress }}</p>
                     </Link>
                     <Link :href="route('orders.index')" class="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-5 hover:shadow-md transition">
                         <p class="text-sm text-gray-500 dark:text-gray-400">{{ lang.stats?.completed }}</p>
@@ -81,7 +81,7 @@ const roleBadgeClass = computed(() => {
             <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm">
                 <div class="px-6 py-4 border-b border-gray-200 dark:border-gray-700 flex justify-between items-center">
                     <h2 class="text-base font-semibold text-gray-900 dark:text-gray-100">{{ lang.recent_orders }}</h2>
-                    <Link :href="route('orders.index')" class="text-sm text-indigo-600 hover:text-indigo-800 dark:text-indigo-400">
+                    <Link :href="route('orders.index')" class="text-sm text-brand-500 hover:text-brand-700 dark:text-brand-300">
                         {{ lang.view_all }}
                     </Link>
                 </div>
@@ -118,27 +118,27 @@ const roleBadgeClass = computed(() => {
                 <div class="grid grid-cols-2 sm:grid-cols-3 gap-3">
                     <Link
                         :href="route('products.index')"
-                        class="bg-white dark:bg-gray-800 rounded-lg shadow-sm px-5 py-4 text-sm font-medium text-gray-700 dark:text-gray-300 hover:shadow-md hover:text-indigo-600 dark:hover:text-indigo-400 transition"
+                        class="bg-white dark:bg-gray-800 rounded-lg shadow-sm px-5 py-4 text-sm font-medium text-gray-700 dark:text-gray-300 hover:shadow-md hover:text-brand-500 dark:hover:text-brand-300 transition"
                     >
                         {{ lang.browse_products }}
                     </Link>
                     <Link
                         :href="route('orders.index')"
-                        class="bg-white dark:bg-gray-800 rounded-lg shadow-sm px-5 py-4 text-sm font-medium text-gray-700 dark:text-gray-300 hover:shadow-md hover:text-indigo-600 dark:hover:text-indigo-400 transition"
+                        class="bg-white dark:bg-gray-800 rounded-lg shadow-sm px-5 py-4 text-sm font-medium text-gray-700 dark:text-gray-300 hover:shadow-md hover:text-brand-500 dark:hover:text-brand-300 transition"
                     >
                         {{ lang.my_orders }}
                     </Link>
                     <Link
                         v-if="userRole === 'customer'"
                         :href="route('seller.register')"
-                        class="bg-white dark:bg-gray-800 rounded-lg shadow-sm px-5 py-4 text-sm font-medium text-gray-700 dark:text-gray-300 hover:shadow-md hover:text-indigo-600 dark:hover:text-indigo-400 transition"
+                        class="bg-white dark:bg-gray-800 rounded-lg shadow-sm px-5 py-4 text-sm font-medium text-gray-700 dark:text-gray-300 hover:shadow-md hover:text-brand-500 dark:hover:text-brand-300 transition"
                     >
                         {{ lang.become_seller }}
                     </Link>
                     <Link
                         v-if="userRole === 'seller' || userRole === 'admin'"
                         :href="route('seller.dashboard')"
-                        class="bg-white dark:bg-gray-800 rounded-lg shadow-sm px-5 py-4 text-sm font-medium text-gray-700 dark:text-gray-300 hover:shadow-md hover:text-indigo-600 dark:hover:text-indigo-400 transition"
+                        class="bg-white dark:bg-gray-800 rounded-lg shadow-sm px-5 py-4 text-sm font-medium text-gray-700 dark:text-gray-300 hover:shadow-md hover:text-brand-500 dark:hover:text-brand-300 transition"
                     >
                         {{ lang.seller_panel }}
                     </Link>

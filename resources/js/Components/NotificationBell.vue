@@ -110,12 +110,12 @@ const markAllRead = () => {
                 <button
                     :aria-label="fallbackText('title', 'Notifications')"
                     v-bind="triggerAttrs"
-                    class="relative p-2 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 dark:focus:ring-offset-gray-800"
+                    class="relative p-2 text-gray-500 dark:text-gray-400 hover:text-brand-500 dark:hover:text-brand-200 hover:scale-110 transition duration-150 ease-in-out focus:outline-none focus:ring-2 focus:ring-accent-400 focus:ring-offset-2 dark:focus:ring-offset-gray-800"
                 >
                     <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M14.857 17.082a23.848 23.848 0 005.454-1.31A8.967 8.967 0 0118 9.75v-.7V9A6 6 0 006 9v.75a8.967 8.967 0 01-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 01-5.714 0m5.714 0a3 3 0 11-5.714 0" />
                     </svg>
-                    <span v-if="unreadCount > 0" class="absolute -top-1 -right-1 inline-flex items-center justify-center px-1.5 py-0.5 text-xs font-bold leading-none text-white bg-red-600 rounded-full">
+                    <span v-if="unreadCount > 0" class="absolute -top-1 -right-1 inline-flex items-center justify-center px-1.5 py-0.5 text-xs font-bold leading-none text-white bg-accent-500 rounded-full">
                         {{ unreadCount > 99 ? '99+' : unreadCount }}
                     </span>
                 </button>
@@ -130,7 +130,7 @@ const markAllRead = () => {
                         <button
                             v-if="unreadCount > 0"
                             @click="markAllRead"
-                            class="text-xs text-indigo-600 dark:text-indigo-400 hover:underline"
+                            class="text-xs text-brand-500 dark:text-brand-300 hover:underline"
                         >
                             {{ fallbackText('mark_all_read', 'Mark all as read') }}
                         </button>
@@ -147,11 +147,11 @@ const markAllRead = () => {
                             @click="handleClick(n)"
                             :class="[
                                 'px-4 py-3 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700',
-                                !n.read_at ? 'bg-indigo-50/40 dark:bg-indigo-900/20' : ''
+                                !n.read_at ? 'bg-brand-50/40 dark:bg-brand-900/20' : ''
                             ]"
                         >
                             <div class="flex items-start gap-2">
-                                <span v-if="!n.read_at" class="mt-1.5 h-2 w-2 rounded-full bg-indigo-500 shrink-0"></span>
+                                <span v-if="!n.read_at" class="mt-1.5 h-2 w-2 rounded-full bg-accent-500 shrink-0"></span>
                                 <span v-else class="mt-1.5 h-2 w-2 shrink-0"></span>
                                 <div class="flex-1 min-w-0">
                                     <p class="text-sm font-medium text-gray-800 dark:text-gray-100 truncate">
@@ -171,7 +171,7 @@ const markAllRead = () => {
                     <div class="border-t border-gray-100 dark:border-gray-700">
                         <Link
                             :href="route('notifications.index')"
-                            class="block px-4 py-2 text-center text-sm text-indigo-600 dark:text-indigo-400 hover:bg-gray-50 dark:hover:bg-gray-700"
+                            class="block px-4 py-2 text-center text-sm text-brand-500 dark:text-brand-300 hover:bg-gray-50 dark:hover:bg-gray-700"
                         >
                             {{ fallbackText('view_all', 'View all') }}
                         </Link>

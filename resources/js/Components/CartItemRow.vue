@@ -51,7 +51,7 @@ const removeItem = () => {
             type="checkbox"
             :checked="checked"
             @change="emit('toggle', item.id)"
-            class="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500 cursor-pointer flex-shrink-0"
+            class="h-4 w-4 rounded border-gray-300 text-brand-500 focus:ring-accent-400 cursor-pointer flex-shrink-0"
         />
         <div class="h-20 w-20 flex-shrink-0 bg-gray-200 dark:bg-gray-700 rounded-md overflow-hidden">
             <ImageWithFallback

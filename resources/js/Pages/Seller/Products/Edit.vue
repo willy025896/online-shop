@@ -66,7 +66,7 @@ const submit = () => {
                         id="description"
                         v-model="form.description"
                         rows="4"
-                        class="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                        class="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-300 shadow-sm focus:border-brand-400 focus:ring-accent-400"
                     />
                     <InputError :message="form.errors.description" class="mt-2" />
                 </div>
@@ -76,7 +76,7 @@ const submit = () => {
                     <select
                         id="category_id"
                         v-model="form.category_id"
-                        class="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                        class="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-300 shadow-sm focus:border-brand-400 focus:ring-accent-400"
                     >
                         <option value="">{{ lang.products?.no_category }}</option>
                         <option v-for="cat in categories" :key="cat.id" :value="cat.id">{{ cat.name }}</option>
@@ -108,7 +108,7 @@ const submit = () => {
                         <select
                             id="status"
                             v-model="form.status"
-                            class="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                            class="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-300 shadow-sm focus:border-brand-400 focus:ring-accent-400"
                         >
                             <option value="draft">{{ lang.products?.draft }}</option>
                             <option value="active">{{ lang.products?.active }}</option>
@@ -119,7 +119,7 @@ const submit = () => {
                 </div>
 
                 <div class="flex items-center">
-                    <input id="is_featured" v-model="form.is_featured" type="checkbox" class="rounded border-gray-300 text-indigo-600 shadow-sm focus:ring-indigo-500" />
+                    <input id="is_featured" v-model="form.is_featured" type="checkbox" class="rounded border-gray-300 text-brand-500 shadow-sm focus:ring-accent-400" />
                     <label for="is_featured" class="ml-2 text-sm text-gray-600 dark:text-gray-400">{{ lang.products?.featured }}</label>
                 </div>
 

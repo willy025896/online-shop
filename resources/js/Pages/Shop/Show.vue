@@ -115,14 +115,14 @@ watch(() => props.filters, (filters) => {
                         v-model="search"
                         type="text"
                         :placeholder="lang.search"
-                        class="flex-1 rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 focus:border-indigo-500 focus:ring-indigo-500 text-sm"
+                        class="flex-1 rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 focus:border-brand-400 focus:ring-accent-400 text-sm"
                     />
                 </div>
                 <MinRatingFilter v-model="minRating" />
 
                 <select
                     v-model="sort"
-                    class="rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 focus:border-indigo-500 focus:ring-indigo-500 text-sm"
+                    class="rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 focus:border-brand-400 focus:ring-accent-400 text-sm"
                 >
                     <option value="latest">{{ lang.sort?.latest }}</option>
                     <option value="price_asc">{{ lang.sort?.price_asc }}</option>
@@ -140,7 +140,7 @@ watch(() => props.filters, (filters) => {
                     type="number"
                     min="0"
                     :placeholder="lang.min_price"
-                    class="w-24 text-sm rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 focus:border-indigo-500 focus:ring-indigo-500"
+                    class="w-24 text-sm rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 focus:border-brand-400 focus:ring-accent-400"
                     @keyup.enter="applyFilters"
                 />
                 <span class="text-gray-400">–</span>
@@ -149,12 +149,12 @@ watch(() => props.filters, (filters) => {
                     type="number"
                     min="0"
                     :placeholder="lang.max_price"
-                    class="w-24 text-sm rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 focus:border-indigo-500 focus:ring-indigo-500"
+                    class="w-24 text-sm rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 focus:border-brand-400 focus:ring-accent-400"
                     @keyup.enter="applyFilters"
                 />
                 <button
                     @click="applyFilters"
-                    class="px-3 py-1.5 text-xs font-medium rounded-md bg-indigo-600 text-white hover:bg-indigo-700 transition"
+                    class="px-3 py-1.5 text-xs font-medium rounded-md bg-brand-500 text-white hover:bg-brand-600 transition"
                 >
                     {{ lang.apply }}
                 </button>
@@ -174,7 +174,7 @@ watch(() => props.filters, (filters) => {
                     :class="[
                         'px-3 py-1 rounded-full text-sm font-medium transition',
                         selectedCategory === ''
-                            ? 'bg-indigo-600 text-white'
+                            ? 'bg-brand-500 text-white'
                             : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
                     ]"
                 >
@@ -187,7 +187,7 @@ watch(() => props.filters, (filters) => {
                     :class="[
                         'px-3 py-1 rounded-full text-sm font-medium transition',
                         selectedCategory === String(cat.id)
-                            ? 'bg-indigo-600 text-white'
+                            ? 'bg-brand-500 text-white'
                             : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
                     ]"
                 >

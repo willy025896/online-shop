@@ -153,7 +153,7 @@ const onBlur = () => {
                 @blur="onBlur"
                 type="text"
                 placeholder="Search products..."
-                class="flex-1 rounded-l-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 focus:border-indigo-500 focus:ring-indigo-500 text-sm"
+                class="flex-1 rounded-l-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 focus:border-brand-400 focus:ring-accent-400 text-sm"
                 aria-label="Search products"
                 role="combobox"
                 aria-haspopup="listbox"
@@ -161,7 +161,7 @@ const onBlur = () => {
                 aria-autocomplete="list"
                 aria-controls="search-suggestions-listbox"
             />
-            <button type="submit" class="px-4 bg-indigo-600 text-white rounded-r-lg hover:bg-indigo-700 transition">
+            <button type="submit" class="px-4 bg-brand-500 text-white rounded-r-lg hover:bg-brand-600 transition">
                 <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                 </svg>

@@ -124,7 +124,7 @@ const vIndeterminate = {
                             type="checkbox"
                             :checked="isAllSelected"
                             @change="toggleAll"
-                            class="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500 cursor-pointer"
+                            class="h-4 w-4 rounded border-gray-300 text-brand-500 focus:ring-accent-400 cursor-pointer"
                         />
                         <span class="text-sm text-gray-600 dark:text-gray-400">{{ lang.select_all }}</span>
                     </div>
@@ -138,7 +138,7 @@ const vIndeterminate = {
                                 :checked="isShopAllSelected(group.items)"
                                 :indeterminate="isShopSomeSelected(group.items) && !isShopAllSelected(group.items)"
                                 @change="toggleShop(group.items)"
-                                class="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500 cursor-pointer"
+                                class="h-4 w-4 rounded border-gray-300 text-brand-500 focus:ring-accent-400 cursor-pointer"
                             />
                             <span class="text-sm font-semibold text-gray-800 dark:text-gray-200">{{ group.shopName }}</span>
                         </div>
@@ -161,7 +161,7 @@ const vIndeterminate = {
                         <button
                             :disabled="selectedCount === 0"
                             @click="checkoutSelected"
-                            class="mt-4 block w-full text-center bg-indigo-600 text-white py-3 px-6 rounded-lg hover:bg-indigo-700 transition font-medium disabled:opacity-40 disabled:cursor-not-allowed"
+                            class="mt-4 block w-full text-center bg-brand-500 text-white py-3 px-6 rounded-lg hover:bg-brand-600 transition font-medium disabled:opacity-40 disabled:cursor-not-allowed"
                         >
                             {{ lang.checkout_selected?.replace(':count', selectedCount) }}
                         </button>
@@ -174,7 +174,7 @@ const vIndeterminate = {
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 100 4 2 2 0 000-4z" />
                 </svg>
                 <h2 class="mt-4 text-lg font-medium text-gray-900 dark:text-gray-100">{{ lang.empty }}</h2>
-                <a :href="route('products.index')" class="mt-4 inline-block text-indigo-600 hover:text-indigo-800">
+                <a :href="route('products.index')" class="mt-4 inline-block text-brand-500 hover:text-brand-700">
                     {{ lang.continue_shopping }}
                 </a>
             </div>

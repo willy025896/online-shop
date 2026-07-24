@@ -41,7 +41,7 @@ const setDefault = (address) => {
         <template #header>
             <div class="flex justify-between items-center">
                 <h2 class="text-xl font-semibold text-gray-800 dark:text-gray-200">{{ a.title }}</h2>
-                <Link :href="route('addresses.create')" class="inline-flex items-center px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-md hover:bg-indigo-700">
+                <Link :href="route('addresses.create')" class="inline-flex items-center px-4 py-2 bg-brand-500 text-white text-sm font-medium rounded-md hover:bg-brand-600">
                     {{ a.add }}
                 </Link>
             </div>
@@ -49,7 +49,7 @@ const setDefault = (address) => {
 
         <div class="max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
             <div v-if="!addresses.length" class="bg-white dark:bg-gray-800 rounded-lg shadow-sm px-6 py-12 text-center text-gray-500">
-                {{ a.no_addresses }} <Link :href="route('addresses.create')" class="text-indigo-600 hover:underline">{{ a.create_first }}</Link>.
+                {{ a.no_addresses }} <Link :href="route('addresses.create')" class="text-brand-500 hover:underline">{{ a.create_first }}</Link>.
             </div>
 
             <div v-else class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -62,7 +62,7 @@ const setDefault = (address) => {
                         <span v-if="address.label" class="inline-flex px-2 py-0.5 rounded-full text-xs font-medium bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300">
                             {{ address.label }}
                         </span>
-                        <span v-if="address.is_default" class="inline-flex px-2 py-0.5 rounded-full text-xs font-medium bg-indigo-100 dark:bg-indigo-900/40 text-indigo-700 dark:text-indigo-300">
+                        <span v-if="address.is_default" class="inline-flex px-2 py-0.5 rounded-full text-xs font-medium bg-brand-100 dark:bg-brand-900/40 text-brand-700 dark:text-brand-300">
                             {{ a.default_badge }}
                         </span>
                     </div>
@@ -73,7 +73,7 @@ const setDefault = (address) => {
 
                     <div class="mt-4 flex items-center justify-between text-sm">
                         <RowActions :loading="isDeleting(address.id)">
-                            <Link :href="route('addresses.edit', address.id)" class="text-indigo-600 hover:text-indigo-900">{{ a.action_edit }}</Link>
+                            <Link :href="route('addresses.edit', address.id)" class="text-brand-500 hover:text-brand-700">{{ a.action_edit }}</Link>
                             <button @click="confirmDeleteAddress(address)" class="text-red-600 hover:text-red-900">{{ a.action_delete }}</button>
                         </RowActions>
 

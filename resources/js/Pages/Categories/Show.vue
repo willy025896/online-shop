@@ -33,9 +33,9 @@ const {
         <div class="max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
             <div class="mb-6">
                 <div class="flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400 mb-2">
-                    <Link :href="route('products.index')" class="hover:text-indigo-600">{{ lang.products }}</Link>
+                    <Link :href="route('products.index')" class="hover:text-brand-500">{{ lang.products }}</Link>
                     <span>/</span>
-                    <Link v-if="category.parent" :href="route('categories.show', category.parent.slug)" class="hover:text-indigo-600">
+                    <Link v-if="category.parent" :href="route('categories.show', category.parent.slug)" class="hover:text-brand-500">
                         {{ category.parent.name }}
                     </Link>
                     <span v-if="category.parent">/</span>
@@ -49,7 +49,7 @@ const {
                     v-for="child in category.children"
                     :key="child.id"
                     :href="route('categories.show', child.slug)"
-                    class="px-3 py-1 bg-gray-100 dark:bg-gray-700 rounded-full text-sm text-gray-700 dark:text-gray-300 hover:bg-indigo-100 hover:text-indigo-700 transition"
+                    class="px-3 py-1 bg-gray-100 dark:bg-gray-700 rounded-full text-sm text-gray-700 dark:text-gray-300 hover:bg-brand-100 hover:text-brand-700 transition"
                 >
                     {{ child.name }}
                 </Link>
@@ -72,7 +72,7 @@ const {
                         type="number"
                         min="0"
                         :placeholder="lang.min_price"
-                        class="w-20 text-sm rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 focus:border-indigo-500 focus:ring-indigo-500"
+                        class="w-20 text-sm rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 focus:border-brand-400 focus:ring-accent-400"
                         @keyup.enter="applyPriceFilter"
                     />
                     <span class="text-gray-400 flex-shrink-0">–</span>
@@ -81,12 +81,12 @@ const {
                         type="number"
                         min="0"
                         :placeholder="lang.max_price"
-                        class="w-20 text-sm rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 focus:border-indigo-500 focus:ring-indigo-500"
+                        class="w-20 text-sm rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 focus:border-brand-400 focus:ring-accent-400"
                         @keyup.enter="applyPriceFilter"
                     />
                     <button
                         @click="applyPriceFilter"
-                        class="px-3 py-1.5 text-xs font-medium rounded-md bg-indigo-600 text-white hover:bg-indigo-700 transition"
+                        class="px-3 py-1.5 text-xs font-medium rounded-md bg-brand-500 text-white hover:bg-brand-600 transition"
                     >
                         {{ lang.apply }}
                     </button>
@@ -102,7 +102,7 @@ const {
                 <select
                     :value="filters?.sort || 'latest'"
                     @change="updateFilters({ sort: $event.target.value })"
-                    class="text-sm rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 focus:border-indigo-500 focus:ring-indigo-500"
+                    class="text-sm rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 focus:border-brand-400 focus:ring-accent-400"
                 >
                     <option value="latest">{{ lang.sort?.latest }}</option>
                     <option value="price_asc">{{ lang.sort?.price_asc }}</option>

@@ -33,7 +33,7 @@ const emit = defineEmits(['submit']);
                     :class="[
                         'px-3 py-1 rounded-full text-xs font-medium border',
                         form.label === quick
-                            ? 'bg-indigo-600 text-white border-indigo-600'
+                            ? 'bg-brand-500 text-white border-brand-500'
                             : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 border-transparent hover:bg-gray-200 dark:hover:bg-gray-600',
                     ]"
                 >
@@ -63,7 +63,7 @@ const emit = defineEmits(['submit']);
                 v-model="form.address"
                 rows="3"
                 required
-                class="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                class="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-300 shadow-sm focus:border-brand-400 focus:ring-accent-400"
             ></textarea>
             <InputError :message="form.errors.address" class="mt-2" />
         </div>

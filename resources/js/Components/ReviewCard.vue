@@ -3,7 +3,7 @@
         <!-- Reviewer info + rating -->
         <div class="flex items-start justify-between gap-4">
             <div class="flex items-center gap-3">
-                <div class="w-9 h-9 rounded-full bg-indigo-100 dark:bg-indigo-900/50 flex items-center justify-center font-semibold text-indigo-600 dark:text-indigo-400 text-sm flex-shrink-0">
+                <div class="w-9 h-9 rounded-full bg-brand-100 dark:bg-brand-900/50 flex items-center justify-center font-semibold text-brand-600 dark:text-brand-300 text-sm flex-shrink-0">
                     {{ review.user?.name?.charAt(0)?.toUpperCase() }}
                 </div>
                 <div>
@@ -19,8 +19,8 @@
         <p v-else class="text-gray-400 dark:text-gray-500 text-sm italic">（無文字評論）</p>
 
         <!-- Seller reply -->
-        <div v-if="review.seller_reply" class="bg-gray-50 dark:bg-gray-700/50 border-l-4 border-indigo-300 dark:border-indigo-500 rounded-r pl-3 pr-3 py-2">
-            <div class="text-xs font-semibold text-indigo-600 dark:text-indigo-400 mb-1">賣家回覆</div>
+        <div v-if="review.seller_reply" class="bg-gray-50 dark:bg-gray-700/50 border-l-4 border-accent-400 dark:border-accent-500 rounded-r pl-3 pr-3 py-2">
+            <div class="text-xs font-semibold text-brand-600 dark:text-brand-300 mb-1">賣家回覆</div>
             <p class="text-sm text-gray-700 dark:text-gray-300">{{ review.seller_reply }}</p>
         </div>
 
@@ -32,7 +32,7 @@
                     rows="3"
                     maxlength="1000"
                     placeholder="回覆這則評論..."
-                    class="w-full border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 rounded-md text-sm px-3 py-2 focus:ring-indigo-500 focus:border-indigo-500 resize-none"
+                    class="w-full border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 rounded-md text-sm px-3 py-2 focus:ring-accent-400 focus:border-brand-400 resize-none"
                 />
                 <p v-if="replyForm.errors.reply" class="text-xs text-red-600 dark:text-red-400 mt-1">{{ replyForm.errors.reply }}</p>
                 <div class="flex justify-end gap-2 mt-2">
@@ -40,7 +40,7 @@
                     <button
                         type="submit"
                         :disabled="!replyForm.reply.trim() || replyForm.processing"
-                        class="px-3 py-1.5 bg-indigo-600 text-white text-sm rounded-md disabled:opacity-50 hover:bg-indigo-700"
+                        class="px-3 py-1.5 bg-brand-500 text-white text-sm rounded-md disabled:opacity-50 hover:bg-brand-600"
                     >
                         送出回覆
                     </button>

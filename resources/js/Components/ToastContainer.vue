@@ -36,7 +36,7 @@ watch(
                     :key="toast.id"
                     class="flex w-full max-w-sm items-start gap-3 rounded-lg p-4 shadow-lg sm:w-96"
                     :class="toast.type === 'success'
-                        ? 'bg-indigo-600 dark:bg-indigo-500'
+                        ? 'bg-brand-500 dark:bg-brand-400'
                         : 'bg-red-600 dark:bg-red-500'"
                 >
                     <svg v-if="toast.type === 'success'" class="h-5 w-5 shrink-0 text-white" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">

@@ -85,14 +85,14 @@ function submit(entry) {
                                 rows="4"
                                 maxlength="1000"
                                 :placeholder="lang.comment_placeholder || '分享您的使用心得...'"
-                                class="w-full border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 rounded-md text-sm px-3 py-2 focus:ring-indigo-500 focus:border-indigo-500 resize-none"
+                                class="w-full border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 rounded-md text-sm px-3 py-2 focus:ring-accent-400 focus:border-brand-400 resize-none"
                             />
                             <InputError :message="entry.form.errors.comment" class="mt-1" />
                         </div>
 
                         <button
                             :disabled="entry.form.rating === 0 || entry.form.processing"
-                            class="w-full bg-indigo-600 text-white py-2 px-4 rounded-md text-sm font-medium hover:bg-indigo-700 disabled:opacity-50 transition"
+                            class="w-full bg-brand-500 text-white py-2 px-4 rounded-md text-sm font-medium hover:bg-brand-600 disabled:opacity-50 transition"
                             @click="submit(entry)"
                         >
                             {{ lang.submit || '送出評論' }}
@@ -102,7 +102,7 @@ function submit(entry) {
             </div>
 
             <div class="mt-6 text-center">
-                <a :href="route('orders.show', order.id)" class="text-sm text-indigo-600 hover:underline">← 返回訂單</a>
+                <a :href="route('orders.show', order.id)" class="text-sm text-brand-500 hover:underline">← 返回訂單</a>
             </div>
         </div>
     </AppLayout>

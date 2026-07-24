@@ -40,7 +40,7 @@ const submit = () => {
                         type="file"
                         accept=".csv,text/csv"
                         @change="form.file = $event.target.files[0]"
-                        class="mt-1 block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-medium file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100"
+                        class="mt-1 block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-medium file:bg-brand-50 file:text-brand-600 hover:file:bg-brand-100"
                     />
                     <InputError :message="form.errors.file" class="mt-2" />
                 </div>
@@ -56,7 +56,7 @@ const submit = () => {
                 <h3 class="text-lg font-medium text-gray-900 dark:text-gray-100">{{ t.import_result }}</h3>
                 <div class="flex gap-6 text-sm">
                     <span class="text-green-700 dark:text-green-400">{{ t.created }}: {{ result.created }}</span>
-                    <span class="text-indigo-700 dark:text-indigo-400">{{ t.updated }}: {{ result.updated }}</span>
+                    <span class="text-brand-600 dark:text-brand-300">{{ t.updated }}: {{ result.updated }}</span>
                     <span class="text-red-700 dark:text-red-400">{{ t.failed }}: {{ result.failed.length }}</span>
                 </div>
 

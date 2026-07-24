@@ -85,7 +85,7 @@ const {
         <template #header>
             <div class="flex justify-between items-center">
                 <h2 class="text-xl font-semibold text-gray-800 dark:text-gray-200">{{ lang.categories?.title }}</h2>
-                <button @click="startCreate" class="inline-flex items-center px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-md hover:bg-indigo-700">
+                <button @click="startCreate" class="inline-flex items-center px-4 py-2 bg-brand-500 text-white text-sm font-medium rounded-md hover:bg-brand-600">
                     {{ lang.categories?.add }}
                 </button>
             </div>
@@ -108,7 +108,7 @@ const {
                         <select
                             id="parent_id"
                             v-model="form.parent_id"
-                            class="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                            class="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-300 shadow-sm focus:border-brand-400 focus:ring-accent-400"
                         >
                             <option value="">{{ lang.categories?.none }}</option>
                             <option
@@ -128,7 +128,7 @@ const {
                     </div>
                     <div class="flex items-end pb-2">
                         <label class="flex items-center">
-                            <input v-model="form.is_active" type="checkbox" class="rounded border-gray-300 text-indigo-600 shadow-sm focus:ring-indigo-500" />
+                            <input v-model="form.is_active" type="checkbox" class="rounded border-gray-300 text-brand-500 shadow-sm focus:ring-accent-400" />
                             <span class="ml-2 text-sm text-gray-600 dark:text-gray-400">{{ lang.categories?.active }}</span>
                         </label>
                     </div>
@@ -168,7 +168,7 @@ const {
                             </td>
                             <td class="px-6 py-4 text-right text-sm space-x-2">
                                 <RowActions :loading="isDeleting(category.id)">
-                                    <button @click="startEdit(category)" class="text-indigo-600 hover:text-indigo-900">{{ lang.categories?.action_edit }}</button>
+                                    <button @click="startEdit(category)" class="text-brand-500 hover:text-brand-700">{{ lang.categories?.action_edit }}</button>
                                     <button @click="confirmDeleteCategory(category)" class="text-red-600 hover:text-red-900">{{ lang.categories?.action_delete }}</button>
                                 </RowActions>
                             </td>
@@ -185,7 +185,7 @@ const {
                             </td>
                             <td class="px-6 py-3 text-right text-sm space-x-2">
                                 <RowActions :loading="isDeleting(child.id)">
-                                    <button @click="startEdit(child)" class="text-indigo-600 hover:text-indigo-900">{{ lang.categories?.action_edit }}</button>
+                                    <button @click="startEdit(child)" class="text-brand-500 hover:text-brand-700">{{ lang.categories?.action_edit }}</button>
                                     <button @click="confirmDeleteCategory(child)" class="text-red-600 hover:text-red-900">{{ lang.categories?.action_delete }}</button>
                                 </RowActions>
                             </td>

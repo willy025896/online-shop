@@ -69,7 +69,7 @@ const deleteImage = (imageId) => {
             @drop.prevent="onDrop"
             :class="[
                 'border-2 border-dashed rounded-lg p-6 text-center cursor-pointer transition',
-                dragOver ? 'border-indigo-500 bg-indigo-50' : 'border-gray-300 dark:border-gray-600 hover:border-gray-400'
+                dragOver ? 'border-brand-400 bg-brand-50' : 'border-gray-300 dark:border-gray-600 hover:border-gray-400'
             ]"
             @click="fileInput.click()"
         >

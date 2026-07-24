@@ -135,7 +135,7 @@ const formatCurrency = (v) => `$${Number(v ?? 0).toFixed(2)}`;
             <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm">
                 <div class="px-6 py-4 border-b border-gray-200 dark:border-gray-700 flex justify-between items-center">
                     <h3 class="text-sm font-semibold text-gray-900 dark:text-gray-100">{{ lang.recent_orders }}</h3>
-                    <Link :href="route('seller.orders.index')" class="text-xs text-indigo-600 hover:text-indigo-800">{{ lang.view_all }}</Link>
+                    <Link :href="route('seller.orders.index')" class="text-xs text-brand-500 hover:text-brand-700">{{ lang.view_all }}</Link>
                 </div>
                 <div v-if="recentOrders.length" class="divide-y divide-gray-200 dark:divide-gray-700">
                     <Link

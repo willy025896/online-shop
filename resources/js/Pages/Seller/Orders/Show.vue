@@ -164,7 +164,7 @@ const submitRejectReturn = () => {
                     <button
                         @click="replyCustomer"
                         :disabled="replying"
-                        class="inline-flex items-center gap-2 px-3 py-1.5 bg-indigo-600 text-white text-xs font-medium rounded-md hover:bg-indigo-700 transition disabled:opacity-50"
+                        class="inline-flex items-center gap-2 px-3 py-1.5 bg-brand-500 text-white text-xs font-medium rounded-md hover:bg-brand-600 transition disabled:opacity-50"
                     >
                         <Spinner v-if="replying" class="h-3.5 w-3.5" />
                         {{ t.reply_customer || 'Reply Customer' }}
@@ -261,7 +261,7 @@ const submitRejectReturn = () => {
                     <Link
                         v-if="buyerRating"
                         :href="route('seller.buyers.show', order.user?.id)"
-                        class="flex items-center gap-2 text-sm text-gray-600 hover:text-indigo-600"
+                        class="flex items-center gap-2 text-sm text-gray-600 hover:text-brand-500"
                     >
                         <StarRating :model-value="Math.round(buyerRating.average)" :readonly="true" size="sm" />
                         <span>{{ buyerRating.average.toFixed(1) }} ({{ buyerRating.count }})</span>
@@ -294,7 +294,7 @@ const submitRejectReturn = () => {
                             <button
                                 v-if="canEditShipment && !editingShipment"
                                 @click="startEditShipment"
-                                class="text-xs font-medium text-indigo-600 hover:text-indigo-500"
+                                class="text-xs font-medium text-brand-500 hover:text-brand-400"
                             >
                                 {{ t.edit_shipment }}
                             </button>
@@ -302,7 +302,7 @@ const submitRejectReturn = () => {
                         <div v-if="editingShipment" class="grid gap-3 mt-2">
                             <select
                                 v-model="carrier"
-                                class="block w-full rounded-md border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-sm"
+                                class="block w-full rounded-md border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 shadow-sm focus:border-brand-400 focus:ring-accent-400 text-sm"
                             >
                                 <option value="">{{ t.select_carrier }}</option>
                                 <option v-for="(label, value) in carrierOptions" :key="value" :value="value">{{ label }}</option>
@@ -310,14 +310,14 @@ const submitRejectReturn = () => {
                             <input
                                 v-model="trackingNumber"
                                 type="text"
-                                class="block w-full rounded-md border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-sm"
+                                class="block w-full rounded-md border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 shadow-sm focus:border-brand-400 focus:ring-accent-400 text-sm"
                                 :placeholder="t.tracking_number"
                             />
                             <div class="flex gap-2">
                                 <button
                                     @click="saveShipment"
                                     :disabled="savingShipment"
-                                    class="inline-flex items-center gap-2 px-3 py-1.5 bg-indigo-600 text-white text-xs font-medium rounded-md hover:bg-indigo-700 disabled:opacity-50"
+                                    class="inline-flex items-center gap-2 px-3 py-1.5 bg-brand-500 text-white text-xs font-medium rounded-md hover:bg-brand-600 disabled:opacity-50"
                                 >
                                     <Spinner v-if="savingShipment" class="h-3 w-3" />
                                     {{ t.confirm }}
@@ -386,7 +386,7 @@ const submitRejectReturn = () => {
                         <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">{{ t.shipping_carrier }}</label>
                         <select
                             v-model="carrier"
-                            class="block w-full rounded-md border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-sm"
+                            class="block w-full rounded-md border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 shadow-sm focus:border-brand-400 focus:ring-accent-400 text-sm"
                         >
                             <option value="">{{ t.select_carrier }}</option>
                             <option v-for="(label, value) in carrierOptions" :key="value" :value="value">{{ label }}</option>
@@ -397,7 +397,7 @@ const submitRejectReturn = () => {
                         <input
                             v-model="trackingNumber"
                             type="text"
-                            class="block w-full rounded-md border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-sm"
+                            class="block w-full rounded-md border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 shadow-sm focus:border-brand-400 focus:ring-accent-400 text-sm"
                             :placeholder="t.tracking_number"
                         />
                     </div>
@@ -406,7 +406,7 @@ const submitRejectReturn = () => {
                     <button
                         @click="updateStatus(nextStatuses[order.status])"
                         :disabled="updatingStatus"
-                        class="inline-flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-md hover:bg-indigo-700 disabled:opacity-50"
+                        class="inline-flex items-center gap-2 px-4 py-2 bg-brand-500 text-white text-sm font-medium rounded-md hover:bg-brand-600 disabled:opacity-50"
                     >
                         <Spinner v-if="updatingStatus" class="h-4 w-4" />
                         {{ t.mark_as?.replace(':status', nextStatuses[order.status]) }}
@@ -444,7 +444,7 @@ const submitRejectReturn = () => {
                 <textarea
                     v-model="rejectForm.response_reason"
                     rows="4"
-                    class="w-full rounded-md border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-sm"
+                    class="w-full rounded-md border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 shadow-sm focus:border-brand-400 focus:ring-accent-400 text-sm"
                 ></textarea>
                 <InputError :message="rejectForm.errors.response_reason" class="mt-2" />
             </template>
@@ -469,7 +469,7 @@ const submitRejectReturn = () => {
                 <textarea
                     v-model="rejectReturnForm.response_reason"
                     rows="4"
-                    class="w-full rounded-md border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-sm"
+                    class="w-full rounded-md border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 shadow-sm focus:border-brand-400 focus:ring-accent-400 text-sm"
                 ></textarea>
                 <InputError :message="rejectReturnForm.errors.response_reason" class="mt-2" />
             </template>
@@ -494,7 +494,7 @@ const submitRejectReturn = () => {
                 <textarea
                     v-model="cancelForm.reason"
                     rows="4"
-                    class="w-full rounded-md border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-sm"
+                    class="w-full rounded-md border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 shadow-sm focus:border-brand-400 focus:ring-accent-400 text-sm"
                 ></textarea>
                 <InputError :message="cancelForm.errors.reason" class="mt-2" />
             </template>

@@ -48,7 +48,7 @@ const {
                                 type="number"
                                 min="0"
                                 :placeholder="lang.min_price"
-                                class="w-full text-sm rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 focus:border-indigo-500 focus:ring-indigo-500"
+                                class="w-full text-sm rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 focus:border-brand-400 focus:ring-accent-400"
                                 @keyup.enter="applyPriceFilter"
                             />
                             <span class="text-gray-400 flex-shrink-0">–</span>
@@ -57,14 +57,14 @@ const {
                                 type="number"
                                 min="0"
                                 :placeholder="lang.max_price"
-                                class="w-full text-sm rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 focus:border-indigo-500 focus:ring-indigo-500"
+                                class="w-full text-sm rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 focus:border-brand-400 focus:ring-accent-400"
                                 @keyup.enter="applyPriceFilter"
                             />
                         </div>
                         <div class="flex gap-2">
                             <button
                                 @click="applyPriceFilter"
-                                class="flex-1 px-3 py-1.5 text-xs font-medium rounded-md bg-indigo-600 text-white hover:bg-indigo-700 transition"
+                                class="flex-1 px-3 py-1.5 text-xs font-medium rounded-md bg-brand-500 text-white hover:bg-brand-600 transition"
                             >
                                 {{ lang.apply }}
                             </button>
@@ -94,7 +94,7 @@ const {
                         <select
                             :value="filters?.sort || 'latest'"
                             @change="updateFilters({ sort: $event.target.value })"
-                            class="text-sm rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 focus:border-indigo-500 focus:ring-indigo-500"
+                            class="text-sm rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 focus:border-brand-400 focus:ring-accent-400"
                         >
                             <option value="latest">{{ lang.sort?.latest }}</option>
                             <option value="price_asc">{{ lang.sort?.price_asc }}</option>

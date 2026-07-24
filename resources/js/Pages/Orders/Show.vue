@@ -287,7 +287,7 @@ const reorder = (orderId) => {
                     </a>
                     <button
                         @click="askSeller(order.id)"
-                        class="bg-indigo-600 text-white py-2 px-6 rounded-lg hover:bg-indigo-700 transition text-sm font-medium ms-auto"
+                        class="bg-brand-500 text-white py-2 px-6 rounded-lg hover:bg-brand-600 transition text-sm font-medium ms-auto"
                     >
                         {{ lang.ask_seller || 'Ask Seller' }}
                     </button>
@@ -302,7 +302,7 @@ const reorder = (orderId) => {
                 <textarea
                     v-model="cancelForm.reason"
                     rows="4"
-                    class="w-full rounded-md border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-sm"
+                    class="w-full rounded-md border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 shadow-sm focus:border-brand-400 focus:ring-accent-400 text-sm"
                     :placeholder="lang.cancel_reason_placeholder"
                 ></textarea>
                 <InputError :message="cancelForm.errors.reason" class="mt-2" />
@@ -341,7 +341,7 @@ const reorder = (orderId) => {
                             type="number"
                             min="0"
                             :max="item.returnable_quantity"
-                            class="w-20 rounded-md border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-sm"
+                            class="w-20 rounded-md border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 shadow-sm focus:border-brand-400 focus:ring-accent-400 text-sm"
                         />
                     </div>
                 </div>
@@ -350,7 +350,7 @@ const reorder = (orderId) => {
                 <textarea
                     v-model="returnForm.reason"
                     rows="3"
-                    class="w-full rounded-md border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-sm"
+                    class="w-full rounded-md border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 shadow-sm focus:border-brand-400 focus:ring-accent-400 text-sm"
                     :placeholder="lang.return_reason_placeholder"
                 ></textarea>
                 <InputError :message="returnForm.errors.reason" class="mt-2" />

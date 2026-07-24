@@ -18,7 +18,7 @@ defineEmits(['start', 'finish']);
                 :class="[
                     'px-3 py-2 text-sm rounded-md',
                     link.active
-                        ? 'bg-indigo-600 text-white'
+                        ? 'bg-brand-500 text-white'
                         : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
                 ]"
                 preserve-scroll

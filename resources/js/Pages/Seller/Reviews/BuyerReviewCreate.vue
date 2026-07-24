@@ -53,14 +53,14 @@ function submit() {
                         rows="4"
                         maxlength="1000"
                         placeholder="評價這位買家的交易體驗..."
-                        class="w-full border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 rounded-md text-sm px-3 py-2 focus:ring-indigo-500 focus:border-indigo-500 resize-none"
+                        class="w-full border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 rounded-md text-sm px-3 py-2 focus:ring-accent-400 focus:border-brand-400 resize-none"
                     />
                     <InputError :message="form.errors.comment" class="mt-1" />
                 </div>
 
                 <button
                     :disabled="form.rating === 0 || form.processing"
-                    class="w-full bg-indigo-600 text-white py-2 px-4 rounded-md text-sm font-medium hover:bg-indigo-700 disabled:opacity-50 transition"
+                    class="w-full bg-brand-500 text-white py-2 px-4 rounded-md text-sm font-medium hover:bg-brand-600 disabled:opacity-50 transition"
                     @click="submit"
                 >
                     送出評價
@@ -68,7 +68,7 @@ function submit() {
             </div>
 
             <div class="mt-4 text-center">
-                <a :href="route('seller.orders.show', order.id)" class="text-sm text-indigo-600 hover:underline">← 返回訂單</a>
+                <a :href="route('seller.orders.show', order.id)" class="text-sm text-brand-500 hover:underline">← 返回訂單</a>
             </div>
         </div>
     </SellerLayout>

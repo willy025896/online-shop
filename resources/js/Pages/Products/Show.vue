@@ -92,7 +92,7 @@ const askSeller = () => {
                 <ProductImageGallery :images="product.images" :product-name="product.name" />
 
                 <div>
-                    <Link v-if="product.category" :href="route('categories.show', product.category.slug)" class="text-sm text-indigo-600 hover:text-indigo-800">
+                    <Link v-if="product.category" :href="route('categories.show', product.category.slug)" class="text-sm text-brand-500 hover:text-brand-700">
                         {{ product.category.name }}
                     </Link>
                     <h1 class="text-2xl font-bold text-gray-900 dark:text-gray-100 mt-1">{{ product.name }}</h1>
@@ -111,14 +111,14 @@ const askSeller = () => {
                     </div>
 
                     <div class="mt-4 flex items-center gap-3">
-                        <Link :href="route('shops.show', product.shop.slug)" class="text-sm text-gray-600 dark:text-gray-400 hover:text-indigo-600">
+                        <Link :href="route('shops.show', product.shop.slug)" class="text-sm text-gray-600 dark:text-gray-400 hover:text-brand-500">
                             {{ (lang.sold_by || 'Sold by :name').replace(':name', product.shop.name) }}
                         </Link>
                         <button
                             v-if="!isOwnProduct"
                             @click="askSeller"
                             :disabled="asking"
-                            class="inline-flex items-center gap-1.5 text-sm font-medium text-indigo-600 hover:text-indigo-800 disabled:opacity-50"
+                            class="inline-flex items-center gap-1.5 text-sm font-medium text-brand-500 hover:text-brand-700 disabled:opacity-50"
                         >
                             <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                                 <path stroke-linecap="round" stroke-linejoin="round" d="M8.625 12a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0H8.25m4.125 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0H12m4.125 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0h-.375M21 12c0 4.556-4.03 8.25-9 8.25a9.764 9.764 0 01-2.555-.337A5.972 5.972 0 015.41 20.97a5.969 5.969 0 01-.474-.065 4.48 4.48 0 00.978-2.025c.09-.457-.133-.901-.467-1.226C3.93 16.178 3 14.189 3 12c0-4.556 4.03-8.25 9-8.25s9 3.694 9 8.25z" />
@@ -143,7 +143,7 @@ const askSeller = () => {
                                         :class="[
                                             'px-3 py-1.5 rounded-md border text-sm transition',
                                             selected[option.id] === value.id
-                                                ? 'border-indigo-600 bg-indigo-50 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-300'
+                                                ? 'border-brand-500 bg-brand-50 text-brand-700 dark:bg-brand-900/30 dark:text-brand-300'
                                                 : 'border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:border-gray-400',
                                         ]"
                                     >
@@ -168,7 +168,7 @@ const askSeller = () => {
                             <button
                                 @click="addToCart"
                                 :disabled="addingToCart"
-                                class="flex-1 flex items-center justify-center gap-2 bg-indigo-600 text-white py-3 px-6 rounded-lg hover:bg-indigo-700 transition font-medium disabled:opacity-50"
+                                class="flex-1 flex items-center justify-center gap-2 bg-brand-500 text-white py-3 px-6 rounded-lg hover:bg-brand-600 transition font-medium disabled:opacity-50"
                             >
                                 <Spinner v-if="addingToCart" class="h-4 w-4" />
                                 {{ lang.add_to_cart }}

@@ -40,9 +40,9 @@ const navItems = computed(() => [
     <div>
         <Head :title="title" />
 
-        <div class="min-h-screen bg-gray-100 dark:bg-gray-900">
+        <div class="min-h-screen bg-brand-50 dark:bg-gray-900">
             <!-- Mobile sidebar toggle -->
-            <div class="lg:hidden flex items-center justify-between bg-white dark:bg-gray-800 border-b px-4 py-3">
+            <div class="lg:hidden flex items-center justify-between bg-white dark:bg-gray-800 shadow-soft px-4 py-3">
                 <Link :href="route('seller.dashboard')">
                     <ApplicationMark class="block h-9 w-auto" />
                 </Link>
@@ -55,12 +55,12 @@ const navItems = computed(() => [
 
             <div class="flex">
                 <!-- Sidebar -->
-                <aside :class="sidebarOpen ? 'block' : 'hidden'" class="lg:block w-64 min-h-screen bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700">
-                    <div class="hidden lg:flex items-center h-16 px-6 border-b border-gray-200 dark:border-gray-700">
+                <aside :class="sidebarOpen ? 'block' : 'hidden'" class="lg:block w-64 min-h-screen bg-white dark:bg-gray-800 shadow-soft relative z-10">
+                    <div class="hidden lg:flex items-center h-20 px-6 shadow-soft">
                         <Link :href="route('seller.dashboard')">
                             <ApplicationMark class="block h-9 w-auto" />
                         </Link>
-                        <span class="ml-3 font-semibold text-gray-700 dark:text-gray-200">{{ nav.seller_title }}</span>
+                        <span class="ml-3 font-display italic text-brand-500 dark:text-brand-200">{{ nav.seller_title }}</span>
                     </div>
 
                     <nav class="mt-4 px-3 space-y-1">
@@ -70,9 +70,9 @@ const navItems = computed(() => [
                             :href="route(item.route)"
                             :class="[
                                 route().current(item.route + '*')
-                                    ? 'bg-indigo-50 dark:bg-indigo-900/50 text-indigo-600 dark:text-indigo-400'
-                                    : 'text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700',
-                                'flex items-center px-3 py-2 rounded-md text-sm font-medium'
+                                    ? 'bg-brand-50 dark:bg-brand-900/50 text-brand-600 dark:text-brand-200 border-l-4 border-accent-500'
+                                    : 'text-gray-700 dark:text-gray-300 hover:bg-brand-50 dark:hover:bg-gray-700 border-l-4 border-transparent',
+                                'flex items-center px-3 py-2 rounded-xl text-sm font-medium transition duration-150 ease-in-out'
                             ]"
                         >
                             <svg class="mr-3 h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
@@ -82,17 +82,17 @@ const navItems = computed(() => [
                         </Link>
                     </nav>
 
-                    <div class="absolute bottom-0 w-64 p-4 border-t border-gray-200 dark:border-gray-700">
+                    <div class="absolute bottom-0 w-64 p-4 border-t border-brand-100 dark:border-gray-700">
                         <!-- Locale switcher -->
                         <div class="flex items-center justify-between mb-3">
                             <div class="flex gap-2 text-xs font-medium">
                                 <button @click="switchLocale('en')"
-                                    :class="locale === 'en' ? 'text-indigo-600 dark:text-indigo-400 font-bold' : 'text-gray-400 hover:text-gray-600 dark:hover:text-gray-300'">
+                                    :class="locale === 'en' ? 'text-brand-500 dark:text-brand-200 font-bold' : 'text-gray-400 hover:text-gray-600 dark:hover:text-gray-300'">
                                     EN
                                 </button>
                                 <span class="text-gray-300 dark:text-gray-600">|</span>
                                 <button @click="switchLocale('zh_TW')"
-                                    :class="locale === 'zh_TW' ? 'text-indigo-600 dark:text-indigo-400 font-bold' : 'text-gray-400 hover:text-gray-600 dark:hover:text-gray-300'">
+                                    :class="locale === 'zh_TW' ? 'text-brand-500 dark:text-brand-200 font-bold' : 'text-gray-400 hover:text-gray-600 dark:hover:text-gray-300'">
                                     中文
                                 </button>
                             </div>
@@ -109,7 +109,7 @@ const navItems = computed(() => [
                                         <button
                                             :aria-label="nav.manage_account"
                                             v-bind="triggerAttrs"
-                                            class="text-gray-400 hover:text-gray-600"
+                                            class="text-gray-400 hover:text-brand-500 dark:hover:text-brand-200"
                                         >
                                             <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z" />

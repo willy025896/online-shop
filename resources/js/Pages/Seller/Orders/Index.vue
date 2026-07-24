@@ -41,7 +41,7 @@ const skeletonRows = computed(() => skeletonRowCount(props.orders));
                 <tbody v-else class="divide-y divide-gray-200 dark:divide-gray-700">
                     <tr v-for="order in orders.data" :key="order.id">
                         <td class="px-6 py-4">
-                            <Link :href="route('seller.orders.show', order.id)" class="text-sm font-medium text-indigo-600 hover:text-indigo-900">
+                            <Link :href="route('seller.orders.show', order.id)" class="text-sm font-medium text-brand-500 hover:text-brand-700">
                                 {{ order.order_number }}
                             </Link>
                         </td>

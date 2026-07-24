@@ -18,7 +18,7 @@ defineProps({
                 :class="[
                     'block px-3 py-2 rounded-md text-sm',
                     activeSlug === category.slug
-                        ? 'bg-indigo-50 text-indigo-700 dark:bg-indigo-900/50 dark:text-indigo-400 font-medium'
+                        ? 'bg-brand-50 text-brand-600 dark:bg-brand-900/50 dark:text-brand-300 font-medium'
                         : 'text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700'
                 ]"
             >
@@ -32,7 +32,7 @@ defineProps({
                     :class="[
                         'block px-3 py-1.5 rounded-md text-sm',
                         activeSlug === child.slug
-                            ? 'text-indigo-600 dark:text-indigo-400 font-medium'
+                            ? 'text-brand-500 dark:text-brand-300 font-medium'
                             : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'
                     ]"
                 >

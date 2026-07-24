@@ -49,7 +49,7 @@ const formatDateTime = (value) => {
                     :disabled="running"
                     :class="{ 'opacity-50': running }"
                     @click="runPayouts"
-                    class="bg-indigo-600 text-white py-2 px-4 rounded-lg hover:bg-indigo-700 transition text-sm font-medium"
+                    class="bg-brand-500 text-white py-2 px-4 rounded-lg hover:bg-brand-600 transition text-sm font-medium"
                 >
                     {{ running ? t.running : t.run }}
                 </button>

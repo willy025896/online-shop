@@ -31,7 +31,7 @@ const save = () => {
     <div class="fixed bottom-6 right-6 z-40">
         <button
             @click="open = !open"
-            class="bg-indigo-600 hover:bg-indigo-700 text-white rounded-full p-3 shadow-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 dark:focus:ring-offset-gray-800"
+            class="bg-brand-500 hover:bg-brand-600 text-white rounded-full p-3 shadow-lift focus:outline-none focus:ring-2 focus:ring-accent-400 focus:ring-offset-2 dark:focus:ring-offset-gray-800"
             :title="lang.widget_settings"
             :aria-label="lang.widget_settings"
         >
@@ -60,14 +60,14 @@ const save = () => {
                         <input
                             type="checkbox"
                             v-model="local[w.key]"
-                            class="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
+                            class="rounded border-gray-300 text-brand-500 focus:ring-accent-400"
                         />
                         <span class="text-sm text-gray-600 dark:text-gray-300">{{ lang[w.labelKey] ?? w.key }}</span>
                     </label>
                 </div>
                 <button
                     @click="save"
-                    class="mt-4 w-full bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-medium py-1.5 rounded-md"
+                    class="mt-4 w-full bg-brand-500 hover:bg-brand-600 text-white text-sm font-medium py-1.5 rounded-md"
                 >
                     {{ lang.save_preferences }}
                 </button>

@@ -72,7 +72,7 @@ const {
                     <Link :href="route('seller.products.import.form')" class="inline-flex items-center px-3 py-2 text-sm font-medium rounded-md border bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700">
                         {{ lang.products?.import }}
                     </Link>
-                    <Link :href="route('seller.products.create')" class="inline-flex items-center px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-md hover:bg-indigo-700">
+                    <Link :href="route('seller.products.create')" class="inline-flex items-center px-4 py-2 bg-brand-500 text-white text-sm font-medium rounded-md hover:bg-brand-600">
                         {{ lang.products?.add }}
                     </Link>
                 </div>
@@ -128,7 +128,7 @@ const {
                         </td>
                         <td class="px-6 py-4 text-right text-sm space-x-2">
                             <RowActions :loading="isDeleting(product.id)">
-                                <Link :href="route('seller.products.edit', product.id)" class="text-indigo-600 hover:text-indigo-900">{{ lang.products?.action_edit }}</Link>
+                                <Link :href="route('seller.products.edit', product.id)" class="text-brand-500 hover:text-brand-700">{{ lang.products?.action_edit }}</Link>
                                 <button @click="confirmDeleteProduct(product)" class="text-red-600 hover:text-red-900">{{ lang.products?.action_delete }}</button>
                             </RowActions>
                         </td>
@@ -141,7 +141,7 @@ const {
                 </svg>
                 <p class="mt-4">
                     {{ lang.products?.no_products }}
-                    <Link :href="route('seller.products.create')" class="text-indigo-600 hover:underline">{{ lang.products?.create_first }}</Link>.
+                    <Link :href="route('seller.products.create')" class="text-brand-500 hover:underline">{{ lang.products?.create_first }}</Link>.
                 </p>
             </div>
         </div>

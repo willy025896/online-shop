@@ -46,7 +46,7 @@ const formatTime = (iso) => {
             :aria-current="activeId === conv.id ? 'page' : undefined"
             :class="[
                 'flex items-center gap-3 px-4 py-3 border-b border-gray-100 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition',
-                activeId === conv.id ? 'bg-indigo-50 dark:bg-indigo-900/20' : ''
+                activeId === conv.id ? 'bg-brand-50 dark:bg-brand-900/20' : ''
             ]"
         >
             <img

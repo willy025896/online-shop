@@ -15,7 +15,7 @@ const lang = computed(() => page.props.lang || {});
     <Link
         v-if="product"
         :href="route('products.show', product.slug)"
-        class="flex items-center gap-3 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded-xl p-2 hover:border-indigo-400 transition max-w-full"
+        class="flex items-center gap-3 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded-xl p-2 hover:border-brand-400 transition max-w-full"
     >
         <div class="w-14 h-14 rounded-lg overflow-hidden bg-gray-100 dark:bg-gray-700 flex-shrink-0">
             <ImageWithFallback

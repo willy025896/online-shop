@@ -144,14 +144,14 @@ const submit = () => {
                                         :class="[
                                             'text-left text-sm p-3 rounded-md border',
                                             selectedAddressId === addr.id
-                                                ? 'border-indigo-500 ring-1 ring-indigo-500 bg-indigo-50 dark:bg-indigo-900/20'
+                                                ? 'border-brand-400 ring-1 ring-brand-400 bg-brand-50 dark:bg-brand-900/20'
                                                 : 'border-gray-200 dark:border-gray-600 hover:border-gray-300',
                                         ]"
                                     >
                                         <span class="flex items-center gap-1.5 font-medium text-gray-900 dark:text-gray-100">
                                             {{ addr.recipient_name }}
                                             <span v-if="addr.label" class="text-xs font-normal text-gray-500">({{ addr.label }})</span>
-                                            <span v-if="addr.is_default" class="text-xs font-normal text-indigo-600">{{ lang.default_badge }}</span>
+                                            <span v-if="addr.is_default" class="text-xs font-normal text-brand-500">{{ lang.default_badge }}</span>
                                         </span>
                                         <span class="block text-gray-500 dark:text-gray-400 truncate">{{ addr.address }}</span>
                                     </button>
@@ -161,7 +161,7 @@ const submit = () => {
                                         :class="[
                                             'text-left text-sm p-3 rounded-md border flex items-center justify-center',
                                             selectedAddressId === null
-                                                ? 'border-indigo-500 ring-1 ring-indigo-500 bg-indigo-50 dark:bg-indigo-900/20'
+                                                ? 'border-brand-400 ring-1 ring-brand-400 bg-brand-50 dark:bg-brand-900/20'
                                                 : 'border-dashed border-gray-300 dark:border-gray-600 hover:border-gray-400',
                                         ]"
                                     >
@@ -274,7 +274,7 @@ const submit = () => {
                             <button
                                 type="submit"
                                 :disabled="form.processing"
-                                class="mt-4 w-full flex items-center justify-center gap-2 bg-indigo-600 text-white py-3 px-6 rounded-lg hover:bg-indigo-700 transition font-medium disabled:opacity-50"
+                                class="mt-4 w-full flex items-center justify-center gap-2 bg-brand-500 text-white py-3 px-6 rounded-lg hover:bg-brand-600 transition font-medium disabled:opacity-50"
                             >
                                 <Spinner v-if="form.processing" class="h-4 w-4" />
                                 {{ form.processing ? lang.processing : lang.place_order }}

@@ -180,14 +180,14 @@ const submit = () => {
                     <button
                         type="button"
                         @click="addValue(option)"
-                        class="text-sm text-indigo-600 hover:text-indigo-800"
+                        class="text-sm text-brand-500 hover:text-brand-700"
                     >
                         + {{ lang?.add_value }}
                     </button>
                 </div>
             </div>
 
-            <button type="button" @click="addOption" class="text-sm text-indigo-600 hover:text-indigo-800">
+            <button type="button" @click="addOption" class="text-sm text-brand-500 hover:text-brand-700">
                 + {{ lang?.add_option }}
             </button>
         </div>
@@ -196,7 +196,7 @@ const submit = () => {
             <button
                 type="button"
                 @click="generateCombinations"
-                class="text-sm px-3 py-1.5 rounded border border-indigo-300 text-indigo-600 hover:bg-indigo-50 dark:hover:bg-indigo-900/20"
+                class="text-sm px-3 py-1.5 rounded border border-brand-300 text-brand-500 hover:bg-brand-50 dark:hover:bg-brand-900/20"
             >
                 {{ lang?.generate }}
             </button>

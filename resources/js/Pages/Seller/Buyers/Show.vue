@@ -25,7 +25,7 @@ const lang = computed(() => page.props.lang || {})
             <!-- Buyer summary -->
             <div class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-5 mb-6">
                 <div class="flex items-center gap-4">
-                    <div class="w-14 h-14 rounded-full bg-indigo-100 dark:bg-indigo-900/50 flex items-center justify-center text-indigo-600 dark:text-indigo-400 font-bold text-xl flex-shrink-0">
+                    <div class="w-14 h-14 rounded-full bg-brand-100 dark:bg-brand-900/50 flex items-center justify-center text-brand-600 dark:text-brand-300 font-bold text-xl flex-shrink-0">
                         {{ buyer.name?.charAt(0)?.toUpperCase() }}
                     </div>
                     <div>

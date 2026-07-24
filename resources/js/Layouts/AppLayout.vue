@@ -1,7 +1,7 @@
 <script setup>
 import { ref, computed } from 'vue';
 import { Head, Link, router, usePage } from '@inertiajs/vue3';
-import ApplicationMark from '@/Components/ApplicationMark.vue';
+import ApplicationLogo from '@/Components/ApplicationLogo.vue';
 import Banner from '@/Components/Banner.vue';
 import Dropdown from '@/Components/Dropdown.vue';
 import DropdownLink from '@/Components/DropdownLink.vue';
@@ -50,16 +50,16 @@ const logout = () => {
 
         <Banner />
 
-        <div class="min-h-screen bg-gray-100 dark:bg-gray-900">
-            <nav class="bg-white dark:bg-gray-800 border-b border-gray-100 dark:border-gray-700">
+        <div class="min-h-screen bg-brand-50 dark:bg-gray-900">
+            <nav class="bg-white dark:bg-gray-800 shadow-soft relative z-10">
                 <!-- Primary Navigation Menu -->
                 <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                    <div class="flex justify-between h-16">
+                    <div class="flex justify-between h-20">
                         <div class="flex">
                             <!-- Logo -->
                             <div class="shrink-0 flex items-center">
                                 <Link :href="route('dashboard')">
-                                    <ApplicationMark class="block h-9 w-auto" />
+                                    <ApplicationLogo class="block h-10 w-auto" />
                                 </Link>
                             </div>
 
@@ -81,12 +81,12 @@ const logout = () => {
                             <!-- Locale switcher -->
                             <div class="hidden sm:flex items-center gap-1 text-xs font-medium me-2">
                                 <button @click="switchLocale('en')"
-                                    :class="locale === 'en' ? 'text-indigo-600 dark:text-indigo-400 font-bold' : 'text-gray-400 hover:text-gray-600 dark:hover:text-gray-300'">
+                                    :class="locale === 'en' ? 'text-brand-500 dark:text-brand-200 font-bold' : 'text-gray-400 hover:text-gray-600 dark:hover:text-gray-300'">
                                     EN
                                 </button>
                                 <span class="text-gray-300 dark:text-gray-600">|</span>
                                 <button @click="switchLocale('zh_TW')"
-                                    :class="locale === 'zh_TW' ? 'text-indigo-600 dark:text-indigo-400 font-bold' : 'text-gray-400 hover:text-gray-600 dark:hover:text-gray-300'">
+                                    :class="locale === 'zh_TW' ? 'text-brand-500 dark:text-brand-200 font-bold' : 'text-gray-400 hover:text-gray-600 dark:hover:text-gray-300'">
                                     中文
                                 </button>
                             </div>
@@ -94,31 +94,31 @@ const logout = () => {
                             <DarkModeToggle />
 
                             <!-- Wishlist Badge (auth only) -->
-                            <Link v-if="$page.props.auth?.user" :href="route('wishlist.index')" :aria-label="nav.wishlist" class="relative p-2 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300">
+                            <Link v-if="$page.props.auth?.user" :href="route('wishlist.index')" :aria-label="nav.wishlist" class="relative p-2 text-gray-500 dark:text-gray-400 hover:text-brand-500 dark:hover:text-brand-200 hover:scale-110 transition duration-150 ease-in-out">
                                 <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
                                     <path stroke-linecap="round" stroke-linejoin="round" d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12z" />
                                 </svg>
-                                <span v-if="wishlistCount > 0" class="absolute -top-1 -right-1 inline-flex items-center justify-center px-1.5 py-0.5 text-xs font-bold leading-none text-white bg-red-600 rounded-full">
+                                <span v-if="wishlistCount > 0" class="absolute -top-1 -right-1 inline-flex items-center justify-center px-1.5 py-0.5 text-xs font-bold leading-none text-white bg-accent-500 rounded-full">
                                     {{ wishlistCount > 99 ? '99+' : wishlistCount }}
                                 </span>
                             </Link>
 
                             <!-- Cart Badge -->
-                            <Link :href="route('cart.index')" :aria-label="nav.cart" class="relative p-2 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300">
+                            <Link :href="route('cart.index')" :aria-label="nav.cart" class="relative p-2 text-gray-500 dark:text-gray-400 hover:text-brand-500 dark:hover:text-brand-200 hover:scale-110 transition duration-150 ease-in-out">
                                 <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
                                     <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 3h1.386c.51 0 .955.343 1.087.835l.383 1.437M7.5 14.25a3 3 0 00-3 3h15.75m-12.75-3h11.218c1.121-2.3 2.1-4.684 2.924-7.138a60.114 60.114 0 00-16.536-1.84M7.5 14.25L5.106 5.272M6 20.25a.75.75 0 11-1.5 0 .75.75 0 011.5 0zm12.75 0a.75.75 0 11-1.5 0 .75.75 0 011.5 0z" />
                                 </svg>
-                                <span v-if="cartCount > 0" class="absolute -top-1 -right-1 inline-flex items-center justify-center px-1.5 py-0.5 text-xs font-bold leading-none text-white bg-red-600 rounded-full">
+                                <span v-if="cartCount > 0" class="absolute -top-1 -right-1 inline-flex items-center justify-center px-1.5 py-0.5 text-xs font-bold leading-none text-white bg-accent-500 rounded-full">
                                     {{ cartCount > 99 ? '99+' : cartCount }}
                                 </span>
                             </Link>
 
                             <!-- Messages Badge (auth only) -->
-                            <Link v-if="$page.props.auth?.user" :href="route('messages.index')" :aria-label="nav.messages" class="relative p-2 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300">
+                            <Link v-if="$page.props.auth?.user" :href="route('messages.index')" :aria-label="nav.messages" class="relative p-2 text-gray-500 dark:text-gray-400 hover:text-brand-500 dark:hover:text-brand-200 hover:scale-110 transition duration-150 ease-in-out">
                                 <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
                                     <path stroke-linecap="round" stroke-linejoin="round" d="M8.625 12a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm0 0H8.25m4.125 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm0 0H12m4.125 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm0 0h-.375M21 12c0 4.556-4.03 8.25-9 8.25a9.764 9.764 0 0 1-2.555-.337A5.972 5.972 0 0 1 5.41 20.97a5.969 5.969 0 0 1-.474-.065 4.48 4.48 0 0 0 .978-2.025c.09-.457-.133-.901-.467-1.226C3.93 16.178 3 14.189 3 12c0-4.556 4.03-8.25 9-8.25s9 3.694 9 8.25Z" />
                                 </svg>
-                                <span v-if="unreadMessageCount > 0" class="absolute -top-1 -right-1 inline-flex items-center justify-center px-1.5 py-0.5 text-xs font-bold leading-none text-white bg-red-600 rounded-full">
+                                <span v-if="unreadMessageCount > 0" class="absolute -top-1 -right-1 inline-flex items-center justify-center px-1.5 py-0.5 text-xs font-bold leading-none text-white bg-accent-500 rounded-full">
                                     {{ unreadMessageCount > 99 ? '99+' : unreadMessageCount }}
                                 </span>
                             </Link>
@@ -132,10 +132,10 @@ const logout = () => {
                             </Link>
 
                             <!-- Seller/Admin Panel Link -->
-                            <Link v-if="userRole === 'seller'" :href="route('seller.dashboard')" class="ms-3 text-sm text-indigo-600 dark:text-indigo-400 hover:text-indigo-800 dark:hover:text-indigo-300 font-medium">
+                            <Link v-if="userRole === 'seller'" :href="route('seller.dashboard')" class="ms-3 text-sm text-accent-600 dark:text-accent-400 hover:text-accent-700 dark:hover:text-accent-300 font-medium">
                                 {{ nav.seller_panel }}
                             </Link>
-                            <Link v-if="userRole === 'admin'" :href="route('admin.dashboard')" class="ms-3 text-sm text-indigo-600 dark:text-indigo-400 hover:text-indigo-800 dark:hover:text-indigo-300 font-medium">
+                            <Link v-if="userRole === 'admin'" :href="route('admin.dashboard')" class="ms-3 text-sm text-accent-600 dark:text-accent-400 hover:text-accent-700 dark:hover:text-accent-300 font-medium">
                                 {{ nav.admin_panel }}
                             </Link>
 
@@ -325,11 +325,11 @@ const logout = () => {
                     <div class="pt-3 pb-2 px-4 border-t border-gray-200 dark:border-gray-600 flex items-center justify-between">
                         <div class="flex gap-3 text-sm font-medium">
                             <button @click="switchLocale('en')"
-                                :class="locale === 'en' ? 'text-indigo-600 dark:text-indigo-400 font-bold' : 'text-gray-500 dark:text-gray-400'">
+                                :class="locale === 'en' ? 'text-brand-500 dark:text-brand-200 font-bold' : 'text-gray-500 dark:text-gray-400'">
                                 English
                             </button>
                             <button @click="switchLocale('zh_TW')"
-                                :class="locale === 'zh_TW' ? 'text-indigo-600 dark:text-indigo-400 font-bold' : 'text-gray-500 dark:text-gray-400'">
+                                :class="locale === 'zh_TW' ? 'text-brand-500 dark:text-brand-200 font-bold' : 'text-gray-500 dark:text-gray-400'">
                                 中文
                             </button>
                         </div>

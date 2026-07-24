@@ -24,7 +24,7 @@ const remaining = computed(() => props.count - props.products.length);
             <Link
                 v-if="count > 0"
                 :href="route('seller.products.index', { low_stock: 1 })"
-                class="text-xs text-indigo-600 hover:text-indigo-800"
+                class="text-xs text-brand-500 hover:text-brand-700"
             >{{ lang.view_all }}</Link>
         </div>
 
