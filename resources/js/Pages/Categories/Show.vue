@@ -41,7 +41,7 @@ const {
                     <span v-if="category.parent">/</span>
                     <span class="text-gray-900 dark:text-gray-100">{{ category.name }}</span>
                 </div>
-                <h1 class="text-2xl font-bold text-gray-900 dark:text-gray-100">{{ category.name }}</h1>
+                <h1 class="font-display text-3xl font-semibold text-gray-900 dark:text-gray-100">{{ category.name }}</h1>
             </div>
 
             <div v-if="category.children?.length" class="flex flex-wrap gap-2 mb-6">

@@ -95,7 +95,7 @@ const askSeller = () => {
                     <Link v-if="product.category" :href="route('categories.show', product.category.slug)" class="text-sm text-brand-500 hover:text-brand-700">
                         {{ product.category.name }}
                     </Link>
-                    <h1 class="text-2xl font-bold text-gray-900 dark:text-gray-100 mt-1">{{ product.name }}</h1>
+                    <h1 class="font-display text-3xl font-semibold text-gray-900 dark:text-gray-100 mt-1">{{ product.name }}</h1>
 
                     <div v-if="product.reviews_count > 0" class="flex items-center gap-2 mt-2">
                         <StarRating :model-value="Math.round(product.rating_sum / product.reviews_count)" :readonly="true" size="sm" />

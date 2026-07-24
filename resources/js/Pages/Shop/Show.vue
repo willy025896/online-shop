@@ -96,7 +96,7 @@ watch(() => props.filters, (filters) => {
                     </ImageWithFallback>
                 </div>
                 <div>
-                    <h1 class="text-2xl font-bold text-gray-900 dark:text-gray-100">{{ shop.name }}</h1>
+                    <h1 class="font-display text-3xl font-semibold text-gray-900 dark:text-gray-100">{{ shop.name }}</h1>
                     <p v-if="shop.description" class="mt-1 text-gray-600 dark:text-gray-400">{{ shop.description }}</p>
                     <div v-if="shop.reviews_count > 0" class="flex items-center gap-2 mt-2">
                         <StarRating :model-value="Math.round(shop.rating_sum / shop.reviews_count)" :readonly="true" size="sm" />
